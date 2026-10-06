@@ -2,7 +2,7 @@
 
 > 조사일: 2026-08-19
 > 대상: `google/gemma-4-26B-A4B-it` · `google/gemma-4-31B-it` · `Qwen/Qwen3.8-27B-FP8`
-> 범위: **한국어 능력만.** 속도·메모리·토큰 효율·코딩 성능은 [comparison.md](comparison.md) 참조.
+> 범위: **한국어 능력만.** 속도·메모리·토큰 효율·코딩 성능은 [gemma4-vs-qwen.md](gemma4-vs-qwen.md) 참조.
 >
 > **판단 맥락**: 운영계 메인 챗(`prd-gemma`)은 현재 GPU 제약으로 **26B**를 쓴다.
 > 여유가 생기면 **31B** 또는 **Qwen3.8 27B**로 전환할 계획이다. 이 문서는 그 선택을 위한 것이다.
@@ -303,7 +303,7 @@ HF 토론에 「Very bad results with model quant and KV cache quant, only BF16 
 
 **직접 검증한 것**: NOLLI 논문 전문의 수치, 디노티시아 리더보드 원본 디코딩, wikidocs 채점 CSV 원본, Gemma 4 기술보고서 전문 검색, 두 모델카드 로컬 사본, 국립국어원 어문 규범(`며칠`·사물존대), Qwen3.8 라이브 프로브, 커뮤니티 글 원문.
 
-**원본 자료**: 인용한 수치와 증언의 원본은 [`data/2026-08-19_korean/`](data/2026-08-19_korean/)에 보존했다. 벤치마크 원본, 논문 전문, 커뮤니티 글, 프로브 스크립트, 차단 사이트 수집 방법까지 들어 있어 재조사 없이 확인하거나 갱신할 수 있다.
+**원본 자료**: 인용한 수치와 증언의 원본은 [`sources/2026-08-19_korean/`](../sources/2026-08-19_korean/README.md)에 보존했다. 벤치마크 원본, 논문 전문, 커뮤니티 글, 프로브 스크립트, 차단 사이트 수집 방법까지 들어 있어 재조사 없이 확인하거나 갱신할 수 있다.
 
 **한계**:
 - **Gemma 4 26B·31B의 1차 실측이 없다.** GPU를 Qwen이 점유해 A/B를 하지 않았다.
@@ -319,7 +319,7 @@ HF 토론에 「Very bad results with model quant and KV cache quant, only BF16 
 
 ## 부록: 관련 문서
 
-- [comparison.md](comparison.md) — Gemma 4 vs Qwen 3.6 운영 관점 비교 (서빙 효율·안정성)
-- [qwen38.md](qwen38.md) — Qwen3.8-27B 스펙·벤치마크·Thinking 제어. **한국어 밖의 성능 축**(추론·코딩·에이전트)은 이쪽이다
-- [gemma4.md](gemma4.md) — Gemma 4 전 라인업 스펙
-- [qwen36.md](qwen36.md) · [qwen35.md](qwen35.md) — Qwen 계열 스펙
+- [gemma4-vs-qwen.md](gemma4-vs-qwen.md) — Gemma 4 vs Qwen 3.6 운영 관점 비교 (서빙 효율·안정성)
+- [qwen3.8.md](../models/qwen3.8.md) — Qwen3.8-27B 스펙·벤치마크·Thinking 제어. **한국어 밖의 성능 축**(추론·코딩·에이전트)은 이쪽이다
+- [gemma4.md](../models/gemma4.md) — Gemma 4 전 라인업 스펙
+- [qwen3.6.md](../models/qwen3.6.md) · [qwen3.5.md](../models/qwen3.5.md) — Qwen 계열 스펙

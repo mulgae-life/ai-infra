@@ -95,7 +95,7 @@ docker/
     │   │   ├── speed_test.py        # 모델 간 속도 매트릭스 누적 (진입점 ./start.sh speed)
     │   │   ├── image.png            # 멀티모달 fixture
     │   │   └── results/             # speed_results.md 등 누적 리포트
-    │   ├── slm_research/             # SLM 비교 (Gemma, Qwen) — 연구계 전용, S3 배포 제외
+    │   ├── slm_research/             # 모델 조사 (models/·topics/·sources/, 목록은 README) — 연구계 전용, S3 배포 제외
     │   └── bugfix/                   # 운영 중 발견 이슈 기록
     ├── pii/                          # PII/DLP 가드 운영 중 (외부 포트 인수 → 게이트웨이 포워딩, enforcement)
     │   ├── start.sh                  # NER(GPU3)+프록시 기동 (up/down/status [5015|5016|5501|5502|all])

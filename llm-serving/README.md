@@ -31,7 +31,7 @@ LLM 서빙 프레임워크 운영 구성 모음. 서버 인프라(EC2/Docker)와
 | [`vllm/tests/test_vllm_server.py`](vllm/tests/test_vllm_server.py) | 서버 헬스/추론 기능 테스트 (9개 카테고리 QA) |
 | [`vllm/tests/traffic_test_vllm.py`](vllm/tests/traffic_test_vllm.py) | smoke/overload 트래픽 테스트와 429 방어 응답 검증 |
 | [`vllm/tests/speed_test.py`](vllm/tests/speed_test.py) | 모델 간 속도 비교 (TTFT · TPS 매트릭스 누적, 입력 ~2k자 고정 × max_tokens [512,2048] × 동시성 [1,5,10]) |
-| [`vllm/slm_research/`](vllm/slm_research/) | SLM 비교 리서치 (Gemma, Qwen) |
+| [`vllm/slm_research/`](vllm/slm_research/README.md) | 모델 조사 문서 (Gemma, Qwen, Jev). 목록은 README |
 | [`vllm/bugfix/`](vllm/bugfix/) | 운영 중 발견된 이슈 기록 |
 
 운영 인스턴스/게이트웨이 추가는 yaml 한 파일 복사 → 값만 수정 → `./start.sh up <name>` (인스턴스) 또는 게이트웨이 재기동(자동 디스커버리). 자세한 사용법은 [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md) 참조. 단순 호출만 필요한 사용자는 [`VLLM_API_GUIDE.md`](VLLM_API_GUIDE.md)부터 보세요.

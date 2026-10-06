@@ -7,8 +7,8 @@ tq = AutoTokenizer.from_pretrained("/models/LLM/Qwen/Qwen3.8-27B-FP8")
 files = ["/workspace/docker/llm-serving/VLLM_API_GUIDE.md",
          "/workspace/docker/llm-serving/VLLM_OPS_GUIDE.md",
          "/workspace/docker/llm-serving/DEPLOY_GUIDE.md",
-         "/workspace/docker/llm-serving/vllm/slm_research/comparison.md",
-         "/workspace/docker/llm-serving/vllm/slm_research/qwen35.md"]
+         "/workspace/docker/llm-serving/vllm/slm_research/topics/gemma4-vs-qwen.md",
+         "/workspace/docker/llm-serving/vllm/slm_research/models/qwen3.5.md"]
 
 # 코드블록·표 제거 후 한글 비중 높은 줄만 추출 (순수 한국어 산문 근사)
 ko_lines = []

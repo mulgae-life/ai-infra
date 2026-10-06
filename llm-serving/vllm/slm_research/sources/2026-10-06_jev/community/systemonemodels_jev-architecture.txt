@@ -1,0 +1,83 @@
+Jev architecture: parameters, encoder or decoder, and no paper yet Skip to content System One System One Models Models Use cases Examples Recipes Guides Integrations Glossary Search ⌘ K Submit Menu Site navigation Models Use cases Examples Recipes Guides Integrations Glossary Submit an example Close Home Guides Jev architecture: parameters, encoder or decoder, and no paper yet Jev architecture: parameters, encoder or decoder, and no paper yet Jev's architecture is not published. TypeSafe has said only that the model generates all outputs in a single query rather than one token at a time, returns typed answers with calibrated probabilities, and was trained with RLCD on synthetic data. Parameter count, base architecture, weights and training method are undisclosed as of 20 September 2026. Updated 2 Oct 2026 What TypeSafe has said about Jev’s architecture 
+ Five statements, and that is close to the whole public record. 
+ The model produces its outputs in parallel. The launch post contrasts Jev’s sampling with sequential token generation, saying it “generates all outputs in a single query” and calling the approach “Incredibly efficient and hardware-aware.” 
+ It returns typed answers and probabilities rather than text. Every answer is a member of the option set you defined, with a probability distribution over that set and, for Choice and Score, a confidence value. 
+ TypeSafe trained it with RLCD , Reinforcement Learning for Calibrated Decisions, aimed at “answers with epistemically honest probabilities on System One tasks.” 
+ The training data is synthetic. TechCrunch reported on 18 September 2026 that “Almeida says Jev is trained exclusively on synthetic data using a technique he calls ‘reinforcement learning from calibrated decisions.’” That is the first on-the-record statement about what Jev learned from. 
+ It takes text only: a string, a JSON object, or an array of text values, up to 64k tokens per request. No image, audio or video input. 
+ Everything past those five points is inference from behaviour or guesswork from outside the company. 
+ How many parameters does Jev have? 
+ TypeSafe has not published a parameter count, and no figure for Jev appears in the docs, the launch post or the press coverage. 
+ Two indirect signals point at something small. Input is priced at $0.042 per million tokens, far under what frontier LLMs charge, and the launch post claims 70ms to 500ms latency. Both fit a model cheap enough to serve at volume. Neither is a measurement of model size, and TypeSafe has published no eval methodology behind either number. The speed and pricing guide covers how far those figures can be pushed. 
+ The one concrete parameter count in circulation is not Jev’s. Latent.Space’s roundup of six community reproductions describes Laya , NandhaKishorM’s clone, as a 421M-parameter model built on a ModernBERT-large encoder with two added transformer layers, trained with PPO over sequence embeddings. Laya’s current model card agrees on the size and the two layers but describes different training: the encoder is fully fine-tuned, and updates use REINFORCE with a group-mean baseline, not PPO. That is the size of a reproduction somebody else built as a guess at the problem, and it gets quoted as though it were Jev’s own. 
+ Is Jev a transformer? Encoder, decoder or diffusion? 
+ Nobody outside TypeSafe knows, because TypeSafe has not said and the weights are closed. 
+ TechCrunch’s launch-week piece calls Jev “a new transformer-based model” in its opening line. The same article then reports that “Almeida is tight-lipped about the model’s architecture, which outside observers suspect is built on top of an open-weight LLM.” Those two lines sit badly together. Read the first as the reporter’s shorthand, since the second says the architecture was never disclosed. 
+ Three families of hypothesis circulate. The table further down names who proposed each and what it rests on. The mechanics are these. 
+ An encoder with a classification head. A BERT or DeBERTa style model reads the state once and emits a distribution over labels, which matches Jev’s interface exactly. On X, @scaling01 argued Jev “is not a general language model” and called it closer to “a constrained or diffusion-like decision model,” per Latent.Space’s roundup of launch-day reaction. 
+ Masked diffusion. Diffusion language models produce all positions at once and refine them, which fits “all outputs in a single query” more literally than an encoder does. The MDLM repository is the usual reference for the technique. 
+ A head bolted onto an existing decoder LLM. Score each candidate option against the state in one forward pass and normalise. This is what most reproductions did, and it is the family TechCrunch’s “outside observers” are pointing at. 
+ Is there a Jev paper or arXiv preprint? 
+ No. An arXiv search on 20 September 2026 for the phrase “reinforcement learning for calibrated decisions” returned zero results, and so did a search for TypeSafe together with Jev. 
+ What exists instead is product documentation. The models page carries pricing, context limits and rate limits. The jaggedness page lists nine failure modes for version 1.13, with worked numeric examples. The launch post carries the speed and cost claims. None of those is a model card in the research sense: no training data description, no parameter count, no architecture, no eval results anyone can reproduce. 
+ What the single-pass claim rules out 
+ An autoregressive model predicts one token, conditions on it, predicts the next. That loop is where most of an LLM’s response time goes, and it is why an LLM answering “billing” still takes hundreds of milliseconds. 
+ Producing all outputs in one pass skips the loop. Sean Goedecke described the general technique the day after launch: “If you want fast, parallelized structured output against limited choices, you don’t strictly need to do autoregressive generation at all… Since LLMs ingest all input tokens in parallel, this is way faster than generating the entire structured output.” 
+ The cost of that design shows up in the weakness list. Goedecke again: “Not being able to use test-time compute at all is a big disadvantage.” A model with no decode loop has no way to think longer about a hard case, which is consistent with the jaggedness page listing multi-hop indirection, arithmetic and date comparison as weak areas. Those are the tasks that reward intermediate steps. 
+ Two more things are known indirectly from behaviour. Adding questions to a call adds little latency, which is consistent with questions being evaluated in parallel against one encoding of the state. And the jaggedness page says the model gives no guaranteed relationship between related questions, so a question and its negation can both come back at 0.7. Whatever produces the answers does not share a single joint distribution across questions. 
+ The community’s best guesses 
+ None of these is confirmed. Every one is an educated guess by people reading the same public pages you are, and the authors say so themselves. 
+
+ Hypothesis 
+ Proposed by 
+ Evidence it rests on 
+ Reproduction that tests it 
+
+ Encoder with a classification head 
+ NandhaKishorM, in Latent.Space’s roundup of six clones. @scaling01 on X, also via Latent.Space 
+ Jev’s interface reads the state once and returns a distribution over caller-supplied options, which is what an encoder classifier does 
+ Laya , 421M parameters: a fully fine-tuned ModernBERT-large encoder plus a two-layer decision head, trained with REINFORCE and a group-mean baseline per its model card (Latent.Space reported PPO) 
+
+ Masked diffusion 
+ vllm-project, and JoshuaSP 
+ “Generates all outputs in a single query” reads most literally as all-positions-at-once generation 
+ DiffusionGemmaJev, reported as “pretty close on benchmarks”, and open-jev on DiffusionGemma 
+
+ An adapter or readout head on an open decoder LLM 
+ @justALEXWORTEGA, madiator, jaredpalmer. Matches TechCrunch’s line that “outside observers suspect it is built on top of an open-weight LLM” 
+ Small heads on frozen open models reproduce the typed output cheaply, which the authors read as evidence the interface is not the hard part 
+ An MLP head on a frozen Qwen 4B , Bespoke Nimble (LoRA on Qwen3.5-9B), Kev-0.5B (LoRA plus readout head on Qwen2.5-0.5B), SemIf/OpenJev (three-class NLI off the final token of Qwen3.5 4B and 35B) 
+
+ One-pass option scoring over a small model 
+ suriyaG, daseinlabs, vinnylarouge 
+ Adding questions to a call costs little extra latency, consistent with parallel scoring against one encoding of the state 
+ Jevlike , an option-attention model with 40K byte embeddings, and open-jev with Gemma 3 4B 
+
+ A non-autoregressive decision model built a year earlier by an outsider 
+ nandakishor_ml of Convai Innovations, on Hacker News 
+ arXiv 2503.23303 and 2510.01237, the hallunox package, a Laya repository and a HuggingFace model 
+ The sales-conversion model . Commenters on the thread flagged that the training code takes “outcome” as a model input, which would leak the target and invalidate the reported results 
+
+ The reproductions are evidence about the interface, not about Jev. openjev by TheoLeeCJ passed 880 stars within days, phyrex posted Mini-Jev on top of a frozen local LLM, and rorshopping shipped jev-on-a-laptop . All of them recreate the API shape on other models. None recreates RLCD, because RLCD is undocumented. The classifier debate covers what a working clone does and does not prove. 
+ Cloudflare’s Clef , launched on 1 October 2026, is a published design rather than a guess. Its launch post says each model keeps a frozen Qwen backbone, makes one prefill pass, and scores every valid answer in parallel, with a routing head and low-rank adapters trained on top. That is close to the adapter-on-an-open-LLM row above. Cloudflare does not say Jev works the same way. 
+ Why the secrecy matters 
+ If the architecture is a standard encoder classification model, the interesting part has to be the training. TypeSafe’s public claim is exactly that: the differentiator is calibration, not capability. 
+ Which makes one omission awkward. A vendor selling calibrated probabilities as its core property has published no calibration number for any task family. Expected calibration error is a standard metric and cheap to report. Its absence as of 20 September 2026 means the central claim rests on the vendor’s word and on whatever you measure yourself. 
+ What to do with this 
+ Design against the behaviour rather than the architecture, because one is documented and the other is not. 
+ Treat the jaggedness page as the real specification. Keep counting, arithmetic and date arithmetic in your own code. Keep state short, since accuracy falls as unrelated content grows. Screen anything user-supplied before it reaches the state. 
+ Measure calibration on your data before you wire thresholds into anything expensive, and measure latency at your own state sizes rather than trusting the published range. Architecture speculation is entertaining and changes none of those steps. Building with System One models covers the design constraints that do. 
+ FAQ 
+ How many parameters does Jev have? 
+ TypeSafe has not said. No parameter count appears in the docs, the launch post or the press coverage. Pricing of $0.042 per million input tokens and a claimed 70ms to 500ms latency both suggest a small model, but neither is a measurement. The 421M figure in circulation belongs to Laya , a community reproduction, not to Jev. 
+ Is Jev a transformer? 
+ Unknown. TypeSafe has published no base architecture and has not released the weights. TechCrunch called Jev “a new transformer-based model” in its 18 September 2026 launch piece, and the same article says Almeida is tight-lipped about the architecture, so read that phrase as the reporter’s shorthand rather than a disclosure. 
+ Is Jev built on an open model like Qwen or Gemma? 
+ Not confirmed. TechCrunch reported that outside observers suspect Jev is built on top of an open-weight LLM, which is a suspicion rather than a disclosure. Several reproductions do exactly that, including LoRA adapters and readout heads on Qwen2.5-0.5B, Qwen3.5-9B and a frozen Qwen 4B, and none of them proves anything about Jev. 
+ Does Jev have a model card? 
+ Not in the usual sense. TypeSafe publishes a models page with pricing and limits, plus a jaggedness page listing nine known failure modes for version 1.13. Neither gives training data, parameter count, architecture or evaluation results, which is what a model card normally carries. 
+ Is Jev a diffusion model? 
+ Nobody outside TypeSafe knows. Diffusion is one of three community hypotheses, alongside an encoder with a classification head and a head bolted onto an existing decoder LLM. The vllm-project’s DiffusionGemmaJev and JoshuaSP’s open-jev both build typed decisions on DiffusionGemma, and both test the idea rather than confirm it. 
+ Can I run Jev’s architecture myself? 
+ Not Jev’s, since it is unpublished. Several community projects reproduce the API shape on open models, including openjev, open-jev and jev-on-a-laptop. They recreate typed one-pass option scoring and none of them replicate RLCD, which has no published paper, dataset or method. 
+ Terms on this page Jev Non-autoregressive RLCD Typed output Calibrated Probability Jaggedness Updated 2 Oct 2026 On this page What TypeSafe has said about Jev’s architecture How many parameters does Jev have? Is Jev a transformer? Encoder, decoder or diffusion? Is there a Jev paper or arXiv preprint? What the single-pass claim rules out The community’s best guesses Why the secrecy matters What to do with this FAQ How many parameters does Jev have? Is Jev a transformer? Is Jev built on an open model like Qwen or Gemma? Does Jev have a model card? Is Jev a diffusion model? Can I run Jev’s architecture myself? Sources 01 Introducing System One Models & Jev typesafe.ai 02 Models (TypeSafe docs) docs.typesafe.ai 03 Jev 1.13 jaggedness (TypeSafe docs) docs.typesafe.ai 04 A new kind of AI model from a ChatGPT inventor is thrilling developers (TechCrunch) techcrunch.com 05 AINews: here are 6 clones of Jev (Latent.Space) latent.space 06 I literally built the Jev architecture one year back (Hacker News) news.ycombinator.com 07 Jev means structured output is interesting again seangoedecke.com 08 [AINews] Jev: a System One Model that only decides/classifies/routes/scores latent.space Related guides What is Jev AI? TypeSafe's decision model explained Jev is TypeSafe AI's decision model. It answers typed questions about text with calibrated probabilities, and it is not an LLM, because it writes nothing. RLCD explained: Reinforcement Learning for Calibrated Decisions RLCD is TypeSafe's training method for Jev. What Reinforcement Learning for Calibrated Decisions means, how it differs from RLHF and RLVR, and what is not public. Is Jev just a zero-shot classifier? Engineers called Jev a zero-shot classifier within hours of launch. What the comparison gets right, what it misses, and what is actually new. System One models vs LLMs System One models return typed decisions; LLMs return text. A side-by-side on output, latency, cost, hallucination and when each one wins. System One Models The independent hub for System One AI models. Browse Models Use cases Examples Recipes Guides Integrations Glossary Compare Site About Submit an example Sponsor Privacy Sitemap llms.txt Elsewhere TypeSafe docs Jev launch post systemonemodels.org is an independent site. Not affiliated with TypeSafe AI or any model vendor. Model names are trademarks of their owners. © 2026 systemonemodels.org

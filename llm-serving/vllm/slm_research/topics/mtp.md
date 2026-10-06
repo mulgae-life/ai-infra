@@ -2,7 +2,7 @@
 
 > 조사일: 2026-05-12
 > 대상: 두 신규 오픈웨이트 모델 패밀리(Gemma 4, Qwen 3.6)의 MTP 도입 형태와 **vLLM 서빙** 차이
-> 관련 문서: [gemma4.md](gemma4.md) · [qwen36.md](qwen36.md) · [qwen35.md](qwen35.md) · [comparison.md](comparison.md)
+> 관련 문서: [gemma4.md](../models/gemma4.md) · [qwen3.6.md](../models/qwen3.6.md) · [qwen3.5.md](../models/qwen3.5.md) · [gemma4-vs-qwen.md](gemma4-vs-qwen.md)
 
 ---
 
@@ -95,7 +95,7 @@ vllm serve Qwen/Qwen3.6-27B \
 
 ### 2.5 실측 — Qwen3.5-27B / 8× B200 (참고치)
 
-> 출처: qwen35.md §7.3 (Google Cloud GKE 측정). 아키텍처 동일 계열, vLLM 동일 method `mtp` / `qwen3_next_mtp`.
+> 출처: qwen3.5.md §7.3 (Google Cloud GKE 측정). 아키텍처 동일 계열, vLLM 동일 method `mtp` / `qwen3_next_mtp`.
 
 - MTP-1 활성화 시 decode step당 **~1.9 토큰** 생성 (acceptance rate **~90%**)
 - 단일 노드 최대 throughput: **96,023 tokens/s**
@@ -298,7 +298,7 @@ vllm serve google/gemma-4-31B-it \
 - [#39323 — FA3 backend 회귀 (Open, nightly 수정)](https://github.com/vllm-project/vllm/issues/39323)
 
 ### 내부 문서
-- [gemma4.md](gemma4.md) — Gemma 4 본체 스펙 / 벤치
-- [qwen36.md](qwen36.md) — Qwen 3.6-35B-A3B 본체 스펙
-- [qwen35.md](qwen35.md) §7.3 — Qwen3.5-27B B200 MTP 실측 (96k tok/s)
-- [comparison.md](comparison.md) §3.3 — ⚠ 2026-05-05 이전 작성으로 "Gemma 4 MTP 미지원" 표기가 outdated
+- [gemma4.md](../models/gemma4.md) — Gemma 4 본체 스펙 / 벤치
+- [qwen3.6.md](../models/qwen3.6.md) — Qwen 3.6-35B-A3B 본체 스펙
+- [qwen3.5.md](../models/qwen3.5.md) §7.3 — Qwen3.5-27B B200 MTP 실측 (96k tok/s)
+- [gemma4-vs-qwen.md](gemma4-vs-qwen.md) §3.3 — ⚠ 2026-05-05 이전 작성으로 "Gemma 4 MTP 미지원" 표기가 outdated

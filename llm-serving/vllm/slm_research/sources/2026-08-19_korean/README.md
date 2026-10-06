@@ -1,6 +1,6 @@
 # 한국어 능력 조사 원본 자료 (2026-08-19)
 
-[`korean.md`](../../korean.md)의 근거 자료다. 문서에 인용한 수치·증언은 전부 여기 있는 원본에서 나왔고, 나중에 재조사 없이 다시 확인하거나 다른 모델로 갱신할 때 쓰라고 남긴다.
+[`korean-ability.md`](../../topics/korean-ability.md)의 근거 자료다. 문서에 인용한 수치·증언은 전부 여기 있는 원본에서 나왔고, 나중에 재조사 없이 다시 확인하거나 다른 모델로 갱신할 때 쓰라고 남긴다.
 
 조사 대상은 Gemma 4 26B-A4B, Gemma 4 31B, Qwen3.8-27B 세 모델의 한국어 능력이다.
 
@@ -8,14 +8,14 @@
 
 | 경로 | 내용 |
 |------|------|
-| `cards/` | HuggingFace 모델카드 로컬 사본 |
-| `bench/` | 서드파티 벤치마크 원본 |
+| `model-cards/` | HuggingFace 모델카드 로컬 사본 |
+| `benchmarks/` | 서드파티 벤치마크 원본 |
 | `papers/` | arXiv 논문 전문 (텍스트 추출본) |
 | `community/` | 커뮤니티·블로그 글 원문 |
-| `probe/` | Qwen3.8 라이브 프로브 스크립트와 실측 기록 |
+| `probes/` | Qwen3.8 라이브 프로브 스크립트와 실측 기록 |
 | `collect/` | 수집에 쓴 스크립트 |
 
-## cards/
+## model-cards/
 
 수집 당시의 모델카드 사본이다. 카드는 갱신되므로 인용 시점을 고정하려고 남긴다.
 
@@ -24,9 +24,9 @@
 | `hf_Qwen_Qwen3.8-27B.md` | Qwen3.8-27B 모델카드. 텍스트·비전 벤치마크 표, 아키텍처 구성, `reasoning_effort`·`preserve_thinking` 설명, YaRN 설정이 들어 있다 |
 | `hf_google_gemma-4-31b-it.md` | Gemma 4 31B 모델카드. 벤치마크 표에 31B·26B-A4B·12B·E4B·E2B와 Gemma 3 27B가 한 표로 실려 있어 26B 수치의 출처이기도 하다 |
 
-두 카드를 나란히 읽은 결과는 [`qwen38.md`](../../qwen38.md) 2.3절에 정리했다. 같은 이름으로 겹치는 벤치마크는 GPQA Diamond, LiveCodeBench v6, HLE 세 개뿐이다.
+두 카드를 나란히 읽은 결과는 [`qwen3.8.md`](../../models/qwen3.8.md) 2.3절에 정리했다. 같은 이름으로 겹치는 벤치마크는 GPQA Diamond, LiveCodeBench v6, HLE 세 개뿐이다.
 
-## bench/
+## benchmarks/
 
 | 파일 | 설명 |
 |------|------|
@@ -67,7 +67,7 @@ HTML 원본은 용량 때문에 넣지 않았다. arXiv ID로 다시 받으면 �
 - `reddit/` — 레딧 스레드 본문
 - `dcinside/` — 파싱된 본문 텍스트와 원본 HTML 압축본 두 개. `raw_html.tar.gz`는 개별 글, `raw_gallery_dump.tar.gz`는 갤러리 단위 수집분이다. 본문 추출은 `collect/parse_dc.py`로 재현한다
 
-## probe/
+## probes/
 
 Qwen3.8만 게이트웨이 5015에서 실제로 돌려본 기록이다. Gemma 두 모델은 GPU를 동시에 못 올려 실측하지 않았다.
 

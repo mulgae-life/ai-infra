@@ -1,0 +1,339 @@
+# TypeSafe Jev 조사 — 판단 전용 모델과 공개 재현 생태계
+
+> 조사일: 2026-10-06 | Jev 출시: 2026-09-15 (`jev-1.13.0`)
+> 글을 생성하지 않고, 정해진 형식의 질문에 선택지별 확률로만 답하는 "판단 전용" 모델. API로만 제공되며, 허깅페이스의 JEV 계열 모델은 전부 TypeSafe와 무관한 제3자의 재현작이다.
+>
+> 원본 자료는 [sources/2026-10-06_jev/](../sources/2026-10-06_jev/README.md). Qwen3.8-27B 자체는 [qwen3.8.md](../models/qwen3.8.md), 한국어 능력 일반은 [korean-ability.md](korean-ability.md) 참조.
+
+---
+
+## 📌 TL;DR
+
+1. **Jev는 오픈소스가 아니다.** 가중치·논문·자체 설치 옵션이 모두 없고, GitHub에 공개된 것은 SDK(MIT)와 예제·평가 코드 같은 주변 도구뿐이다.
+2. **아키텍처도 공개되지 않았다.** 공개 모델들은 공식 입출력 형식을 따라 하되, 내부 구조는 API 블랙박스 실험으로 추정하거나 Jev 출력을 모방해 만들었다.
+3. **속도의 대부분은 "글을 쓰지 않는 형식"에서 나온다.** 디코딩과 사고 토큰 없이 프리필 한 번으로 끝난다. 같은 형식을 쓰면 공개 27B 모델도 GPU 한 장에서 중앙값 100ms대가 나온다.
+4. **성능 상위권은 Qwen3.8-27B와 Gemma 4 기반이다.** 추가 학습 없이 원본 Gemma-4-31B-it와 Qwen3.8-27B만으로 Jev와 1~2점 차이다. 둘 다 이미 받아 둔 모델이다.
+5. **한국어 전용 모델은 초기 단계다.** 4종 모두 다운로드가 0~48건이고 평가도 제작자 자체 측정이다.
+6. **운영계는 폐쇄망이라 Jev API는 처음부터 쓸 수 없다.** 검토 대상은 공개 모델뿐이다.
+
+---
+
+## 1. Jev 개요 — 공식 문서
+
+TypeSafe는 Jev를 "System One 모델"이라 부르고, 기존 LLM은 느리게 숙고하는 System Two로 구분한다. 판단 대상 텍스트(state)와 형식이 정해진 질문을 보내면 문장 대신 선택지별 확률과 신뢰도를 돌려준다.
+
+| 항목 | 값 |
+|------|-----|
+| 출시 | 2026-09-15, 얼리 액세스 |
+| 모델 ID | `jev-1.13.0` (별칭 `jev-latest`, `jev-preview` 모두 같은 모델) |
+| 공개 범위 | API 전용. 가중치 비공개, 자체 설치 옵션 없음. GitHub에는 Python·JavaScript SDK(MIT)와 문서 예제, 평가 재현 코드, 연동 도구만 있다 |
+| 질문 유형 | `Choice`(선택지 하나, 최대 255개), `Score`(등급 평가), `Noul`(예/아니오 확률) |
+| 가격 | 입력 100만 토큰당 $0.042, 출력 무료 |
+| 속도 제한 | 초당 10만 토큰, 초당 80요청 (수요에 따라 수시 조정 중이라고 명시) |
+| 컨텍스트 | 요청당 64k 토큰, 그중 state와 가장 긴 질문의 합은 32k 이하 |
+| 입력 | 텍스트만. 이미지·음성·영상 불가 |
+| 언어 | 영어가 주력. "한중일 문자를 포함한 다른 언어도 처리하지만 성능이 같지 않다"고 명시 |
+| 맞춤 학습 | 불가. 모든 계정이 같은 가중치를 쓰고 도메인 맞춤은 요청 문구로만 한다 |
+| 데이터 | 고객 요청으로 학습하지 않음. 기업 고객에 무보존(ZDR) 옵션 |
+
+### 공식이 밝힌 약점
+
+공식 문서의 「Jev 1.13 jaggedness」(2026-10-02 검토판)가 실패 유형 9가지를 직접 적었다. 문자를 곧이곧대로 읽고, 숫자 계산·개수 세기·날짜 비교에 약하며, 여러 단계를 거치는 추론과 관련 없는 내용이 많은 긴 입력에서 정확도가 떨어진다. 프롬프트 주입 같은 적대적 입력과 서로 모순된 지시에 흔들리고, `Choice` 선택지 순서에 따라 답이 바뀌며 첫 번째 선택지 쪽으로 기운다. 글 생성은 아예 학습하지 않았다.
+
+권장 사용법도 같은 문서에 있다. 계산은 코드에 맡기고, 모델에는 좁은 판단만 묻고, 큰 판단은 작은 질문 여러 개로 쪼개 코드에서 합치라고 한다.
+
+---
+
+## 2. 아키텍처 — 공개된 것과 추정된 것
+
+### 2.1 TypeSafe가 공개한 범위
+
+구조에 관한 공식 설명은 출시 글의 한 문장이 거의 전부다.
+
+> "We built a new stack entirely focused on automation: with a new model architecture, parallel sampler for maximum efficiency, and training method we call Reinforcement Learning for Calibrated Decisions (RLCD)."
+
+문서는 여기에 두 가지를 더한다. 하나는 "state를 한 번 읽고 모든 질문을 그 위에서 병렬로 평가한다"는 것이고, 다른 하나는 RLCD가 글 대신 결정과 보정된 확률을 내도록 학습한다는 것이다. 바탕 모델, 크기, 손실 함수, 학습 데이터는 공개하지 않았다.
+
+**논문도 없다.** arXiv에서 "Jev TypeSafe"로 검색되는 논문 13편(2026-09-23~10-05)은 모두 외부 연구자의 평가·응용 연구이고 TypeSafe 소속 저자는 없다. 고객 약관(MCA) 제한 조항 (c)는 서비스의 구조나 알고리즘을 역공학으로 알아내려는 시도를 금지한다.
+
+### 2.2 블랙박스 역추적 — Archer Hume, 2026-09-17
+
+「Jev's Architecture Unmasked」는 API를 수백~수천 번 호출하는 실험으로 구조를 추정한 글이다. 글쓴이가 관찰한 것과 추정한 것을 나눠 적었다. Kev가 이 글을 설계 근거로 삼았다.
+
+| 구분 | 내용 | 근거 |
+|------|------|------|
+| 관찰 | 디코딩 없이 프리필에서 끝난다 | 출력 토큰 과금이 답이나 지연과 무관 |
+| 관찰 | state는 한 번 처리하고, 질문은 서로 볼 수 없는 분기로 병렬 처리한다 | 형제 질문에 넣은 비밀 코드를 맞힐 확률 0.00, state에 넣으면 0.90~0.92 |
+| 관찰 | 같은 질문의 선택지끼리는 서로 영향을 준다 | 무관한 선택지 하나를 더하면 기존 두 선택지의 로그 오즈가 +0.38에서 +0.11로 바뀜 |
+| 관찰 | 토크나이저가 OpenAI o200k와 비슷하지만 같지는 않다 | 공개 토크나이저 192종과 대조 |
+| 관찰 | 분기당 약 32,768 토큰, 요청당 약 65,536 토큰 한도 | 공식 문서의 32k·64k와 일치 |
+| 추정 | 희소 MoE 백본 | 속도에서 역산. 글쓴이 스스로 "가장 불확실한 부분", "측정이 아니라 추론"이라고 적음 |
+| 추정 | 읽기 헤드의 형태 | 두 가지 방식이 모두 증거와 맞음 |
+
+확산(Diffusion) 모델 여부에 대해서는 "실험 어디에도 반복 복원 과정이 필요하지 않다"고 결론냈다. 확산을 배제한 것이 아니라 필요 없다는 뜻이다.
+
+### 2.3 경쟁 가설과 재현 결과
+
+커뮤니티의 구조 가설은 세 갈래이고, 각 가설을 구현한 공개 모델이 순위표(4장)에 올라 있다. 분류와 모델 수는 순위표 데이터의 `meta.technique` 필드를 따랐다.
+
+| 가설 | 대표 구현 | 순위표 모델 수 | 최고점 |
+|------|-----------|:---:|:---:|
+| 인코더 + 분류 헤드 | Laya, Lavoir (ModernBERT·mmBERT 0.1~0.4B) | 5 | 8.69 (Lavoir) |
+| 마스크 확산 | DiffusionGemma-26B-A4B 기반 (JoshuaSP open-jev, djev) | 4 | 49.47 |
+| 디코더 LLM + 확률 읽기 | Kev, decider, Jebadiah, pplx-decider, simple-jev | 55 | 57.44 (Surogate Rune) |
+
+이 밖에 개체명 인식 모델을 판단용으로 바꾼 GLiNER 계열 6개가 따로 분류돼 있다(최고 11.21).
+
+점수로는 디코더 LLM에서 확률을 읽는 방식이 Jev(57.91)에 가장 가깝다. 다만 이것이 Jev 내부 구조를 증명하지는 않는다. 바탕 모델 크기가 가설마다 달라서, 점수 차이에는 구조 차이와 모델 체급 차이가 섞여 있다.
+
+참고로 TypeSafe 공식 GitHub 조직에는 LLaDA(확산 언어모델)와 vLLM 포크가 있다. 연구 흔적일 뿐 Jev 구조의 근거로 보기는 어렵다.
+
+### 2.4 정리 — 공개 모델은 무엇을 따라 했나
+
+공개 모델들은 세 경로로 만들어졌다.
+
+1. **공식 인터페이스 복제**: 질문 유형과 API 형식은 문서로 공개돼 있어 그대로 따라 한다. Kev 서버에는 TypeSafe 공식 SDK가 수정 없이 붙는다.
+2. **블랙박스 역추적에 기반한 구조 추정**: 2.2절 같은 실험으로 "프리필 한 번, 질문별 병렬 분기, 확률 읽기"라는 큰 틀을 잡았다.
+3. **출력 모방**: Jev API의 출력 분포를 대량으로 받아 학습시켰다(JEV-27B 계열, 6장 참고).
+
+결국 Jev의 내부 구조를 따라 한 것이 아니라, 같은 입출력 계약을 각자의 방식으로 구현한 것이다. 내부 구조는 아직 아무도 확인하지 못했다.
+
+---
+
+## 3. 속도
+
+### 3.1 왜 빠른가
+
+| | 생성형 LLM | Jev (System One) |
+|------|------|------|
+| 출력 | 토큰을 하나씩 생성 (디코딩) | 프리필 한 번 뒤 선택지 확률을 바로 읽음 |
+| 사고 토큰 | 기본 추론 설정이면 수백~수천 토큰 | 없음 |
+| 질문 여러 개 | 하나씩 보내거나 긴 출력 하나로 받음 | state를 한 번 읽고 질문을 병렬 처리 |
+| 출력 과금 | 입력보다 비쌈 | 무료 |
+
+공식 쿡북에 따르면 질문 13개를 따로 보내지 않고 한 요청에 묶으면 10.0배 빠르고 12.2배 싸다. 역추적 글은 질문 1,500개가 한 요청에서 약 600ms, 약 3만 토큰 입력이 약 160ms에 처리됐다고 측정했다.
+
+### 3.2 TypeSafe 공식 평가 — 생성형 LLM과의 비교
+
+출처는 evals.typesafe.ai의 워크플로 평가 4종(보안 사고 분류, 에이전트 실행 기록 검토, 송장 처리, 고객 상담 분류)이다. 원본 HTML과 대조해 확인했다.
+
+**4종 평균** (케이스당)
+
+| 모델 | 정확도 | 비용 | 시간 |
+|------|:---:|:---:|:---:|
+| **Jev** | 67.8% | $0.0004 | **0.4s** |
+| GPT-5.6 Terra | 67.9% | $0.0304 | 10.1s |
+| luna (OpenAI) | 66.8% | $0.0033 | 12.9s |
+| Haiku 4.5 | 53.6% | $0.0195 | 12.5s |
+| sol (OpenAI) | 74.1% | $0.0836 | 23.3s |
+| Opus 5 | 73.1% | $0.1761 | 37.8s |
+| DeepSeek V4 Flash | 64.4% | $0.0059 | 51.9s |
+| Sonnet 5 | 67.8% | $0.1174 | 78.1s |
+| DeepSeek V4 Pro | 65.5% | $0.0413 | 86.5s |
+
+**워크플로별** (Jev, 가장 빠른 LLM, 가장 정확한 LLM)
+
+| 워크플로 | Jev | 가장 빠른 LLM | 가장 정확한 LLM |
+|------|:---:|:---:|:---:|
+| 보안 사고 분류 | 0.3s / 61.7% | Haiku 4.5 3.4s / 58.8% | Opus 5 15.1s / 66.2% |
+| 에이전트 실행 기록 검토 | 0.5s / 71.6% | Haiku 4.5 7.1s / 57.2% | sol 40.3s / 76.6% |
+| 송장 처리 | 0.5s / 61.8% | Terra 17.3s / 74.7% | sol 34.3s / 79.1% |
+| 고객 상담 분류 | 0.4s / 76.0% | Terra 6.0s / 72.7% | sol 10.1s / 78.3% |
+
+읽을 때 주의할 점:
+
+- **정확도는 사람이 매긴 정답이 아니다.** GPT-6 Astra와 Claude Fable 5.1이 최고 사고 수준으로 낸 답의 평균과 얼마나 일치하는지를 잰다. 다른 LLM은 각 제공사의 기본 추론 설정으로 돌렸다.
+- **표의 LLM 수치도 Jev와 같은 워크플로 방식으로 잰 값이다.** 업무 정책을 작은 질문으로 나눠 묻고 답을 코드로 합치는 방식이다. 같은 정책을 프롬프트 하나로 통째로 묻는 방식도 함께 측정했고, 4종 평균으로는 모든 모델이 워크플로 방식에서 더 정확하고 싸고 빨랐다.
+- **"193.6배 빠르다"는 그 기준 모델들(Astra, Fable 고사고)과 비교한 수치다.** 표에 있는 모델과 비교하면, 정확도가 비슷한 Terra보다 약 25배, 가장 정확한 sol보다 약 58배 빠르다. TypeSafe도 193.6배가 "실제 이득의 상단"이라고 적었다.
+- **속도와 정확도를 맞바꾼 구간이 있다.** 송장 처리에서 Jev는 61.8%로, 금액 계산이 섞인 업무에서 약하다는 공식 약점과 맞아떨어진다.
+- 측정은 TypeSafe 서비스가 있는 미국 서부에서 노트북으로 했다고 블로그에 적혀 있다.
+
+### 3.3 독립 측정 — Jev Decision Index 지연 시간
+
+순위표 운영자가 같은 조건으로 잰 지연 시간이다. 표본 750행을 한 번에 하나씩 보내고, 요청이 들어가서 모든 답이 나올 때까지의 시간을 잰다. 공개 모델은 RTX PRO 6000 한 장에서 각 모델이 지원하는 가장 빠른 방식으로 돌렸다. Jev는 운영자 연구실에서 HTTPS로 호출해 네트워크 왕복이 포함된다.
+
+| 모델 | 바탕 | 점수 | p50 (ms) | p95 (ms) | 실행 방식 |
+|------|------|:---:|:---:|:---:|------|
+| **Jev 1.13** | 비공개 | 57.91 | 524.1 | 536.0 | 호스팅 API, 네트워크 포함 |
+| Surogate Rune 26B-A4B v3 | Gemma-4-26B-A4B | 57.44 | 120.5 | 682.8 | 제작자 서버 |
+| Decider chat | Gemma-4-31B-it 원본 | 57.33 | 108.5 | 1,114.7 | 제작자 서버 |
+| pplx-decider-v1-27b | Qwen3.8-27B | 56.40 | 101.4 | 1,052.5 | 프로세스 내 bf16 |
+| simple-jev | Qwen3.8-27B 원본 | 55.74 | 373.0 | 2,796.8 | HF Transformers 서버 |
+| Jebadiah 27B | Qwen3.8-27B | 54.67 | 110.4 | 591.1 | 제작자 제출값 |
+| Decider chat | Qwen3.6-27B 원본 | 51.35 | 83.6 | 965.6 | 제작자 서버 |
+| Winnow-12B | Gemma-4-12B | 50.02 | 72.5 | 356.2 | llama.cpp Q8 |
+| Decider 35B-A3B | Qwen3.5-35B-A3B | 47.11 | 101.4 | 210.9 | vLLM 0.29, NVFP4 |
+| Decider 4B | Qwen3.5-4B | 40.70 | 12.6 | 188.5 | 제작자 서버, FP8 |
+| Kev 4B | Qwen3.5-4B | 34.64 | 52.1 | 141.1 | Kev 서버 |
+| Decider 2B | Qwen3.5-2B | 28.97 | 8.1 | 134.9 | 제작자 서버, FP8 |
+| Laya | ModernBERT 0.4B | 6.04 | 5.8 | 222.5 | 전용 커널 + CUDA 그래프 |
+
+읽는 법:
+
+- **중앙값은 공개 모델이 빠르다.** 27B급이 GPU 한 장에서 약 100ms로 Jev의 524ms보다 낮다. 다만 Jev 쪽에는 네트워크 왕복이 들어 있어 같은 조건이 아니다.
+- **꼬리 지연은 Jev가 앞선다.** 공개 27B급은 긴 입력이 몰린 p95에서 0.6~2.8초로 뛰지만, Jev는 p95가 536ms로 중앙값과 거의 같다. 긴 입력에서도 처리 시간이 늘지 않는다는 뜻이고, 역추적 글의 "3만 토큰 160ms" 관찰과 맞는다.
+- **서빙 엔진 차이가 크다.** 같은 Qwen3.8-27B 계열이라도 HF Transformers 서버(simple-jev)는 p50 373ms이고, 전용 서버를 쓰는 다른 27B는 약 100ms다.
+- **작은 모델일수록 빠르지만 점수가 떨어진다.** 2B는 8ms이지만 점수가 29점이다.
+
+### 3.4 그 밖의 측정
+
+| 출처 | 대상 | 수치 | 비고 |
+|------|------|------|------|
+| JEV-27B 카드 | JEV-27B, B200 1장 | 단건 중앙값 137ms, 128건 묶음 시 건당 4.2ms, 초당 약 130건 | 네트워크 미포함 |
+| JEV-27B 카드 | JEV-9B, B200 1장 | 단건 약 90ms, 묶음 시 건당 2.5ms | |
+| JEV-27B 카드 | Jev API (제3자 측정 인용) | 평균 238ms, 중앙값 291~301ms | 인용된 원 저장소 README에서는 지연 수치를 찾지 못했다 |
+| Kev README | Kev-4B | 질문 6개에 모델 시간 L40S 41.5ms, H100 18.1ms. H100 컨테이너 하나가 초당 약 101요청 | **L40S는 우리 GPU** |
+| Laya 카드 | Laya | GPU 32.8ms, CPU 193~464ms | |
+| ThakiCloud 카드 | 한국어 문항, p50 | Jev 771.9ms (무료 등급 제한 상태), Qwen3.8-27B NVFP4 JSON 생성 522.7ms, Laya 다국어판 CPU 691ms | 제작자가 지연 비교로 읽지 말라고 적음 |
+
+### 3.5 정리
+
+Jev 속도의 대부분은 형식에서 나온다. 디코딩과 사고 토큰을 없애고 질문을 병렬로 처리하면, 공개 모델도 같은 수준의 응답 시간이 나온다. "200배"는 기본 추론 설정의 대형 LLM이 글을 쓰게 한 경우와 비교한 수치다. 같은 형식끼리 비교하면 Jev가 확실히 앞서는 곳은 긴 입력의 꼬리 지연과 운영 규모 정도다.
+
+우리 환경(L40S 2장, FP8, TP2)에서 잰 수치는 아직 없다.
+
+---
+
+## 4. 공개 재현 모델
+
+### 4.1 세 갈래
+
+| 갈래 | 내용 | 대표 |
+|------|------|------|
+| 대형 모델 + 판단 어댑터 | 원래 모델은 그대로 두고 작은 판단 블록만 더한다. 엔진 하나로 일반 생성과 판단을 함께 서빙한다 | JEV-27B(-VL), JEV-Gemma4-26B-A4B |
+| 학습 없이 읽는 방식만 변경 | 기존 모델에 답을 생성시키지 않고 선택지 토큰 확률을 읽는다. 선택지 수에 맞춘 온도 보정만 더한다 | Decider chat, simple-jev |
+| 소형 전용 모델 | 0.3B~9B 모델을 판단 전용으로 학습한다 | Kev, decider, Laya |
+
+### 4.2 주요 모델
+
+| 모델 | 바탕 | 방식 | 학습 데이터 | 점수 | 인기 |
+|------|------|------|------|:---:|------|
+| autotrust/JEV-27B(-VL) | Qwen3.8-27B BF16 원본 | LoRA 108.9M + 24슬롯 헤드 | **Jev 1.13 출력 분포 약 50만 행**(OpenRouter 경유) + Open-Jev 정답 데이터 | 미제출. 자체 측정 6종 평균 84.07 (Jev 83.85) | VL 30일 다운로드 128만 |
+| autotrust/JEV-Gemma4-26B-A4B | gemma-4-26B-A4B-it | LoRA + 헤드 | 교사 분포 + 정답 데이터 (교사 명시 없음) | 자체 실행 58.05 | |
+| Decider chat (Mapika) | Gemma-4-31B-it 원본 | 학습 없음 | — | 57.33 | 깃허브 별 1,085 |
+| simple-jev (featherless) | Qwen3.8-27B 원본 | 학습 없음 | — | 55.74 | 별 590 |
+| pplx-decider-v1-27b (perplexity-ai) | Qwen3.8-27B | 전체 미세조정 | 확인 안 함 | 56.40 | |
+| Kev (jaredpalmer) | Qwen3.5 0.8~9B, Qwen3.8-27B | LoRA + 포인터 헤드 | 공개 데이터 + 생성한 정책 예시 | 4B 34.64 | 별 8,523 |
+| decider (Mapika) | Qwen3.5 2B·4B·35B-A3B | 학습 | 공개 데이터 + 로컬 Qwen3.5-27B 교사. "Jev에서 증류한 것 없음" 명시 | 4B 40.70 | |
+| Laya | ModernBERT-large, mmBERT | 인코더 | 자체 RLCD | 6.04 | 별 31,005, 좋아요 5,247 |
+
+점수는 Jev Decision Index 0.2.1(2026-09-28 생성)의 대표 점수(`balanced_skill`)다. 인기 열은 2026-10-06에 조회한 GitHub 별 수와 허깅페이스 30일 다운로드·좋아요 수다. 5개 영역 38개 벤치마크에서 무작위 수준을 0점, 만점을 100점으로 맞춘 점수이고 순위표에는 70개 모델이 올라 있다. decider 제작자는 "이 순위표에서는 바탕 모델이 점수 대부분을 결정한다"고 적었다.
+
+Laya는 인기는 가장 높지만 순위표 점수가 낮고 한국어에도 약하다(5장). 응답이 빠르고 CPU에서도 돈다는 점이 인기의 이유로 보인다.
+
+Kev README는 자동화 비율도 비교한다. 오류 5% 한도에서 Kev 4B·9B·27B는 처음 보는 출처 판단의 52~69%를 자동 처리하고, Jev는 70%다.
+
+---
+
+## 5. 한국어
+
+| 모델 | 구조 | 학습 데이터 | 성능 (제작자 측정) | 다운로드 |
+|------|------|------|------|:---:|
+| ThakiCloud/kd-4b-ko-v0 | Qwen3.5-4B-Base + LoRA (Kev 레시피) | KoBEST, KLUE, AI Hub 법률·행정 문서 | 법령 문서 봉인 평가셋 0.929 (학습 전 0.801) | 0 |
+| corners-ai/CoCo-Decision-4B-Ko | Qwen3.5-4B + LoRA | 한·영 공개 데이터 + 코드로 만든 합성 데이터 | MASSIVE 한국어 의도 분류 0.915 (Jev 0.831), JevBench 공개판 0.870 (Jev 0.853) | 35 |
+| 2nugu/laya-ko | Laya 다국어판(0.3B) 미세조정 | KLUE, AI Hub | KLUE 주제 분류 0.414→0.834, 관계 추출 0.136→0.705, 지식 문제(KMMLU) 0.298 | 0 |
+| NomaDamas/KoJev-v0 | SKT A.X 인코더 | 한국어 공개 데이터 12종 | KoBEST 거의 무작위. 제작자 스스로 "범용 한국어 Jev가 아니다" | 48 |
+
+### ThakiCloud의 비교 실험
+
+kd-4b-ko-v0 카드에는 같은 한국어 문항을 세 모델에 풀린 결과가 있다. Qwen3.8-27B는 학습 없이 JSON으로 답하게 한 경우다.
+
+| 평가셋 | Jev API | Qwen3.8-27B (학습 없음) | Laya 다국어판 |
+|------|:---:|:---:|:---:|
+| 한국어 정책 문구 판단 (124문항) | 0.933 | 0.871 | 0.476 |
+| KoBEST·KLUE를 판단 형식으로 바꾼 문제 | 0.818 (앞 1,999문항) | 0.895 (앞 600문항) | 0.460 |
+
+평가셋마다 문항 수가 다르고 한 번씩만 돌린 결과라 우열의 근거로는 부족하다.
+
+같은 카드의 기한 계산 문제 결과도 눈여겨볼 만하다. 시행령 기한 문제 591문항 중 4B 모델이 판단을 포기한 406문항에서, Qwen3.8-27B는 날짜와 일수만 뽑고 계산은 코드에 맡겨 99.3%를 맞혔다. 4B 모델 자체는 58.4%였다. Jev 공식 문서의 "계산은 코드에 맡기라"는 권고와 같은 결론이다.
+
+### 주의
+
+- 한국어 모델 넷 모두 실사용 검증이 사실상 없다.
+- ThakiCloud는 정답 라벨을 사람이 아니라 여러 LLM의 합의로 만들었다고 밝혔다.
+- CoCo는 JevBench에서 정확도는 Jev보다 높지만 보정 오차가 크다(ECE 0.070 대 0.040). 확률 임계값을 쓰려면 다시 보정해야 한다.
+
+---
+
+## 6. 도입 시 주의
+
+### 증류 출처 문제
+
+JEV-27B 계열은 Jev API 출력 분포 약 50만 행으로 학습했다(데이터셋 `SargeDev/jev-distill-corpus-v3`). TypeSafe 고객 약관 제한 조항 (b)는 다음을 금지한다.
+
+> "use the Services or any Output to perform model distillation, train a model to imitate the output of the Services, or develop (or to facilitate the development of) a similar or competing product or service"
+
+가중치 라이선스는 Apache-2.0이지만 학습 데이터 출처에 다툼의 여지가 있다. 회사 업무에 쓰려면 법무 확인이 필요하다.
+
+반대로 Kev와 decider는 Jev 출력을 쓰지 않았다고 밝혔고, 한국어 모델 넷도 공개 데이터를 바탕으로 했다. 학습 없이 읽는 방식에는 이 문제가 아예 없다.
+
+### 수치의 성격
+
+- 커뮤니티 순위표를 빼면 대부분 제작자 본인의 측정이다.
+- TypeSafe 공식 평가의 정확도는 사람 정답이 아니라 대형 LLM 두 개의 답과 일치하는 정도다.
+- 지연 시간은 네트워크 포함 여부, 엔진, GPU가 출처마다 달라 직접 비교하면 안 된다.
+
+---
+
+## 7. 우리 환경 적용 검토
+
+| 항목 | 현황 |
+|------|------|
+| Jev API | 운영계 폐쇄망이라 사용 불가 |
+| 바탕 모델 | 순위표 상위권의 바탕인 Qwen3.8-27B(FP8)를 5015에서 서빙 중이다. Gemma-4-31B-it와 26B-A4B도 받아 두었다 |
+| vLLM 기능 | 설치된 `0.20.2rc1.dev251`의 코드에서 확률 읽기에 필요한 기능을 확인했다. 허용 토큰 제한(`allowed_token_ids`, chat·completions 양쪽), 지정 토큰 로그 확률(`logprob_token_ids`), 로그 확률 모드(`logprobs_mode`), `lm_head` LoRA다. 실제 호출은 하지 않았다 |
+| JEV-27B | BF16 원본 백본(54GB)이 필요하다. 지금의 FP8 체크포인트에 그 어댑터를 얹는 경우는 제작자가 시험하지 않았다. 제작자는 2026년 9월 vLLM 개발판에서 시험했고, 6장의 출처 문제가 있다 |
+| 사고 모드 | 확률을 읽으려면 요청마다 사고 모드를 꺼야 한다. 생성으로 판단시키면 3.2절 LLM 쪽처럼 수 초 단위가 된다 |
+
+### 다음 단계 후보 (논의용)
+
+1. **지금 서빙 중인 Qwen3.8-27B로 실측 (추천)**: 실제 업무에 가까운 한국어 판단 문항 50~100개를 만들고, 선택지 확률을 읽는 방식으로 정확도·보정·지연을 잰다. 새 모델이나 GPU가 필요 없고 출처 문제도 없다. 3.5절에서 비어 있는 우리 환경 속도 수치도 이걸로 채운다.
+2. **소형 한국어 모델 비교**: CoCo-Decision-4B-Ko나 kd-4b-ko-v0을 같은 문항으로 비교한다. L40S 한 장이면 돌지만 어느 GPU를 쓸지 먼저 정해야 한다.
+3. **Gemma-4-31B-it 비교**: 순위표 2위 방식의 바탕이다. 다만 Qwen과 GPU를 나눠 쓰는 택일 구성이라 전환 비용이 있다.
+
+---
+
+## 8. 논의 기록
+
+| 날짜 | 질문 | 결론 |
+|------|------|------|
+| 2026-10-06 | Jev는 오픈소스인가, API 전용인가 | API 전용. 가중치·자체 설치 옵션 없음. 허깅페이스의 JEV 계열은 전부 제3자 재현작 (1장) |
+| 2026-10-06 | 속도 비교는 없나 | 공식 평가·순위표·모델카드 수치를 정리했다. 속도의 대부분은 형식에서 나오고, Jev가 확실히 앞서는 곳은 꼬리 지연이다. 우리 환경 수치는 없음 (3장) |
+| 2026-10-06 | 아키텍처를 공개해서 다들 따라 하는 것인가 | 공개하지 않았다. 공개 모델은 공식 입출력 형식 복제, 블랙박스 역추적, 출력 모방으로 만들어졌다 (2장) |
+
+---
+
+## Sources
+
+### 공식 1차 자료 (직접 fetch 검증)
+- [TypeSafe 블로그 — Introducing System One Models & Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
+- [TypeSafe 문서 — Models](https://docs.typesafe.ai/models)
+- [TypeSafe 문서 — Jev 1.13 jaggedness](https://docs.typesafe.ai/model-jaggedness/jev-1.13)
+- [TypeSafe 문서 — AI primer (RLCD)](https://docs.typesafe.ai/introduction/machine-learning-primer)
+- [TypeSafe 문서 전체 목차 (llms.txt)](https://docs.typesafe.ai/llms.txt)
+- [TypeSafe Master Customer Agreement](https://typesafe.ai/legal/mca)
+- [TypeSafe 워크플로 평가](https://evals.typesafe.ai) · [재현 코드](https://github.com/typesafe-ai/WorkflowEvals)
+- [TypeSafe GitHub 조직](https://github.com/typesafe-ai)
+
+### 모델카드·저장소 (원문 확인)
+- [autotrust/JEV-27B](https://huggingface.co/autotrust/JEV-27B) · [JEV-27B-VL](https://huggingface.co/autotrust/JEV-27B-VL) · [JEV-Gemma4-26B-A4B](https://huggingface.co/autotrust/JEV-Gemma4-26B-A4B)
+- [Mapika/decider](https://github.com/Mapika/decider)
+- [featherless-ai/simple-jev](https://github.com/featherless-ai/simple-jev)
+- [jaredpalmer/kev](https://github.com/jaredpalmer/kev)
+- [convaiinnovations/laya](https://huggingface.co/convaiinnovations/laya)
+- [ThakiCloud/kd-4b-ko-v0](https://huggingface.co/ThakiCloud/kd-4b-ko-v0)
+- [corners-ai/CoCo-Decision-4B-Ko](https://huggingface.co/corners-ai/CoCo-Decision-4B-Ko)
+- [2nugu/laya-ko](https://huggingface.co/2nugu/laya-ko)
+- [NomaDamas/KoJev-v0](https://huggingface.co/NomaDamas/KoJev-v0)
+
+### 커뮤니티 분석·순위표
+- [Jev Decision Index](https://huggingface.co/spaces/multimodalart/jev-decision-index) (데이터 `data/index.json`, `data/methodology.json`)
+- [Archer Hume — Jev's Architecture Unmasked](https://archerhume.com/posts/jevs-architecture-unmasked/)
+- [systemonemodels.org — Jev architecture](https://systemonemodels.org/guides/jev-architecture/)
+- [arXiv 검색 "Jev TypeSafe"](https://arxiv.org/search/?query=Jev+TypeSafe&searchtype=all) (13편, TypeSafe 소속 저자 없음)
+- ["오픈소스" 오기 사례 — promppy](https://www.promppy.com/item/1861210)
+
+### 내부 문서
+- [qwen3.8.md](../models/qwen3.8.md) — Qwen3.8-27B 조사
+- [korean-ability.md](korean-ability.md) — 한국어 능력 비교
+- [sources/2026-10-06_jev/](../sources/2026-10-06_jev/README.md) — 이 문서의 원본 자료

@@ -4,7 +4,7 @@
 > Qwen3.5 아키텍처를 그대로 물려받고 포스트 트레이닝만 갱신한 Dense 27B 비전-언어 모델.
 > 연구계 인스턴스(`instances/qwen.yaml`)가 Qwen3.6-27B-FP8에서 이 모델로 교체됐다.
 >
-> 한국어 능력은 [korean.md](korean.md), Gemma 4와의 운영 비교는 [comparison.md](comparison.md) 참조.
+> 한국어 능력은 [korean-ability.md](../topics/korean-ability.md), Gemma 4와의 운영 비교는 [gemma4-vs-qwen.md](../topics/gemma4-vs-qwen.md) 참조.
 
 ---
 
@@ -44,7 +44,7 @@
 
 바뀐 것은 채팅 템플릿이다. `chat_template.jinja`가 153줄에서 169줄로 늘었고 `reasoning_effort` 처리 구간이 새로 들어왔다(4장).
 
-> ⚠️ Qwen3.6에는 MoE 계열인 35B-A3B도 있었고 `comparison.md`의 벤치 표는 그쪽 기준이다. 27B 계열은 Dense라 활성 파라미터가 27B 전부이며, 디코드 비용 특성이 35B-A3B(활성 3B)와 전혀 다르다.
+> ⚠️ Qwen3.6에는 MoE 계열인 35B-A3B도 있었고 `gemma4-vs-qwen.md`의 벤치 표는 그쪽 기준이다. 27B 계열은 Dense라 활성 파라미터가 27B 전부이며, 디코드 비용 특성이 35B-A3B(활성 3B)와 전혀 다르다.
 
 ---
 
@@ -104,7 +104,7 @@ Gemma 4만 싣는 항목은 MMLU-Pro(31B 85.2), AIME 2026(89.2), Tau2(76.9), Cod
 
 > ⚠️ **측정 조건이 같지 않다.** Qwen 쪽 코딩·에이전트 수치는 Claude Code 하네스에 256K 컨텍스트, `temperature=1.0`, `top_p=0.95` 기준이고 HLE는 GPT-4o가 채점했다. Gemma 4 카드는 자체 조건으로 잰 값이다. 소수점 단위 비교는 의미가 없고, 두 자릿수 격차만 신호로 본다.
 
-> ⚠️ **한국어는 방향이 반대다.** 디노티시아 한국어 리더보드에서 Gemma 4 31B 0.9000, Qwen3.5-27B 0.8775이고 NOLLI 거시평균도 31B 48.3, Qwen3.5-27B 44.4다(Qwen3.8은 두 벤치 모두 미등재). 근거와 한계는 [korean.md](korean.md)에 정리했다.
+> ⚠️ **한국어는 방향이 반대다.** 디노티시아 한국어 리더보드에서 Gemma 4 31B 0.9000, Qwen3.5-27B 0.8775이고 NOLLI 거시평균도 31B 48.3, Qwen3.5-27B 44.4다(Qwen3.8은 두 벤치 모두 미등재). 근거와 한계는 [korean-ability.md](../topics/korean-ability.md)에 정리했다.
 
 ---
 
@@ -130,7 +130,7 @@ Qwen3.5 하이브리드 구조를 그대로 쓴다. Gated DeltaNet 세 층마다
 
 비전 인코더는 깊이 27, hidden 1,152, 패치 16, 출력 차원 5,120이다.
 
-Gated DeltaNet 층은 상태 크기가 입력 길이와 무관해 KV 캐시 요구가 Full Attention보다 낮다. 이 특성은 3.5부터 이어진 것이라 [qwen36.md](qwen36.md)의 KV 관련 서술이 그대로 적용된다.
+Gated DeltaNet 층은 상태 크기가 입력 길이와 무관해 KV 캐시 요구가 Full Attention보다 낮다. 이 특성은 3.5부터 이어진 것이라 [qwen3.6.md](qwen3.6.md)의 KV 관련 서술이 그대로 적용된다.
 
 ---
 
@@ -144,7 +144,7 @@ Gated DeltaNet 층은 상태 크기가 입력 길이와 무관해 KV 캐시 요�
 | `reasoning_effort` | **xhigh** | 사고 깊이. `xhigh` / `medium` / `low` 세 값만 허용 |
 | `preserve_thinking` | **true** | 이전 메시지의 사고 블록을 대화 내내 유지 |
 
-**허용값을 벗어나면 HTTP 400이다.** 채팅 템플릿이 `raise_exception`을 던지기 때문이며, OpenAI 규격에서는 정상인 `high`도 여기서는 400이 된다. 운영 가이드 [VLLM_OPS_GUIDE.md §12.5](../../VLLM_OPS_GUIDE.md)에 호출 예시와 함께 정리돼 있다.
+**허용값을 벗어나면 HTTP 400이다.** 채팅 템플릿이 `raise_exception`을 던지기 때문이며, OpenAI 규격에서는 정상인 `high`도 여기서는 400이 된다. 운영 가이드 [VLLM_OPS_GUIDE.md §12.5](../../../VLLM_OPS_GUIDE.md)에 호출 예시와 함께 정리돼 있다.
 
 `preserve_thinking`은 에이전트 시나리오에서 판단 일관성을 지키고 KV 캐시 재사용률을 올리는 목적이다. 최신 사용자 메시지의 사고만 남기려면 `false`로 끈다.
 
@@ -212,7 +212,7 @@ Gated DeltaNet 층은 상태 크기가 입력 길이와 무관해 KV 캐시 요�
 | 역할극 호칭·등급 | ❌ 3표본 재현 실패 |
 | 한글 숫자 → 자릿수 변환 | ❌ 10회 중 0회 |
 
-3.6에서 문제였던 한자·중국어 혼입은 눈에 띄게 줄었다. 무너지는 곳은 어휘 선택과 호칭이며, 격식체 문어체는 오류가 없었다. 근거 원문과 프로브 스크립트는 [korean.md](korean.md)와 [`data/2026-08-19_korean/`](data/2026-08-19_korean/)에 있다.
+3.6에서 문제였던 한자·중국어 혼입은 눈에 띄게 줄었다. 무너지는 곳은 어휘 선택과 호칭이며, 격식체 문어체는 오류가 없었다. 근거 원문과 프로브 스크립트는 [korean-ability.md](../topics/korean-ability.md)와 [`sources/2026-08-19_korean/`](../sources/2026-08-19_korean/README.md)에 있다.
 
 ---
 
@@ -220,11 +220,11 @@ Gated DeltaNet 층은 상태 크기가 입력 길이와 무관해 KV 캐시 요�
 
 ### 이전 세대 이슈의 승계
 
-아키텍처 클래스가 `Qwen3_5ForConditionalGeneration`으로 3.5·3.6과 동일하다. [qwen36.md §7](qwen36.md)에 정리한 하이브리드 계열 이슈들 — KV 캐시 과대추정, 동시 이미지 요청 크래시, 멀티모달 encoder cache 경합 — 은 구조적으로 같은 경로를 타므로 방어 설정을 그대로 유지한다. **다만 3.8 고유의 vLLM 이슈는 이번 조사에서 확인하지 않았다.**
+아키텍처 클래스가 `Qwen3_5ForConditionalGeneration`으로 3.5·3.6과 동일하다. [qwen3.6.md §7](qwen3.6.md)에 정리한 하이브리드 계열 이슈들 — KV 캐시 과대추정, 동시 이미지 요청 크래시, 멀티모달 encoder cache 경합 — 은 구조적으로 같은 경로를 타므로 방어 설정을 그대로 유지한다. **다만 3.8 고유의 vLLM 이슈는 이번 조사에서 확인하지 않았다.**
 
 ### thinking을 끄고 쓰는 문제
 
-Qwen3.8은 추론을 전제로 설계됐고 기본값이 thinking ON이다. 커뮤니티 증언은 양쪽으로 갈린다. 끄면 성능이 크게 떨어진다는 쪽은 "띵킹을 끄면 개 ㅈ병신이 됨. 추론 기능을 전제로 깔고 들어간 모델"이라고 했고, 반대쪽은 기본값 `xhigh`로 켜면 과잉추론이 심하다며 SVG 하나에 추론 토큰 22,276개를 쓰고 21분이 걸린 사례를 들었다. 원문과 출처는 [korean.md §5.2](korean.md)에 있다.
+Qwen3.8은 추론을 전제로 설계됐고 기본값이 thinking ON이다. 커뮤니티 증언은 양쪽으로 갈린다. 끄면 성능이 크게 떨어진다는 쪽은 "띵킹을 끄면 개 ㅈ병신이 됨. 추론 기능을 전제로 깔고 들어간 모델"이라고 했고, 반대쪽은 기본값 `xhigh`로 켜면 과잉추론이 심하다며 SVG 하나에 추론 토큰 22,276개를 쓰고 21분이 걸린 사례를 들었다. 원문과 출처는 [korean-ability.md §5.2](../topics/korean-ability.md)에 있다.
 
 현행 설정은 thinking OFF이므로 2장의 벤치 수치가 그대로 재현되지 않는다. 다만 6장의 약관 RAG·문서 처리 실측은 thinking OFF에서 전부 통과했다. 과제 유형에 따라 영향이 갈리므로, 실제 워크로드로 ON/OFF를 비교해 정하는 편이 확실하다.
 
@@ -236,9 +236,9 @@ Qwen3.8은 추론을 전제로 설계됐고 기본값이 thinking ON이다. 커�
 
 ## Sources
 
-- [Qwen/Qwen3.8-27B — HuggingFace 모델카드](https://huggingface.co/Qwen/Qwen3.8-27B) (로컬 사본: [`data/2026-08-19_korean/cards/hf_Qwen_Qwen3.8-27B.md`](data/2026-08-19_korean/cards/hf_Qwen_Qwen3.8-27B.md))
-- [google/gemma-4-31b-it — HuggingFace 모델카드](https://huggingface.co/google/gemma-4-31b-it) (로컬 사본: [`data/2026-08-19_korean/cards/hf_google_gemma-4-31b-it.md`](data/2026-08-19_korean/cards/hf_google_gemma-4-31b-it.md))
+- [Qwen/Qwen3.8-27B — HuggingFace 모델카드](https://huggingface.co/Qwen/Qwen3.8-27B) (로컬 사본: [`sources/2026-08-19_korean/model-cards/hf_Qwen_Qwen3.8-27B.md`](../sources/2026-08-19_korean/model-cards/hf_Qwen_Qwen3.8-27B.md))
+- [google/gemma-4-31b-it — HuggingFace 모델카드](https://huggingface.co/google/gemma-4-31b-it) (로컬 사본: [`sources/2026-08-19_korean/model-cards/hf_google_gemma-4-31b-it.md`](../sources/2026-08-19_korean/model-cards/hf_google_gemma-4-31b-it.md))
 - 로컬 체크포인트 `/models/LLM/Qwen/Qwen3.8-27B-FP8` — `config.json`, `chat_template.jinja` 직접 대조
 - [vLLM Qwen3.8 Recipe](https://recipes.vllm.ai/Qwen/Qwen3.8-27B)
-- [korean.md](korean.md) — 한국어 능력 비교와 근거 원본
-- [qwen36.md](qwen36.md) · [qwen35.md](qwen35.md) — 이전 세대 조사
+- [korean-ability.md](../topics/korean-ability.md) — 한국어 능력 비교와 근거 원본
+- [qwen3.6.md](qwen3.6.md) · [qwen3.5.md](qwen3.5.md) — 이전 세대 조사
