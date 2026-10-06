@@ -1,7 +1,7 @@
 ---
 name: session
 description: docker 레포 현재 상태. 세션 시작 시 다음 작업과 최근 변경 파악용.
-last-updated: 2026-09-15 (llm-serving 배포 범위 주석 정리 + `slm_research/` S3 제외 — 운영 서버로 가는 코드·문서 기준)
+last-updated: 2026-10-06 (Jev 조사 + `slm_research/` 개편)
 ---
 
 # 세션 상태
@@ -32,6 +32,7 @@ last-updated: 2026-09-15 (llm-serving 배포 범위 주석 정리 + `slm_researc
 | P1 | **모델 간 속도 매트릭스**: `./start.sh speed [name\|all]` (8/10 진입점 신설 — 무인자면 기동된 게이트웨이를 순회하며 같은 파일에 누적). 26B-A4B 6행 확보(c=1 TPS 168.5 / c=10 TPS 81 — 31B quick 64.8 대비 단발 약 2.6배). 잔존: 31B·Qwen 풀 매트릭스로 3모델 비교 완성. | 부분 완료(26B 측정) |
 | P1 | `llm-serving/sglang/` 디렉토리 골격 (운영 가이드 + 런처 + 설정 + 테스트) | Todo |
 | P1 | **STT 한국어 정성 비교 (PoC 잔여)**: 시나리오 E(정확도+offline) 채택 완료 — 1순위 Whisper-large-v3(+한국어 fine-tune 트랙). `test_stt.py`(WER/RTF/정성) 작성으로 실측 확정. | 의사결정 ✅, 실측 대기 |
+| P2 | **Jev 방식 판단 실측**: 서빙 중인 Qwen3.8-27B에서 선택지 확률을 읽어 한국어 판단 문항 50~100개의 정확도·보정·지연 측정 (`slm_research/topics/jev.md` 7장 후보 1). **대표님 결정 대기.** | 신규 (2026-10-06) |
 | P2 | **26B-A4B MTP 튜닝**: acceptance 32~47%(31B 70~85% 대비 낮음 — MoE 저동시성 특성). 동시성 4+ 실측 후 낮으면 `num_speculative_tokens 4→2` 또는 MTP off A/B. | 신규 (2026-07-21) |
 | P2 | **PII NER 후속 고도화 (대표님 지시로 보류)**: 현재 연구·운영 모두 PII 미사용(비PII vllm만 운영). 재사용 전 필수 — ① **🚨 512 토큰 초과 청킹**(현재 긴 텍스트 500 에러 → fail-open 무검사 통과/fail-closed 차단. overlap 청킹 + 회귀 테스트) ② 마이크로 배칭 ③ replica 스케일아웃(`configs/ner.yaml` backends 복제, LB 기지원). 동시성 1차(스레드풀+세마포어)는 7/21 완료. | 신규 (후속 대기) |
 | P2 | **PII 가드 운영 적용 후속 (보류)**: 잔존 — 운영계 :5501 실기동(설정 준비 완료) · 보험 실데이터 recall 게이트 실측(`recall_gate.py` 하버스 준비, 라벨 JSONL 대기) · 스트리밍 progressive buffer(별도 합의) · 이미지 OCR PII · 배포 시 `PII_AUDIT_SALT` 확인. 설계: `agent-guide/plans/pii-dlp-gateway.md`. | 보류(PII 미사용 중) |
@@ -52,6 +53,11 @@ last-updated: 2026-09-15 (llm-serving 배포 범위 주석 정리 + `slm_researc
 ---
 
 ## 최근 세션
+
+### 2026-10-06 (Jev 조사 + `slm_research/` 개편)
+
+- **변경**: `topics/jev.md`·`sources/2026-10-06_jev/` 신설 · `slm_research/`를 `models/`·`topics/`·`sources/`(구 `data/`)로 개편하고 루트 README 목록 신설, 외부 참조 4곳 갱신 · 중복 원본 5개 `.archive/2026-10-06_slm-research-dup/` (`5557317`)
+- **상태**: 모델 5종은 HF 최신 커밋과 일치해 갱신 불필요. Jev는 API 전용이라 폐쇄망 운영계에 도입 불가 → 공개 모델 확률 읽기 방식 실측은 다음 작업 P2
 
 ### 2026-09-15 (on-prem 대조 + llm-serving 배포 범위 주석 정리 + `slm_research/` S3 제외)
 
