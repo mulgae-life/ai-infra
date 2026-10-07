@@ -1,7 +1,7 @@
 ---
 name: project
 description: ai-infra 레포 핵심 요약. 서버·운영 구성 자산 모음으로 디렉토리 분리 원칙과 기술 스택 파악용.
-last-updated: 2026-10-07 (레포명 docker → ai-infra)
+last-updated: 2026-10-07 (레포명 docker → ai-infra, embedding_research 추가)
 ---
 
 # 프로젝트 개요
@@ -40,7 +40,8 @@ last-updated: 2026-10-07 (레포명 docker → ai-infra)
 ai-infra/
 ├── README.md                         # 메타 진입점 (디렉토리 안내)
 ├── agent-guide/                      # AI 에이전트 가이드 (GUIDE/PROJECT/SESSION)
-│   └── docs/slm_research/            # 모델 조사 (models/·topics/·sources/, 목록은 README) — 연구계 전용, S3 배포 범위 밖
+│   ├── docs/slm_research/            # 모델 조사 (models/·topics/·sources/, 목록은 README) — 연구계 전용, S3 배포 범위 밖
+│   └── docs/embedding_research/      # 임베딩 모델 조사 (slm_research와 같은 구조) — 연구계 전용, S3 배포 범위 밖
 │
 ├── my-docker-server/                 # 로컬 dev/GPU Docker 환경
 │   ├── Dockerfile.dev                # Ubuntu 24.04 + Node/Python/Playwright/CC
