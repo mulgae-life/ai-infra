@@ -5,7 +5,7 @@ Requires=docker.service
 
 [Service]
 Type=oneshot
-ExecStart=/workspace/docker/my-docker-server/ssh-guard.sh
+ExecStart=/workspace/ai-infra/my-docker-server/ssh-guard.sh
 RemainAfterExit=yes
 
 [Install]

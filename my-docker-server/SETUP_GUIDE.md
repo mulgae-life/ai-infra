@@ -64,8 +64,8 @@ sudo usermod -aG docker $USER   # 재로그인 후 적용
 
 ```bash
 # 1) 레포 받기
-git clone https://github.com/mulgae-life/docker.git
-cd docker/my-docker-server
+git clone https://github.com/mulgae-life/ai-infra.git
+cd ai-infra/my-docker-server
 
 # 2) 계정 설정
 cp .env.example .env
@@ -176,7 +176,7 @@ Host desktop-pub-cfd
 
 ## 5. 일상 운영
 
-모든 명령은 `docker/my-docker-server/`에서 실행.
+모든 명령은 `ai-infra/my-docker-server/`에서 실행.
 
 | 목적 | 명령 |
 |---|---|

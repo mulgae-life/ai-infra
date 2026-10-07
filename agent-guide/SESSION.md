@@ -1,7 +1,7 @@
 ---
 name: session
-description: docker 레포 현재 상태. 세션 시작 시 다음 작업과 최근 변경 파악용.
-last-updated: 2026-10-06 (Jev 조사·실측 + `slm_research/` 개편·이동)
+description: ai-infra 레포 현재 상태. 세션 시작 시 다음 작업과 최근 변경 파악용.
+last-updated: 2026-10-07 (레포명 docker → ai-infra)
 ---
 
 # 세션 상태
@@ -15,7 +15,7 @@ last-updated: 2026-10-06 (Jev 조사·실측 + `slm_research/` 개편·이동)
 | 항목 | 내용 |
 |------|------|
 | **이슈 트래커** | 별도 도구 없음 (git history + 본 SESSION.md "다음 작업" 표) |
-| **원격 레포** | `git@github.com:mulgae-life/docker.git` (`origin/main`) |
+| **원격 레포** | `https://github.com/mulgae-life/ai-infra.git` (`origin/main`) |
 | **배포 채널** | `aws/start.sh push`·`llm-serving/start.sh push` (S3 전체 교체) → 대상 서버에서 `./start.sh pull` |
 
 ---
@@ -54,6 +54,12 @@ last-updated: 2026-10-06 (Jev 조사·실측 + `slm_research/` 개편·이동)
 
 ## 최근 세션
 
+### 2026-10-07 (레포명 docker → ai-infra)
+
+- **변경**: GitHub 레포를 `mulgae-life/docker`에서 `mulgae-life/ai-infra`로, 로컬 경로를 `/workspace/docker`에서 `/workspace/ai-infra`로 바꿈. 레포 안의 경로와 클론 주소 표기를 새 이름으로 맞춤(README, `agent-guide/` 3종, 4개 영역 가이드, `ssh-guard.service`, `on-prem/setup-host.sh`의 작업 사본 경로 `/volume/workspace/root/ai-infra`). Docker 도구 이름과 `my-docker-server/`는 그대로 둠
+- **서빙**: 연구계 qwen(:7080)과 게이트웨이 :5015를 내렸다가 새 경로에서 다시 올림. 런처의 자동 재기동이 옛 경로의 설정 파일을 쓰기 때문. 서빙이 이 컨테이너 안에서 돈다는 것을 확인해 `GUIDE.md` 토폴로지의 "net/PID 네임스페이스 밖" 설명을 정정
+- **남은 일**: 이미 설치된 사본은 각자 옮겨야 한다. 로컬 PC에 `ssh-guard.service`를 설치했다면 다시 복사하고, 온프레미스 서버는 `setup-host.sh` 실행 전이라 영향 없음
+
 ### 2026-10-06 (Jev 조사·실측 + `slm_research/` 개편·이동)
 
 - **변경**: `topics/jev.md`·`sources/2026-10-06_jev/` 신설 · `slm_research/`를 `models/`·`topics/`·`sources/`(구 `data/`)로 개편하고 루트 README 목록 신설, 외부 참조 4곳 갱신 · 중복 원본 5개 `.archive/2026-10-06_slm-research-dup/` (`5557317`)
@@ -83,7 +89,7 @@ last-updated: 2026-10-06 (Jev 조사·실측 + `slm_research/` 개편·이동)
 | `llm-serving/vllm/tests/*.py`, `tests/results/speed_results.md` | 코드·문서 | 옛 포트·경로·테스트 번호 정정, "실모델" 표기를 "체크포인트"로 통일 |
 
 #### 결정 사항
-- **보안 검토 범위는 운영 서버로 가는 것**(`llm-serving/start.sh push` → S3 → 운영계 `pull`)이라고 대표님이 확정. GitHub 공개 여부를 기준으로 삼던 초기 판단은 폐기했다. `/workspace/docker`의 연구계 전용 자료는 대상이 아니다.
+- **보안 검토 범위는 운영 서버로 가는 것**(`llm-serving/start.sh push` → S3 → 운영계 `pull`)이라고 대표님이 확정. GitHub 공개 여부를 기준으로 삼던 초기 판단은 폐기했다. `/workspace/ai-infra`의 연구계 전용 자료는 대상이 아니다.
 - **정체성 프롬프트(`_DEFAULT_IDENTITY_PROMPT`)는 손대지 않는다.** 서빙 모델의 정상적인 시스템 프롬프트 지침이라는 대표님 지적을 받아들였다.
 - **주석 재작성 원칙**: "누구에게 안 보이게 한다"가 아니라 "무엇을 어떤 값으로 고정하고, 그래서 클라이언트가 무엇을 안 바꿔도 되는가"로 쓴다. 기능과 동작 설명은 그대로 두고 어조만 바꿨으므로 동작 변경은 없다.
 - **`slm_research/`는 배포 제외.** S3에 182개 객체(10,075,140바이트)가 실제로 올라가 있어 운영계가 `pull`하면 그대로 내려간다. 모델 조사 문서와 커뮤니티 수집 원본이라 서빙에 쓰이지 않는다.

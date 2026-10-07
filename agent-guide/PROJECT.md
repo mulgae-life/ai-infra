@@ -1,7 +1,7 @@
 ---
 name: project
-description: docker 레포 핵심 요약. 서버·운영 구성 자산 모음으로 디렉토리 분리 원칙과 기술 스택 파악용.
-last-updated: 2026-08-20 (모델명 gemma-4 고정 + 게이트웨이 호환 계층 반영)
+description: ai-infra 레포 핵심 요약. 서버·운영 구성 자산 모음으로 디렉토리 분리 원칙과 기술 스택 파악용.
+last-updated: 2026-10-07 (레포명 docker → ai-infra)
 ---
 
 # 프로젝트 개요
@@ -14,7 +14,7 @@ last-updated: 2026-08-20 (모델명 gemma-4 고정 + 게이트웨이 호환 계�
 
 | 항목 | 내용 |
 |------|------|
-| **프로젝트** | docker (서버 세팅 & 운영 구성 모음) |
+| **프로젝트** | ai-infra (서버 세팅 & 운영 구성 모음). 2026-10-07에 `docker`에서 이름을 바꿨다 |
 | **목적** | 인프라(어디에 띄우는가) ↔ 서빙(무엇을 어떻게 띄우는가)을 한 레포에서 관리하면서 디렉토리로 책임 분리 |
 | **기술 스택** | Docker, Ubuntu 24.04, NVIDIA CUDA 12.6, AWS EC2 GPU, vLLM, Python 3.12 / Node.js LTS |
 | **운영 자산** | `my-docker-server/` (로컬 dev/GPU) + `aws/` (EC2 GPU 인프라) + `on-prem/` (사내 H200 호스트 셋업) + `llm-serving/vllm/` (서빙) |
@@ -37,7 +37,7 @@ last-updated: 2026-08-20 (모델명 gemma-4 고정 + 게이트웨이 호환 계�
 ## 프로젝트 구조
 
 ```
-docker/
+ai-infra/
 ├── README.md                         # 메타 진입점 (디렉토리 안내)
 ├── agent-guide/                      # AI 에이전트 가이드 (GUIDE/PROJECT/SESSION)
 │   └── docs/slm_research/            # 모델 조사 (models/·topics/·sources/, 목록은 README) — 연구계 전용, S3 배포 범위 밖

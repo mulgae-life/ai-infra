@@ -5,7 +5,7 @@ tq = AutoTokenizer.from_pretrained("/models/LLM/Qwen/Qwen3.8-27B-FP8")
 
 # 레포 전체 한국어 문서에서 한글 산문만 추출
 ko = []
-for f in glob.glob("/workspace/docker/**/*.md", recursive=True):
+for f in glob.glob("/workspace/ai-infra/**/*.md", recursive=True):
     if ".archive" in f or "node_modules" in f: continue
     try: txt = open(f, encoding="utf-8").read()
     except Exception: continue

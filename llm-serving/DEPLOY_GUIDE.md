@@ -11,12 +11,12 @@
 **① 배포 파이프라인** — 코드는 S3를 경유해 운영계 컨테이너로, 모델은 컨테이너에서 자동 다운로드.
 
 ```
-[로컬]                          [S3]                          [운영계 컨테이너]
-/workspace/docker/llm-serving  →  s3://hgi-ai-res/hjjo/  →  /workspace/llm-serving/
-   (start.sh push)                  llm-serving/              (start.sh pull → 클러스터별 start.sh up)
+[로컬]                            [S3]                          [운영계 컨테이너]
+/workspace/ai-infra/llm-serving  →  s3://hgi-ai-res/hjjo/  →  /workspace/llm-serving/
+   (start.sh push)                    llm-serving/              (start.sh pull → 클러스터별 start.sh up)
 
-                                                            /models/  ← 첫 기동 시 자동 다운로드
-                                                                        (갱신은 ./start.sh download — 폐쇄망은 네트워크 개방 시점에)
+                                                              /models/  ← 첫 기동 시 자동 다운로드
+                                                                          (갱신은 ./start.sh download — 폐쇄망은 네트워크 개방 시점에)
 ```
 
 **② 서비스 진입점 맵** — 배포 후 클라이언트가 들어가는 **외부 포트**와 그 뒤 내부 흐름. 외부엔 진입점만 열고 내부 포트는 방화벽으로 차단한다.
@@ -43,7 +43,7 @@
 ## 1. 로컬 → S3 (코드 업로드)
 
 ```bash
-cd /workspace/docker/llm-serving && ./start.sh push
+cd /workspace/ai-infra/llm-serving && ./start.sh push
 ```
 
 > `logs/`, `__pycache__/`, 런처 임시 config(`.vllm_serve_*`·`.runtime/`), `samples/`, `audit.salt`는 런타임 산출물/시크릿이라 `start.sh`가 자동 제외. 모델 조사 문서는 연구계 전용이라 2026-10-06에 `agent-guide/docs/slm_research/`로 옮겨 배포 대상(`llm-serving/`) 밖에 있다 — 운영 서버에는 서빙에 필요한 코드·설정·테스트만 간다. 이동 전 운영 서버에 내려간 `vllm/slm_research/`가 있으면 다음 `pull`이 `--delete`로 지운다.
@@ -190,7 +190,7 @@ cd ../pii && python tests/eval_pii.py
 
 ```bash
 # (로컬) 수정 후 S3 재업로드
-cd /workspace/docker/llm-serving && ./start.sh push
+cd /workspace/ai-infra/llm-serving && ./start.sh push
 
 # (운영계) 재다운로드 + 재시작
 cd /workspace/llm-serving && sudo ./start.sh pull

@@ -58,18 +58,18 @@ AWS와 다른 점은 셋뿐입니다.
 
 ```bash
 # on-prem/.env.prd 의 서버 고유값 확인 (VOLUME_DEVICE는 설치팀에 받은 경로)
-vim /workspace/docker/on-prem/.env.prd
+vim /workspace/ai-infra/on-prem/.env.prd
 ```
 
 ### 3-2. 서버 최초 셋업
 
 ```bash
 # (1) 부트스트랩 clone — 셋업 스크립트를 꺼내기 위한 임시 사본
-git clone https://github.com/mulgae-life/docker.git ~/docker
-cd ~/docker
+git clone https://github.com/mulgae-life/ai-infra.git ~/ai-infra
+cd ~/ai-infra
 
 # (2) 개발 머신에서 .env 전달 → aws/.env 로 (setup-host.sh·compose·user.sh 가 모두 이 경로를 읽는다)
-#     개발 머신에서: scp /workspace/docker/on-prem/.env.prd <server>:~/docker/aws/.env
+#     개발 머신에서: scp /workspace/ai-infra/on-prem/.env.prd <server>:~/ai-infra/aws/.env
 vim aws/.env                         # VOLUME_DEVICE, SSH_PORT 등 서버 고유값 최종 확인
 
 # (3) 호스트 셋업 (Phase 1 → 자동 reboot → Phase 2 자동 실행)
@@ -77,12 +77,12 @@ chmod +x on-prem/setup-host.sh
 sudo ./on-prem/setup-host.sh
 tail -f /var/log/onprem-setup.log    # 진행 확인 (다른 터미널)
 
-# (4) 완료 후 작업 사본으로 이동 — Phase 1이 /volume/workspace/root/docker 에 clone하고 .env를 옮겨 둔다.
-#     컨테이너 안에서 /workspace/docker 로 보이는 위치라 연구계와 경로가 같다. ~/docker 는 이제 안 쓴다.
-cd /volume/workspace/root/docker/aws
+# (4) 완료 후 작업 사본으로 이동 — Phase 1이 /volume/workspace/root/ai-infra 에 clone하고 .env를 옮겨 둔다.
+#     컨테이너 안에서 /workspace/ai-infra 로 보이는 위치라 연구계와 경로가 같다. ~/ai-infra 는 이제 안 쓴다.
+cd /volume/workspace/root/ai-infra/aws
 
 # (5) vLLM nightly wheel 전달 (246MB, git 미추적, Dockerfile.llm 이 COPY)
-#     개발 머신에서: scp /workspace/docker/aws/wheels/vllm-*.whl <server>:/volume/workspace/root/docker/aws/wheels/
+#     개발 머신에서: scp /workspace/ai-infra/aws/wheels/vllm-*.whl <server>:/volume/workspace/root/ai-infra/aws/wheels/
 
 # (6) 컨테이너 빌드 + 기동
 docker compose build
@@ -95,12 +95,12 @@ docker compose logs -f llm
 ```bash
 # 모델 가중치 — 컨테이너 안에서
 sudo docker exec -it llm-root bash
-cd /workspace/docker/llm-serving/vllm && ./start.sh download all
+cd /workspace/ai-infra/llm-serving/vllm && ./start.sh download all
 exit
 
 # 런타임 pip 휠 — §5-3
 # 점검 — 전부 ✅ 여야 끊어도 된다
-/volume/workspace/root/docker/on-prem/start.sh check
+/volume/workspace/root/ai-infra/on-prem/start.sh check
 ```
 
 ---
@@ -131,7 +131,7 @@ exit
 | 3 | 데이터 디스크 xfs 포맷 + 마운트 + fstab (루트 디스크 오지정 가드 동일) | EBS→NVMe, 로직 동일 |
 | 4 | `/volume/{workspace,data,models,homes,root-homes}` + 소유권 + **SELinux `container_file_t` 라벨** | 라벨 신규 |
 | 5 | 시스템 업데이트(커널 제외) + git/gcc/dkms + `kernel-devel-matched` + versionlock 플러그인 + nvitop | 커널 패키지명 |
-| 6 | **작업 사본 배치**: `/volume/workspace/root/docker`에 clone + `.env` 복사 (git 설치 뒤라 최소 설치 RHEL에서도 동작) | 신규 (S3 없음) |
+| 6 | **작업 사본 배치**: `/volume/workspace/root/ai-infra`에 clone + `.env` 복사 (git 설치 뒤라 최소 설치 RHEL에서도 동작) | 신규 (S3 없음) |
 | 7 | **Docker CE 공식 저장소** (podman·runc 충돌 패키지 제거 후) — compose·buildx 플러그인 동봉 | AL2023 dnf docker 아님 |
 | 8 | Claude Code (dev 모드만) | 동일 |
 | 9 | NVIDIA rhel10 저장소 등록 | repo 경로 |
@@ -188,13 +188,13 @@ exit
 
 ```bash
 # 네트워크 개방 시
-cd /volume/workspace/root/docker && on-prem/start.sh pull
+cd /volume/workspace/root/ai-infra && on-prem/start.sh pull
 cd aws && docker compose build --no-cache && docker compose up -d
 sudo ./user.sh rebuild
 
 # 네트워크 폐쇄 시 — 개발 머신에서 밀어 넣기 (.git 제외, .env 보존)
 rsync -av --delete --exclude .git --exclude .env --exclude .archive --exclude logs \
-      /workspace/docker/ <server>:/volume/workspace/root/docker/
+      /workspace/ai-infra/ <server>:/volume/workspace/root/ai-infra/
 ```
 
 `.env`와 `aws/wheels/`는 git 밖이라 `pull`로 안 따라옵니다. 바뀌었으면 scp로 따로 옮깁니다.

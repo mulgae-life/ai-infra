@@ -4,11 +4,11 @@ from transformers import AutoTokenizer
 tg = AutoTokenizer.from_pretrained("/models/LLM/google/gemma-4-26B-A4B-it")
 tq = AutoTokenizer.from_pretrained("/models/LLM/Qwen/Qwen3.8-27B-FP8")
 
-files = ["/workspace/docker/llm-serving/VLLM_API_GUIDE.md",
-         "/workspace/docker/llm-serving/VLLM_OPS_GUIDE.md",
-         "/workspace/docker/llm-serving/DEPLOY_GUIDE.md",
-         "/workspace/docker/agent-guide/docs/slm_research/topics/gemma4-vs-qwen.md",
-         "/workspace/docker/agent-guide/docs/slm_research/models/qwen3.5.md"]
+files = ["/workspace/ai-infra/llm-serving/VLLM_API_GUIDE.md",
+         "/workspace/ai-infra/llm-serving/VLLM_OPS_GUIDE.md",
+         "/workspace/ai-infra/llm-serving/DEPLOY_GUIDE.md",
+         "/workspace/ai-infra/agent-guide/docs/slm_research/topics/gemma4-vs-qwen.md",
+         "/workspace/ai-infra/agent-guide/docs/slm_research/models/qwen3.5.md"]
 
 # 코드블록·표 제거 후 한글 비중 높은 줄만 추출 (순수 한국어 산문 근사)
 ko_lines = []

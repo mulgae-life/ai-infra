@@ -45,7 +45,7 @@ Amazon Linux 2023 + NVIDIA GPU EC2에 vLLM 기반 LLM 환경을 1회 셋업으�
 
 ### 3-1. 로컬 → S3 (코드 변경 시)
 ```bash
-cd /workspace/docker/aws && ./start.sh push
+cd /workspace/ai-infra/aws && ./start.sh push
 ```
 
 > ⚠️ `push`는 **전체 교체**입니다. S3 프리픽스를 비운 뒤 올려 로컬과 정확히 일치시킵니다. 로컬에서 지운 파일이 S3에 남아 `pull` 때 되살아나는 것을 막기 위해서입니다. 업로드 중 실패하면 프리픽스가 빈 상태로 남으니 반드시 다시 실행하세요. `wheels/`(246MB)는 제외 대상이 아니라 push마다 다시 올라가므로, 규모를 먼저 보려면 `./start.sh push --dryrun`을 쓰세요(삭제 단계까지 미리보기로 동작).
@@ -246,7 +246,7 @@ docker compose up -d
 ### 9-1. 코드 변경 반영
 ```bash
 # (1) 로컬 → S3 (전체 교체)
-cd /workspace/docker/aws && ./start.sh push
+cd /workspace/ai-infra/aws && ./start.sh push
 
 # (2) EC2 → 다운로드 + 재빌드 (pull이 --delete로 잔재 정리 + *.sh 실행권한 자동 부여)
 #     .env는 동기화 제외라 이 서버 설정 그대로 유지됨. 환경 원본을 고쳤다면 cp .env.prd .env 로 다시 반영

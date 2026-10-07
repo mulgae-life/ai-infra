@@ -190,9 +190,9 @@ $(echo "$child_parts" | sed 's/^/    /')
 }
 
 # 작업 사본 배치: 컨테이너가 /workspace로 마운트하는 ${VOLUME_PATH}/workspace/root 아래에
-# 이 레포를 둔다. 그래야 컨테이너 안에서 /workspace/docker/llm-serving 경로가 연구계와 같아진다.
+# 이 레포를 둔다. 그래야 컨테이너 안에서 /workspace/ai-infra/llm-serving 경로가 연구계와 같아진다.
 # — 이 스크립트가 이미 그 안에서 실행 중이면(최초부터 거기 clone) 아무것도 하지 않는다.
-# — 밖(예: ~/docker 부트스트랩 사본)에서 실행 중이면 같은 origin으로 clone하고 .env를 옮긴다.
+# — 밖(예: ~/ai-infra 부트스트랩 사본)에서 실행 중이면 같은 origin으로 clone하고 .env를 옮긴다.
 #   데이터 디스크를 /volume에 마운트한 뒤에 clone해야 하므로 mount_data_volume 이후에 호출한다.
 place_working_copy() {
     local repo_root target
@@ -201,7 +201,7 @@ place_working_copy() {
         log "  ⚠️ 이 스크립트가 git 저장소 안에 없습니다. 작업 사본 배치 건너뜀 — SETUP_GUIDE.md §3-2 (5)를 수동 수행하세요."
         return
     fi
-    target="${VOLUME_PATH}/workspace/root/docker"
+    target="${VOLUME_PATH}/workspace/root/ai-infra"
 
     if [ "$repo_root" = "$(realpath "$target" 2>/dev/null || true)" ]; then
         log "  작업 사본이 이미 ${target}에 있음 (현재 실행 위치). 건너뜀."
@@ -423,7 +423,7 @@ JAIL
     log "  커널: $(uname -r), kernel-devel-matched 설치"
 
     # --- 작업 사본 배치 ---
-    log "[6/10] 작업 사본 배치 (${VOLUME_PATH}/workspace/root/docker)"
+    log "[6/10] 작업 사본 배치 (${VOLUME_PATH}/workspace/root/ai-infra)"
     place_working_copy
 
     # --- Docker 설치 (Docker CE 공식 저장소) ---
@@ -633,7 +633,7 @@ phase2() {
     rm -f "$PHASE_FILE"
     trap - EXIT
 
-    local work_dir="${VOLUME_PATH}/workspace/root/docker/aws"
+    local work_dir="${VOLUME_PATH}/workspace/root/ai-infra/aws"
     [ -d "$work_dir" ] || work_dir="${SCRIPT_DIR}/../aws"
 
     log ""
