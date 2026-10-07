@@ -198,7 +198,7 @@ place_working_copy() {
     local repo_root target
     repo_root=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || true)
     if [ -z "$repo_root" ]; then
-        log "  ⚠️ 이 스크립트가 git 저장소 안에 없습니다. 작업 사본 배치 건너뜀 — SETUP_GUIDE.md §3-2 (5)를 수동 수행하세요."
+        log "  ⚠️ 이 스크립트가 git 저장소 안에 없습니다. 작업 사본 배치 건너뜀 — SETUP_GUIDE.md §3-2 (4)의 작업 사본(clone + .env 복사)을 수동으로 배치하세요."
         return
     fi
     target="${VOLUME_PATH}/workspace/root/ai-infra"

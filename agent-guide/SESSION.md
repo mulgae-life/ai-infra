@@ -56,7 +56,7 @@ last-updated: 2026-10-07 (레포명 docker → ai-infra)
 
 ### 2026-10-07 (레포명 docker → ai-infra)
 
-- **변경**: GitHub 레포를 `mulgae-life/docker`에서 `mulgae-life/ai-infra`로, 로컬 경로를 `/workspace/docker`에서 `/workspace/ai-infra`로 바꿈. 레포 안의 경로와 클론 주소 표기를 새 이름으로 맞춤(README, `agent-guide/` 3종, 4개 영역 가이드, `ssh-guard.service`, `on-prem/setup-host.sh`의 작업 사본 경로 `/volume/workspace/root/ai-infra`). Docker 도구 이름과 `my-docker-server/`는 그대로 둠
+- **변경**: GitHub 레포를 `mulgae-life/docker`에서 `mulgae-life/ai-infra`로, 로컬 경로를 `/workspace/docker`에서 `/workspace/ai-infra`로 바꿈. 레포 안의 경로와 클론 주소 표기를 새 이름으로 맞춤(README, `agent-guide/` 3종, 4개 영역 가이드, `ssh-guard.service`, `on-prem/setup-host.sh`의 작업 사본 경로 `/volume/workspace/root/ai-infra`). Docker 도구 이름과 `my-docker-server/`는 그대로 둠 (`c009f48`). 점검 중 발견한 기존 안내 오류 2건도 수정: `setup-host.sh`가 작업 사본 수동 배치를 wheel 단계인 §3-2 (5)로 안내하던 것을 (4)로, `ssh-guard.service` 설치 안내에 ExecStart를 클론 위치에 맞추라는 사전 확인 추가
 - **서빙**: 연구계 qwen(:7080)과 게이트웨이 :5015를 내렸다가 새 경로에서 다시 올림. 런처의 자동 재기동이 옛 경로의 설정 파일을 쓰기 때문. 서빙이 이 컨테이너 안에서 돈다는 것을 확인해 `GUIDE.md` 토폴로지의 "net/PID 네임스페이스 밖" 설명을 정정
 - **남은 일**: 이미 설치된 사본은 각자 옮겨야 한다. 로컬 PC에 `ssh-guard.service`를 설치했다면 다시 복사하고, 온프레미스 서버는 `setup-host.sh` 실행 전이라 영향 없음
 

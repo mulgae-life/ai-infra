@@ -271,10 +271,12 @@ docker compose up -d
 - 컨테이너 재시작 불필요
 
 ```bash
-# 사전 확인: 스크립트의 LAN 대역·PORTS가 내 환경과 맞는지
+# 사전 확인: 스크립트의 LAN 대역·PORTS가 내 환경과 맞는지,
+#           ssh-guard.service의 ExecStart가 실제 클론 위치를 가리키는지
+#           (기본값 /workspace/ai-infra/my-docker-server/ssh-guard.sh — 다른 곳에 클론했다면 고친 뒤 복사)
 chmod +x ssh-guard.sh
 sudo ./ssh-guard.sh                                  # 즉시 적용 (반복 실행 안전)
-sudo cp ssh-guard.service /etc/systemd/system/       # ExecStart 경로 확인
+sudo cp ssh-guard.service /etc/systemd/system/       # ExecStart는 위 사전 확인대로 맞춘 상태
 sudo systemctl daemon-reload && sudo systemctl enable --now ssh-guard.service
 sudo iptables -L DOCKER-USER -v -n                   # 차단 카운터 확인
 ```
