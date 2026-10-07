@@ -49,7 +49,7 @@ last-updated: 2026-10-07 (레포명 docker → ai-infra, SESSION 초압축)
 
 | 날짜 | 한 일 |
 |------|------|
-| **10-07** | 레포명 `docker` → `ai-infra`(GitHub, 로컬 경로, 레포 안 표기. Docker 도구명과 `my-docker-server/`는 유지) `c009f48` · 점검 중 찾은 기존 안내 오류 2건 정정 `cef33a0` · 연구계 qwen·:5015를 새 경로에서 재기동. GUIDE의 "서빙은 net/PID 네임스페이스 밖"은 틀려서 정정(이 컨테이너 안에서 돈다). 잔존: 로컬 PC에 설치한 `ssh-guard.service` 재복사 |
+| **10-07** | 레포명 `docker` → `ai-infra`(GitHub, 로컬 경로, 레포 안 표기. Docker 도구명과 `my-docker-server/`는 유지) `c009f48` · 점검 중 찾은 기존 안내 오류 2건 정정 `cef33a0` · 연구계 qwen·:5015를 새 경로에서 재기동. GUIDE의 "서빙은 net/PID 네임스페이스 밖"은 틀려서 정정(이 컨테이너 안에서 돈다). 로컬 PC도 `/workspace/ai-infra`로 옮기고 `ssh-guard.service` 재복사 + `daemon-reload` 완료(설치본 = 레포본) |
 | **10-06** | Jev 조사 + `slm_research/`를 `models/`·`topics/`·`sources/`로 개편 `5557317` · `slm_research/`를 `agent-guide/docs/`로 옮겨 배포 범위 밖에 두고 `start.sh` 제외 규칙 삭제 `11d7420` · Jev 방식 실측(Qwen3.8 FP8 대 Jev) `6f9550b` |
 | **09-15** | 운영 배포분 주석 어조 정리 + `slm_research/` S3 제외 `298b04c`. 보안 검토 범위는 GitHub 공개 여부가 아니라 운영 서버로 가는 것(대표님 확정) · 정체성 프롬프트는 유지 · `on-prem/`은 `aws/`보다 뒤처지지 않음 |
 | **09-14** | 데탑 컨테이너 재생성 전 수동 설치 도구를 Dockerfile에 고정 `c3a6976` · SSH 호스트 키 영속화 `d436e87` · `my-docker-server/README` → `SETUP_GUIDE.md` `6ffb11d`. 잔존: 휴대폰을 Tailscale로 옮기면 공유기 5000/5010 포워딩을 닫을 수 있음, 컨테이너 `btmp`는 수동 truncate |
