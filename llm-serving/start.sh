@@ -41,7 +41,6 @@ SYNC_EXCLUDES=(
     --exclude '*/samples/*'
     --exclude '*/.archive/*'
     --exclude '*/audit.salt'      # PII 감사로그 HMAC 시크릿 — 환경별 분리, S3 업로드 금지
-    --exclude '*/slm_research/*'  # 모델 조사 문서·수집 원본(10MB) — 연구계 전용, 운영 서버에 불필요
 )
 
 require_aws() {

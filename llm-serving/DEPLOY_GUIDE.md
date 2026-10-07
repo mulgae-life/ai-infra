@@ -46,7 +46,7 @@
 cd /workspace/docker/llm-serving && ./start.sh push
 ```
 
-> `logs/`, `__pycache__/`, 런처 임시 config(`.vllm_serve_*`·`.runtime/`), `samples/`, `audit.salt`는 런타임 산출물/시크릿이라 `start.sh`가 자동 제외. `vllm/slm_research/`(모델 조사 문서와 수집 원본)도 연구계 전용이라 제외한다 — 운영 서버에는 서빙에 필요한 코드·설정·테스트만 간다.
+> `logs/`, `__pycache__/`, 런처 임시 config(`.vllm_serve_*`·`.runtime/`), `samples/`, `audit.salt`는 런타임 산출물/시크릿이라 `start.sh`가 자동 제외. 모델 조사 문서는 연구계 전용이라 2026-10-06에 `agent-guide/docs/slm_research/`로 옮겨 배포 대상(`llm-serving/`) 밖에 있다 — 운영 서버에는 서빙에 필요한 코드·설정·테스트만 간다. 이동 전 운영 서버에 내려간 `vllm/slm_research/`가 있으면 다음 `pull`이 `--delete`로 지운다.
 
 > ⚠️ `push`는 **전체 교체**입니다. S3 프리픽스를 비운 뒤 올려 로컬과 정확히 일치시킵니다. 증분만 올리면 로컬에서 지우거나 이름을 바꾼 파일이 S3에 남아 `pull` 때 되살아나기 때문입니다. 업로드 단계에서 중단되면 프리픽스가 빈 상태로 남으므로 반드시 `push`를 다시 실행하세요. 규모를 먼저 보려면 `./start.sh push --dryrun`을 쓰면 삭제 단계까지 미리보기로 동작합니다.
 

@@ -872,7 +872,7 @@ fingerprint_value: gemma-4
 | **vLLM 최소 버전** | 0.20.2 실기동 확인 | 0.19.0 | 0.18.0 | 0.19.0 | 0.19.0 |
 | **transformers 최소 버전** | 5.8.0 (config.json 기재) | ≥4.56.0 | ≥4.56.0 | ≥5.5.0 | ≥5.5.0 |
 
-> Qwen3.8 열은 로컬 체크포인트(`/models/LLM/Qwen/Qwen3.8-27B-FP8`)의 `config.json`·`chat_template.jinja`·모델 카드에서 직접 확인한 값입니다. 벤치마크와 세대 비교는 [`vllm/slm_research/models/qwen3.8.md`](vllm/slm_research/models/qwen3.8.md), Qwen3.5 vs 3.6와 Gemma 4 vs Qwen3.6 비교는 [`vllm/slm_research/topics/gemma4-vs-qwen.md`](vllm/slm_research/topics/gemma4-vs-qwen.md) 참고.
+> Qwen3.8 열은 로컬 체크포인트(`/models/LLM/Qwen/Qwen3.8-27B-FP8`)의 `config.json`·`chat_template.jinja`·모델 카드에서 직접 확인한 값입니다. 벤치마크와 세대 비교는 [`slm_research/models/qwen3.8.md`](../agent-guide/docs/slm_research/models/qwen3.8.md), Qwen3.5 vs 3.6와 Gemma 4 vs Qwen3.6 비교는 [`slm_research/topics/gemma4-vs-qwen.md`](../agent-guide/docs/slm_research/topics/gemma4-vs-qwen.md) 참고.
 
 **모델별 권장 샘플링** (모델 카드·`generation_config.json` 기준):
 
@@ -1609,7 +1609,6 @@ llm-serving/
 │   ├── gateways/                ← 게이트웨이 단위 yaml
 │   │   ├── 5015.yaml · 5501.yaml    (비PII — 외부 직접 노출 0.0.0.0)
 │   │   └── 6015 · 6016 · 6501 · 6502.yaml  (PII — 내부전용 127.0.0.1, 외부는 프록시)
-│   ├── slm_research/            ← 모델 조사 노트 (models/ 모델별 · topics/ 주제별 · sources/ 원본 자료)
 │   ├── bugfix/                  ← 인시던트 기록 (원인 → 수정 → 재발 방지)
 │   └── logs/                    ← 런타임 로그 (gitignore 대상)
 ├── stt/                         ← STT PoC (Qwen3-ASR + Whisper-large-v3)
@@ -1631,11 +1630,11 @@ llm-serving/
 
 **모델 리서치 / 인시던트**
 
-- [`vllm/slm_research/README.md`](vllm/slm_research/README.md) — 리서치 문서 전체 목록
-- [`vllm/slm_research/models/qwen3.6.md`](vllm/slm_research/models/qwen3.6.md) — Qwen3.6 모델 상세 스펙·벤치마크·운영 메모
-- [`vllm/slm_research/models/qwen3.5.md`](vllm/slm_research/models/qwen3.5.md) — Qwen3.5 조사
-- [`vllm/slm_research/models/gemma4.md`](vllm/slm_research/models/gemma4.md) — Gemma 4 조사
-- [`vllm/slm_research/topics/gemma4-vs-qwen.md`](vllm/slm_research/topics/gemma4-vs-qwen.md) — Gemma 4 vs Qwen 3.6 비교
+- [`slm_research/README.md`](../agent-guide/docs/slm_research/README.md) — 리서치 문서 전체 목록 (연구계 전용, `agent-guide/docs/`)
+- [`slm_research/models/qwen3.6.md`](../agent-guide/docs/slm_research/models/qwen3.6.md) — Qwen3.6 모델 상세 스펙·벤치마크·운영 메모
+- [`slm_research/models/qwen3.5.md`](../agent-guide/docs/slm_research/models/qwen3.5.md) — Qwen3.5 조사
+- [`slm_research/models/gemma4.md`](../agent-guide/docs/slm_research/models/gemma4.md) — Gemma 4 조사
+- [`slm_research/topics/gemma4-vs-qwen.md`](../agent-guide/docs/slm_research/topics/gemma4-vs-qwen.md) — Gemma 4 vs Qwen 3.6 비교
 - [`vllm/bugfix/2026-04-18_vllm_multimodal_encoder_cache.md`](vllm/bugfix/2026-04-18_vllm_multimodal_encoder_cache.md) — encoder cache race 해결 기록
 
 ### 15.3 외부 링크

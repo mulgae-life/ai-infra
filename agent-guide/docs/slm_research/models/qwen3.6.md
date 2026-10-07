@@ -344,4 +344,4 @@ FP8 가중치 ~35 GB. chatbot-poc 현행 구성은 **L40S 46GB × 2장, TP=2**. 
 - [GitHub vllm-project/vllm Issue #37121 — Hybrid Mamba/Attention KV cache overestimation](https://github.com/vllm-project/vllm/issues/37121)
 - [GitHub vllm-project/vllm Issue #37602 — Qwen3.5-122B-A10B-FP8 concurrent image crash](https://github.com/vllm-project/vllm/issues/37602)
 - [GitHub vllm-project/vllm Issue #38643 — Qwen3.5 FLA linear attention format mismatch](https://github.com/vllm-project/vllm/issues/38643)
-- [chatbot-poc 운영 이슈 기록 — 2026-04-18 encoder cache race](../../bugfix/2026-04-18_vllm_multimodal_encoder_cache.md)
+- [chatbot-poc 운영 이슈 기록 — 2026-04-18 encoder cache race](../../../../llm-serving/vllm/bugfix/2026-04-18_vllm_multimodal_encoder_cache.md)

@@ -1,6 +1,6 @@
 # SLM 리서치
 
-서빙 모델을 고르고 운영 설정을 정할 때 근거로 쓴 조사 문서다. 연구계 전용이라 S3 배포에서 제외한다(`llm-serving/start.sh`의 `*/slm_research/*`).
+서빙 모델을 고르고 운영 설정을 정할 때 근거로 쓴 조사 문서다. 연구계 전용 문서라 S3 배포 대상(`llm-serving/`) 밖인 `agent-guide/docs/`에 둔다(2026-10-06 `llm-serving/vllm/`에서 이동).
 
 ## 구조
 
@@ -29,6 +29,7 @@
 | [korean-ability.md](topics/korean-ability.md) | 2026-08-19 | Gemma 4 26B·31B와 Qwen3.8 27B의 한국어 능력 | [2026-08-19_korean](sources/2026-08-19_korean/README.md) |
 | [mtp.md](topics/mtp.md) | 2026-05-12 | Multi-Token Prediction의 모델별 도입 형태와 vLLM 서빙 차이 | — |
 | [jev.md](topics/jev.md) | 2026-10-06 | TypeSafe Jev 판단 전용 모델과 공개 재현 모델 | [2026-10-06_jev](sources/2026-10-06_jev/README.md) |
+| [jev-probe.md](topics/jev-probe.md) | 2026-10-06 | 서빙 중인 Qwen3.8-27B를 확률 읽기로 Jev 1.13과 맞댄 실측. 정확도, 보정, 업무 문항, 지연·처리량 | [2026-10-06_jev-probe](sources/2026-10-06_jev-probe/README.md) |
 
 ## 새 조사를 넣을 때
 

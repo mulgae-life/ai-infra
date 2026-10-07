@@ -144,7 +144,7 @@ Gated DeltaNet 층은 상태 크기가 입력 길이와 무관해 KV 캐시 요�
 | `reasoning_effort` | **xhigh** | 사고 깊이. `xhigh` / `medium` / `low` 세 값만 허용 |
 | `preserve_thinking` | **true** | 이전 메시지의 사고 블록을 대화 내내 유지 |
 
-**허용값을 벗어나면 HTTP 400이다.** 채팅 템플릿이 `raise_exception`을 던지기 때문이며, OpenAI 규격에서는 정상인 `high`도 여기서는 400이 된다. 운영 가이드 [VLLM_OPS_GUIDE.md §12.5](../../../VLLM_OPS_GUIDE.md)에 호출 예시와 함께 정리돼 있다.
+**허용값을 벗어나면 HTTP 400이다.** 채팅 템플릿이 `raise_exception`을 던지기 때문이며, OpenAI 규격에서는 정상인 `high`도 여기서는 400이 된다. 운영 가이드 [VLLM_OPS_GUIDE.md §12.5](../../../../llm-serving/VLLM_OPS_GUIDE.md)에 호출 예시와 함께 정리돼 있다.
 
 `preserve_thinking`은 에이전트 시나리오에서 판단 일관성을 지키고 KV 캐시 재사용률을 올리는 목적이다. 최신 사용자 메시지의 사고만 남기려면 `false`로 끈다.
 

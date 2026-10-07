@@ -46,7 +46,7 @@ last-updated: 2026-06-10
 | **Phase 1 / Phase 2** | `aws/setup-ec2.sh`의 재부팅 전(드라이버/EBS/Docker) ↔ 재부팅 후(NVIDIA Container Toolkit/Fabric Manager/GPU 검증) 단계 |
 | **user.sh** | `aws/`의 다중 사용자 컨테이너 관리 스크립트 (포트 5010~5499 자동 할당) |
 | **vLLM Gateway** | `llm-serving/vllm/vllm_gateway.py`. OpenAI 호환 + 모델 라우팅 (다중 vLLM 서버 라우팅) |
-| **SLM** | Small Language Model. `llm-serving/vllm/slm_research/`에 비교 자료 (Gemma, Qwen) |
+| **SLM** | Small Language Model. `agent-guide/docs/slm_research/`에 비교 자료 (Gemma, Qwen) |
 | **SSM Session Manager** | AWS Systems Manager로 폐쇄망 EC2 호스트 셸 접근 |
 | **MCP** | Model Context Protocol. AI가 외부 도구와 통신하는 방식 |
 | **P0/P1/P2** | 우선순위. P0(긴급) > P1(중요) > P2(보통) |
