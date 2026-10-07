@@ -1,0 +1,11 @@
+{
+ "endpoint": "http://127.0.0.1:8179",
+ "mode": "systemone",
+ "concurrency": 16,
+ "n": 600,
+ "accuracy": 0.8983,
+ "p50_ms": 2768.6,
+ "p95_ms": 5093.4,
+ "wall_s": 117.45,
+ "items_per_s": 5.11
+}

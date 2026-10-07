@@ -1,0 +1,98 @@
+[
+ {
+  "chars": 500,
+  "kind": "cold",
+  "prompt_tokens": 522,
+  "p50_ms": 263.6,
+  "max_ms": 267.1,
+  "reps": 8
+ },
+ {
+  "chars": 500,
+  "kind": "warm",
+  "prompt_tokens": 514,
+  "p50_ms": 258.6,
+  "max_ms": 265.2,
+  "reps": 8
+ },
+ {
+  "chars": 2000,
+  "kind": "cold",
+  "prompt_tokens": 1313,
+  "p50_ms": 585.4,
+  "max_ms": 588.1,
+  "reps": 8
+ },
+ {
+  "chars": 2000,
+  "kind": "warm",
+  "prompt_tokens": 1256,
+  "p50_ms": 561.0,
+  "max_ms": 565.4,
+  "reps": 8
+ },
+ {
+  "chars": 8000,
+  "kind": "cold",
+  "prompt_tokens": 4399,
+  "p50_ms": 1935.1,
+  "max_ms": 1941.5,
+  "reps": 8
+ },
+ {
+  "chars": 8000,
+  "kind": "warm",
+  "prompt_tokens": 4249,
+  "p50_ms": 493.6,
+  "max_ms": 500.0,
+  "reps": 8
+ },
+ {
+  "chars": 20000,
+  "kind": "cold",
+  "prompt_tokens": 10625,
+  "p50_ms": 4913.1,
+  "max_ms": 4945.3,
+  "reps": 8
+ },
+ {
+  "chars": 20000,
+  "kind": "warm",
+  "prompt_tokens": 10858,
+  "p50_ms": 598.3,
+  "max_ms": 603.6,
+  "reps": 8
+ },
+ {
+  "chars": 40000,
+  "kind": "cold",
+  "prompt_tokens": 21213,
+  "p50_ms": 10524.7,
+  "max_ms": 10692.9,
+  "reps": 8
+ },
+ {
+  "chars": 40000,
+  "kind": "warm",
+  "prompt_tokens": 20978,
+  "p50_ms": 525.3,
+  "max_ms": 527.8,
+  "reps": 8
+ },
+ {
+  "chars": 80000,
+  "kind": "cold",
+  "prompt_tokens": 42009,
+  "p50_ms": 21487.7,
+  "max_ms": 21603.5,
+  "reps": 8
+ },
+ {
+  "chars": 80000,
+  "kind": "warm",
+  "prompt_tokens": 41433,
+  "p50_ms": 786.4,
+  "max_ms": 794.1,
+  "reps": 8
+ }
+]

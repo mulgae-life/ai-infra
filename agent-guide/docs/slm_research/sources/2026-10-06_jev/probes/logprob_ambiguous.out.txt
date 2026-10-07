@@ -1,0 +1,16 @@
+선택지 토큰 ID: {'A': 32, 'B': 33, 'C': 34}
+프롬프트 끝부분: ') 해지<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n'
+
+=== ② 전용 경로 /generative_scoring (선택지 순서를 돌려 3회) ===
+첫 선택지 A: score 0.2682  (87 ms, 입력 86 토큰)
+첫 선택지 B: score 0.7290  (79 ms, 입력 86 토큰)
+첫 선택지 C: score 0.0028  (78 ms, 입력 86 토큰)
+합계: 1.0000
+
+=== 비교: 게이트웨이 채팅 경로 top_logprobs 5 ===
+           'B'  logprob   -0.3895  → 0.6774
+           'A'  logprob   -1.1395  → 0.3200
+           'C'  logprob   -7.3270  → 0.0007
+  '<|im_end|>'  logprob   -7.4520  → 0.0006
+          ' B'  logprob   -7.9520  → 0.0004
+(124 ms)

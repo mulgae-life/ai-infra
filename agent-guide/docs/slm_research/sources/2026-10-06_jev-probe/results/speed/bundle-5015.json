@@ -1,0 +1,38 @@
+[
+ {
+  "mode": "chat",
+  "n_questions": 1,
+  "chars": 2000,
+  "p50_ms": 580.4,
+  "min_ms": 557.5,
+  "max_ms": 598.1,
+  "reps": 5
+ },
+ {
+  "mode": "chat",
+  "n_questions": 4,
+  "chars": 2000,
+  "p50_ms": 2321.4,
+  "min_ms": 2243.3,
+  "max_ms": 2394.2,
+  "reps": 5
+ },
+ {
+  "mode": "chat",
+  "n_questions": 8,
+  "chars": 2000,
+  "p50_ms": 4818.9,
+  "min_ms": 4607.7,
+  "max_ms": 5086.0,
+  "reps": 5
+ },
+ {
+  "mode": "chat",
+  "n_questions": 16,
+  "chars": 2000,
+  "p50_ms": 9970.2,
+  "min_ms": 9526.4,
+  "max_ms": 10765.9,
+  "reps": 5
+ }
+]

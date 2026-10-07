@@ -1,0 +1,20 @@
+{
+ "input": "/workspace/tmp/jev-lab/data/ko-biz/all.jsonl",
+ "endpoint": "http://127.0.0.1:7080",
+ "mode": "prob",
+ "concurrency": 16,
+ "n": 600,
+ "accuracy": 0.8733,
+ "p50_ms": 1957.9,
+ "p95_ms": 2797.5,
+ "mean_ms": 1984.6,
+ "wall_s": 74.99,
+ "items_per_s": 8.0,
+ "prompt_tokens_median": 256.5,
+ "shift": 0,
+ "shuffle": false,
+ "labels": "letter",
+ "system": true,
+ "cover_mean": 0.9969,
+ "all_labels_in_top20": 0.9617
+}

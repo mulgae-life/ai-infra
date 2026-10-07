@@ -1,0 +1,44 @@
+[
+ {
+  "kind": "tokens",
+  "concurrency": 1,
+  "n": 300,
+  "items_per_s": 7.25,
+  "p50_ms": 134.5
+ },
+ {
+  "kind": "tokens",
+  "concurrency": 16,
+  "n": 300,
+  "items_per_s": 9.29,
+  "p50_ms": 1709.0
+ },
+ {
+  "kind": "chat",
+  "concurrency": 1,
+  "n": 300,
+  "items_per_s": 7.05,
+  "p50_ms": 138.3
+ },
+ {
+  "kind": "chat",
+  "concurrency": 16,
+  "n": 300,
+  "items_per_s": 9.32,
+  "p50_ms": 1702.6
+ },
+ {
+  "kind": "chat-nolp",
+  "concurrency": 1,
+  "n": 300,
+  "items_per_s": 7.07,
+  "p50_ms": 138.5
+ },
+ {
+  "kind": "chat-nolp",
+  "concurrency": 16,
+  "n": 300,
+  "items_per_s": 9.39,
+  "p50_ms": 1689.7
+ }
+]

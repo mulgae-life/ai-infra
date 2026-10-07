@@ -1,0 +1,100 @@
+{"id": "route-001", "answer": "보험금 청구", "confidence": "high", "issue": null}
+{"id": "route-002", "answer": "계약 변경", "confidence": "high", "issue": null}
+{"id": "route-003", "answer": "해지·환급", "confidence": "high", "issue": null}
+{"id": "route-004", "answer": "보험료 납입", "confidence": "high", "issue": null}
+{"id": "route-005", "answer": "상품 문의", "confidence": "high", "issue": null}
+{"id": "route-006", "answer": "대출", "confidence": "high", "issue": null}
+{"id": "route-007", "answer": "민원", "confidence": "high", "issue": null}
+{"id": "route-008", "answer": "기타", "confidence": "high", "issue": null}
+{"id": "route-009", "answer": "보험금 청구", "confidence": "high", "issue": null}
+{"id": "route-010", "answer": "해지·환급", "confidence": "high", "issue": null}
+{"id": "route-011", "answer": "계약 변경", "confidence": "high", "issue": null}
+{"id": "route-012", "answer": "보험료 납입", "confidence": "high", "issue": null}
+{"id": "route-013", "answer": "상품 문의", "confidence": "high", "issue": null}
+{"id": "route-014", "answer": "민원", "confidence": "high", "issue": null}
+{"id": "route-015", "answer": "대출", "confidence": "high", "issue": null}
+{"id": "route-016", "answer": "기타", "confidence": "high", "issue": null}
+{"id": "route-017", "answer": "보험금 청구", "confidence": "high", "issue": null}
+{"id": "route-018", "answer": "해지·환급", "confidence": "high", "issue": null}
+{"id": "route-019", "answer": "자동차보상팀", "confidence": "high", "issue": null}
+{"id": "route-020", "answer": "수납팀", "confidence": "high", "issue": null}
+{"id": "route-021", "answer": "장기보상팀", "confidence": "high", "issue": null}
+{"id": "route-022", "answer": "계약관리팀", "confidence": "high", "issue": null}
+{"id": "route-023", "answer": "소비자보호팀", "confidence": "high", "issue": null}
+{"id": "route-024", "answer": "간편청구센터", "confidence": "high", "issue": null}
+{"id": "route-025", "answer": "보험금심사팀", "confidence": "high", "issue": null}
+{"id": "route-026", "answer": "보험금심사팀", "confidence": "high", "issue": null}
+{"id": "route-027", "answer": "대출센터", "confidence": "high", "issue": null}
+{"id": "route-028", "answer": "고객지원팀", "confidence": "high", "issue": null}
+{"id": "route-029", "answer": "금융사기대응팀", "confidence": "high", "issue": null}
+{"id": "route-030", "answer": "일반상담", "confidence": "high", "issue": null}
+{"id": "route-031", "answer": "외국어데스크", "confidence": "high", "issue": null}
+{"id": "route-032", "answer": "시니어전담", "confidence": "high", "issue": null}
+{"id": "route-033", "answer": "단체보험팀", "confidence": "high", "issue": null}
+{"id": "route-034", "answer": "설계사지원센터", "confidence": "high", "issue": null}
+{"id": "route-035", "answer": "퇴직연금팀", "confidence": "high", "issue": null}
+{"id": "route-036", "answer": "개인고객센터", "confidence": "high", "issue": null}
+{"id": "route-037", "answer": "입원비 청구", "confidence": "high", "issue": null}
+{"id": "route-038", "answer": "자녀 실손보험 대리 청구", "confidence": "high", "issue": null}
+{"id": "route-039", "answer": "명의도용 의심 계약 확인", "confidence": "high", "issue": null}
+{"id": "route-040", "answer": "약관대출 이자 납입", "confidence": "high", "issue": null}
+{"id": "route-041", "answer": "사고 접수", "confidence": "high", "issue": null}
+{"id": "route-042", "answer": "청구 서류 보완 제출", "confidence": "high", "issue": null}
+{"id": "route-043", "answer": "보험료 납입 유예", "confidence": "high", "issue": null}
+{"id": "route-044", "answer": "정형외과 통원 치료", "confidence": "high", "issue": null}
+{"id": "route-045", "answer": "보상 담당자 응대 불만", "confidence": "high", "issue": null}
+{"id": "route-046", "answer": "저축보험 만기금 수령", "confidence": "high", "issue": null}
+{"id": "route-047", "answer": "현지 병원 지급보증 확인서 발급", "confidence": "high", "issue": null}
+{"id": "route-048", "answer": "수익자 변경", "confidence": "high", "issue": null}
+{"id": "route-049", "answer": "보험금 차액 확인", "confidence": "high", "issue": null}
+{"id": "route-050", "answer": "운전자보험 해지", "confidence": "high", "issue": null}
+{"id": "route-051", "answer": "신규 암보험 청약 철회", "confidence": "high", "issue": null}
+{"id": "route-052", "answer": "연락처 변경", "confidence": "high", "issue": null}
+{"id": "route-053", "answer": "본인 보험 특약 추가", "confidence": "high", "issue": null}
+{"id": "route-054", "answer": "자동차", "confidence": "high", "issue": null}
+{"id": "route-055", "answer": "운전자", "confidence": "high", "issue": null}
+{"id": "route-056", "answer": "실손의료", "confidence": "high", "issue": null}
+{"id": "route-057", "answer": "질병·암", "confidence": "high", "issue": null}
+{"id": "route-058", "answer": "사망·종신", "confidence": "high", "issue": null}
+{"id": "route-059", "answer": "연금·저축", "confidence": "high", "issue": null}
+{"id": "route-060", "answer": "재물·배상", "confidence": "high", "issue": null}
+{"id": "route-061", "answer": "여행", "confidence": "high", "issue": null}
+{"id": "route-062", "answer": "실손의료", "confidence": "high", "issue": null}
+{"id": "route-063", "answer": "질병·암", "confidence": "high", "issue": null}
+{"id": "route-064", "answer": "질병·암", "confidence": "high", "issue": null}
+{"id": "route-065", "answer": "재물·배상", "confidence": "high", "issue": null}
+{"id": "route-066", "answer": "연금·저축", "confidence": "high", "issue": null}
+{"id": "route-067", "answer": "운전자", "confidence": "high", "issue": null}
+{"id": "route-068", "answer": "여행", "confidence": "high", "issue": null}
+{"id": "route-069", "answer": "사망·종신", "confidence": "high", "issue": null}
+{"id": "route-070", "answer": "자동차", "confidence": "high", "issue": null}
+{"id": "route-071", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-072", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-073", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-074", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-075", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-076", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-077", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-078", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-079", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-080", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-081", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-082", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-083", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-084", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-085", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-086", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-087", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-088", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-089", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-090", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-091", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-092", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-093", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-094", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-095", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-096", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-097", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-098", "answer": "true", "confidence": "high", "issue": null}
+{"id": "route-099", "answer": "false", "confidence": "high", "issue": null}
+{"id": "route-100", "answer": "true", "confidence": "high", "issue": null}

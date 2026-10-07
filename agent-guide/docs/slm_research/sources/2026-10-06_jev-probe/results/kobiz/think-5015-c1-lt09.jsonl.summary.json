@@ -1,0 +1,20 @@
+{
+ "input": "data/ko-biz/escalate-lt09.jsonl",
+ "endpoint": "http://127.0.0.1:5015",
+ "mode": "think",
+ "concurrency": 1,
+ "n": 136,
+ "accuracy": 0.9926,
+ "p50_ms": 8178.7,
+ "p95_ms": 21377.1,
+ "mean_ms": 9257.1,
+ "wall_s": 1258.98,
+ "items_per_s": 0.11,
+ "prompt_tokens_median": 370.5,
+ "shift": 0,
+ "shuffle": false,
+ "labels": "letter",
+ "system": true,
+ "unparsed": 0,
+ "completion_tokens_median": 519.5
+}

@@ -1,7 +1,7 @@
 ---
 name: session
 description: docker 레포 현재 상태. 세션 시작 시 다음 작업과 최근 변경 파악용.
-last-updated: 2026-10-06 (Jev 조사 + `slm_research/` 개편)
+last-updated: 2026-10-06 (Jev 조사·실측 + `slm_research/` 개편·이동)
 ---
 
 # 세션 상태
@@ -25,14 +25,14 @@ last-updated: 2026-10-06 (Jev 조사 + `slm_research/` 개편)
 | 우선순위 | 작업 | 상태 |
 |---------|------|------|
 | P1 | **온프레미스 H200 서버 셋업 (`on-prem/`)**: 8/28 골격 신설 — `setup-host.sh`(RHEL 10, 드라이버 580.178.04 LTSB 고정 + versionlock, Docker CE, Fabric Manager는 `/dev/nvidia-nvswitch*`로 판단, 베이스 이미지 사전 pull), `start.sh check`(폐쇄망 준비 점검), `.env.prd`(H200 8장 기준, git 미추적). 컨테이너 계층은 `aws/` 공유. 잔존: ① 설치팀 회신 대기 — HGX/PCIe 구성, 데이터 NVMe 경로(`VOLUME_DEVICE`), RAM ② 실서버에서 `setup-host.sh` 최초 실행 검증(문법·`check` 로직만 연구계에서 확인, RHEL 실기동 미검증) ③ `docker-compose.yml`의 `apparmor=unconfined`가 RHEL Docker에서 무시되는지 확인 ④ 5-3 pip 오프라인 절차 실측 ⑤ `start.sh check`의 `_yaml_top_value`가 최상위 키만 읽어 들여쓰인 `speculative_config.model`(drafter `${model}-assistant`)을 검사하지 못한다 — 폐쇄망에서 drafter 누락을 기동 전에 못 잡는다(9/15 확인, 수정 여부 대표님 결정 대기). | 골격 ✅, 실서버 검증 대기 |
-| P1 | **`gemma-4` 별칭 + 정체성 프롬프트 운영계 반영**: 8/20 연구계 적용·검증 완료. 잔존 — `./start.sh push` 후 운영계에서 인스턴스·게이트웨이 **둘 다** 재기동. 게이트웨이 재기동만으로 걸리는 것은 호환 계층과 정체성 주입(코드 기본값 on)이고, 별칭과 `fingerprint_mode: custom`은 **인스턴스 재기동이 있어야** 반영된다. 클라이언트 `.env`(`CHAT_MODEL` 등)는 `VLLM_OPS_GUIDE.md` §9.4 참고. 같은 `push`로 S3의 `slm_research/` 182개 객체가 지워지지만 운영 서버에 이미 내려간 사본은 제외 경로라 `pull --delete`가 안 지운다 — `pull` 후 `vllm/slm_research/`를 한 번 직접 정리할 것. | 연구계 ✅, 운영계 대기 |
+| P1 | **`gemma-4` 별칭 + 정체성 프롬프트 운영계 반영**: 8/20 연구계 적용·검증 완료. 잔존 — `./start.sh push` 후 운영계에서 인스턴스·게이트웨이 **둘 다** 재기동. 게이트웨이 재기동만으로 걸리는 것은 호환 계층과 정체성 주입(코드 기본값 on)이고, 별칭과 `fingerprint_mode: custom`은 **인스턴스 재기동이 있어야** 반영된다. 클라이언트 `.env`(`CHAT_MODEL` 등)는 `VLLM_OPS_GUIDE.md` §9.4 참고. 모델 조사 문서는 10/6 `agent-guide/docs/slm_research/`로 옮기고 `start.sh`의 제외 규칙을 지웠으므로, 같은 `push`·`pull`(`--delete`)이 S3와 운영 서버의 옛 `vllm/slm_research/`를 함께 지운다(수동 정리 불필요). | 연구계 ✅, 운영계 대기 |
 | P1 | **운영계 31B 전환 반영**: 9/4 `prd-gemma`를 26B-A4B → 31B 덴스로 교체(yaml만). 잔존 — ① 운영계 `/models/LLM/google/`에 `gemma-4-31B-it` **본체와 `-assistant` drafter 둘 다** 확보(폐쇄망이라 S3 경유, `${model}-assistant` 치환이라 yaml 수정은 불필요) ② `./start.sh push` → 운영계 `pull` → 인스턴스·게이트웨이 재기동(바로 위 별칭 반영과 같은 재기동에 묶인다) ③ 기동 로그의 `GPU KV cache size`·`Maximum concurrency` 확인 — 31B는 토큰당 KV가 26B의 4배라 `max_num_seqs: 20`이 실효하는지는 이 값으로만 판정된다 ④ 부하 시 `PreemptionMode.RECOMPUTE` 경고가 뜨면 `max_num_seqs`와 게이트웨이 `max_inflight_requests`를 함께 하향. | yaml ✅, 운영계 대기 |
 | P1 | **:5015 운영 프로파일 (26B 기준)**: 2026-07-21부터 :5015 = 비PII 직접 게이트웨이 + gemma-26b(fp8·TP2·gmu 0.9·max_len 65536 — `5a8fd1b`에서 32768→65536, overload 20/40). 잔존: 장문 트래픽 기준 latency·429 비율 측정. | 갱신(모델 교체), 장문 검증 잔존 |
-| P1 | **MTP 실기동 검증 (31B/26B/Qwen)**: 31B·Qwen 27B(5/13) + 26B-A4B(7/21, QA 통과) 실기동 확인. 잔존: ① Qwen 5016 재기동·가용성 ② acceptance/TPOT 사내 벤치(`slm_research/topics/mtp.md` §5 참고). | 부분 완료, 벤치 잔존 |
+| P1 | **MTP 실기동 검증 (31B/26B/Qwen)**: 31B·Qwen 27B(5/13) + 26B-A4B(7/21, QA 통과) 실기동 확인. 잔존: ① Qwen 5016 재기동·가용성 ② acceptance/TPOT 사내 벤치(`agent-guide/docs/slm_research/topics/mtp.md` §5 참고). | 부분 완료, 벤치 잔존 |
 | P1 | **모델 간 속도 매트릭스**: `./start.sh speed [name\|all]` (8/10 진입점 신설 — 무인자면 기동된 게이트웨이를 순회하며 같은 파일에 누적). 26B-A4B 6행 확보(c=1 TPS 168.5 / c=10 TPS 81 — 31B quick 64.8 대비 단발 약 2.6배). 잔존: 31B·Qwen 풀 매트릭스로 3모델 비교 완성. | 부분 완료(26B 측정) |
 | P1 | `llm-serving/sglang/` 디렉토리 골격 (운영 가이드 + 런처 + 설정 + 테스트) | Todo |
 | P1 | **STT 한국어 정성 비교 (PoC 잔여)**: 시나리오 E(정확도+offline) 채택 완료 — 1순위 Whisper-large-v3(+한국어 fine-tune 트랙). `test_stt.py`(WER/RTF/정성) 작성으로 실측 확정. | 의사결정 ✅, 실측 대기 |
-| P2 | **Jev 방식 판단 실측**: 서빙 중인 Qwen3.8-27B에서 선택지 확률을 읽어 한국어 판단 문항 50~100개의 정확도·보정·지연 측정 (`slm_research/topics/jev.md` 7장 후보 1). **대표님 결정 대기.** | 신규 (2026-10-06) |
+| P2 | **Jev 방식 판단 실측**: 결과 `docs/slm_research/topics/jev-probe.md`. 정확도는 Jev와 같은 수준, 처리량이 초당 6~9건에서 막힘. 후속 ① TP1 A/B — 서빙과 같은 설정에서 TP만 1로 바꿔 처리량 비교(GPU 간 P2P 없음이 유력 원인, 서빙 설정 변경이라 대표님 결정) ② 업무 문항 600개를 Jev API로 풀기(OpenRouter 키 필요, 외부 전송이라 대표님 확인) | **완료**(10-06), 후속 결정 대기 |
 | P2 | **26B-A4B MTP 튜닝**: acceptance 32~47%(31B 70~85% 대비 낮음 — MoE 저동시성 특성). 동시성 4+ 실측 후 낮으면 `num_speculative_tokens 4→2` 또는 MTP off A/B. | 신규 (2026-07-21) |
 | P2 | **PII NER 후속 고도화 (대표님 지시로 보류)**: 현재 연구·운영 모두 PII 미사용(비PII vllm만 운영). 재사용 전 필수 — ① **🚨 512 토큰 초과 청킹**(현재 긴 텍스트 500 에러 → fail-open 무검사 통과/fail-closed 차단. overlap 청킹 + 회귀 테스트) ② 마이크로 배칭 ③ replica 스케일아웃(`configs/ner.yaml` backends 복제, LB 기지원). 동시성 1차(스레드풀+세마포어)는 7/21 완료. | 신규 (후속 대기) |
 | P2 | **PII 가드 운영 적용 후속 (보류)**: 잔존 — 운영계 :5501 실기동(설정 준비 완료) · 보험 실데이터 recall 게이트 실측(`recall_gate.py` 하버스 준비, 라벨 JSONL 대기) · 스트리밍 progressive buffer(별도 합의) · 이미지 OCR PII · 배포 시 `PII_AUDIT_SALT` 확인. 설계: `agent-guide/plans/pii-dlp-gateway.md`. | 보류(PII 미사용 중) |
@@ -54,10 +54,12 @@ last-updated: 2026-10-06 (Jev 조사 + `slm_research/` 개편)
 
 ## 최근 세션
 
-### 2026-10-06 (Jev 조사 + `slm_research/` 개편)
+### 2026-10-06 (Jev 조사·실측 + `slm_research/` 개편·이동)
 
 - **변경**: `topics/jev.md`·`sources/2026-10-06_jev/` 신설 · `slm_research/`를 `models/`·`topics/`·`sources/`(구 `data/`)로 개편하고 루트 README 목록 신설, 외부 참조 4곳 갱신 · 중복 원본 5개 `.archive/2026-10-06_slm-research-dup/` (`5557317`)
 - **상태**: 모델 5종은 HF 최신 커밋과 일치해 갱신 불필요. Jev는 API 전용이라 폐쇄망 운영계에 도입 불가 → 공개 모델 확률 읽기 방식 실측은 다음 작업 P2
+- **이동**: `slm_research/`를 `llm-serving/vllm/`에서 `agent-guide/docs/`로 옮겨 배포 범위 밖에 둠 · `llm-serving/start.sh`의 `*/slm_research/*` 제외 규칙 삭제(9/15 수동 정리 안내 무효화) · 상대 링크·`DEPLOY_GUIDE`·`VLLM_OPS_GUIDE`·`PROJECT`·`GUIDE` 갱신
+- **실측**: `topics/jev-probe.md`·`sources/2026-10-06_jev-probe/` 신설(업무 문항 600개 포함). GPU 3에 임시 실험 엔진을 띄워 측정 후 내림. 작업 디렉터리는 `.archive/2026-10-06_jev-probe/`
 
 ### 2026-09-15 (on-prem 대조 + llm-serving 배포 범위 주석 정리 + `slm_research/` S3 제외)
 
@@ -92,7 +94,7 @@ last-updated: 2026-10-06 (Jev 조사 + `slm_research/` 개편)
 #### 현재 상태
 완료. 검증은 `bash -n`(배포·서비스 진입점 2종), `py_compile`(게이트웨이 + 테스트 3종), YAML 파싱(인스턴스·게이트웨이 12종) 전부 통과. 주석 안의 포트·경로·테스트 번호는 실제 yaml과 테스트 함수로 대조했다. `push --dryrun`에서 `slm_research/` 업로드 대상 0건, 삭제 단계 182건(기존 S3 객체)을 확인했고 S3에는 손대지 않았다.
 
-> ⚠️ **운영 서버 수동 정리 필요**: 다음 `push`로 S3의 `slm_research/` 182개 객체는 지워지지만, 제외 경로는 `pull --delete`에서도 보호되므로 운영 서버에 이미 내려간 `vllm/slm_research/`는 남는다. `pull` 후 한 번 직접 지워야 한다.
+> ~~⚠️ **운영 서버 수동 정리 필요**: 다음 `push`로 S3의 `slm_research/` 182개 객체는 지워지지만, 제외 경로는 `pull --delete`에서도 보호되므로 운영 서버에 이미 내려간 `vllm/slm_research/`는 남는다. `pull` 후 한 번 직접 지워야 한다.~~ → 10/6 폴더를 배포 범위 밖으로 옮기고 제외 규칙을 지워 `pull --delete`가 지운다.
 
 ### 2026-09-14 (my-docker-server 데탑 컨테이너 재생성 + 수동 설치 도구 이미지 고정)
 

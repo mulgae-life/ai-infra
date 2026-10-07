@@ -1,0 +1,100 @@
+{"id": "comply-001", "answer": "단정적 판단 제공", "confidence": "high", "issue": null}
+{"id": "comply-002", "answer": "설명의무 누락", "confidence": "high", "issue": null}
+{"id": "comply-003", "answer": "부당 권유", "confidence": "high", "issue": null}
+{"id": "comply-004", "answer": "동의 절차 누락", "confidence": "high", "issue": null}
+{"id": "comply-005", "answer": "위반 없음", "confidence": "high", "issue": null}
+{"id": "comply-006", "answer": "단정적 판단 제공", "confidence": "high", "issue": null}
+{"id": "comply-007", "answer": "부당 권유", "confidence": "high", "issue": null}
+{"id": "comply-008", "answer": "위반 없음", "confidence": "high", "issue": null}
+{"id": "comply-009", "answer": "위반 없음", "confidence": "high", "issue": null}
+{"id": "comply-010", "answer": "설명의무 누락", "confidence": "high", "issue": null}
+{"id": "comply-011", "answer": "단정적 판단 제공", "confidence": "high", "issue": null}
+{"id": "comply-012", "answer": "동의 절차 누락", "confidence": "high", "issue": null}
+{"id": "comply-013", "answer": "부당 권유", "confidence": "high", "issue": null}
+{"id": "comply-014", "answer": "동의 절차 누락", "confidence": "high", "issue": null}
+{"id": "comply-015", "answer": "설명의무 누락", "confidence": "high", "issue": null}
+{"id": "comply-016", "answer": "부당 권유", "confidence": "high", "issue": null}
+{"id": "comply-017", "answer": "동의 절차 누락", "confidence": "high", "issue": null}
+{"id": "comply-018", "answer": "설명의무 누락", "confidence": "high", "issue": null}
+{"id": "comply-019", "answer": "위반 없음", "confidence": "high", "issue": null}
+{"id": "comply-020", "answer": "단정적 판단 제공", "confidence": "high", "issue": null}
+{"id": "comply-021", "answer": "감액기간", "confidence": "high", "issue": null}
+{"id": "comply-022", "answer": "중도상환수수료", "confidence": "high", "issue": null}
+{"id": "comply-023", "answer": "예금자보호", "confidence": "high", "issue": null}
+{"id": "comply-024", "answer": "누락 없음", "confidence": "high", "issue": null}
+{"id": "comply-025", "answer": "원금 손실 가능성", "confidence": "high", "issue": null}
+{"id": "comply-026", "answer": "자기부담금", "confidence": "high", "issue": null}
+{"id": "comply-027", "answer": "만기 후 이율", "confidence": "high", "issue": null}
+{"id": "comply-028", "answer": "청약철회", "confidence": "high", "issue": null}
+{"id": "comply-029", "answer": "담보 처분", "confidence": "high", "issue": null}
+{"id": "comply-030", "answer": "누락 없음", "confidence": "high", "issue": null}
+{"id": "comply-031", "answer": "공시이율 변동", "confidence": "high", "issue": null}
+{"id": "comply-032", "answer": "비례 보상", "confidence": "high", "issue": null}
+{"id": "comply-033", "answer": "신용점수 영향", "confidence": "high", "issue": null}
+{"id": "comply-034", "answer": "의료비 한도", "confidence": "high", "issue": null}
+{"id": "comply-035", "answer": "기존 질병 제외", "confidence": "high", "issue": null}
+{"id": "comply-036", "answer": "최저보증 없음", "confidence": "high", "issue": null}
+{"id": "comply-037", "answer": "청약철회 기한", "confidence": "high", "issue": null}
+{"id": "comply-038", "answer": "대출 한도", "confidence": "high", "issue": null}
+{"id": "comply-039", "answer": "지원 조건", "confidence": "high", "issue": null}
+{"id": "comply-040", "answer": "누락 없음", "confidence": "high", "issue": null}
+{"id": "comply-041", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-042", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-043", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-044", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-045", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-046", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-047", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-048", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-049", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-050", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-051", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-052", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-053", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-054", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-055", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-056", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-057", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-058", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-059", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-060", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-061", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-062", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-063", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-064", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-065", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-066", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-067", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-068", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-069", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-070", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-071", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-072", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-073", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-074", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-075", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-076", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-077", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-078", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-079", "answer": "true", "confidence": "high", "issue": null}
+{"id": "comply-080", "answer": "false", "confidence": "high", "issue": null}
+{"id": "comply-081", "answer": "정상 종결", "confidence": "high", "issue": null}
+{"id": "comply-082", "answer": "중대 위반 보고", "confidence": "high", "issue": null}
+{"id": "comply-083", "answer": "해피콜 재확인", "confidence": "high", "issue": null}
+{"id": "comply-084", "answer": "보완 안내", "confidence": "high", "issue": null}
+{"id": "comply-085", "answer": "정상 종결", "confidence": "high", "issue": null}
+{"id": "comply-086", "answer": "중대 위반 보고", "confidence": "high", "issue": null}
+{"id": "comply-087", "answer": "해피콜 재확인", "confidence": "high", "issue": null}
+{"id": "comply-088", "answer": "보완 안내", "confidence": "high", "issue": null}
+{"id": "comply-089", "answer": "보완 안내", "confidence": "high", "issue": null}
+{"id": "comply-090", "answer": "해피콜 재확인", "confidence": "high", "issue": null}
+{"id": "comply-091", "answer": "중대 위반 보고", "confidence": "high", "issue": null}
+{"id": "comply-092", "answer": "정상 종결", "confidence": "high", "issue": null}
+{"id": "comply-093", "answer": "해피콜 재확인", "confidence": "high", "issue": null}
+{"id": "comply-094", "answer": "정상 종결", "confidence": "high", "issue": null}
+{"id": "comply-095", "answer": "보완 안내", "confidence": "high", "issue": null}
+{"id": "comply-096", "answer": "중대 위반 보고", "confidence": "high", "issue": null}
+{"id": "comply-097", "answer": "해피콜 재확인", "confidence": "high", "issue": null}
+{"id": "comply-098", "answer": "보완 안내", "confidence": "high", "issue": null}
+{"id": "comply-099", "answer": "정상 종결", "confidence": "high", "issue": null}
+{"id": "comply-100", "answer": "중대 위반 보고", "confidence": "high", "issue": null}

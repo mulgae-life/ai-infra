@@ -13,6 +13,7 @@
 | `benchmarks/` | 커뮤니티 순위표 Jev Decision Index 0.2.1 원본 데이터 |
 | `repos/` | 재현 프로젝트 GitHub README 사본 |
 | `community/` | 커뮤니티 분석 글 원문 (텍스트 추출본) |
+| `probes/` | 연구계 Qwen3.8-27B-FP8에 직접 보낸 확률 읽기 요청과 출력 |
 
 ## official/
 
@@ -64,3 +65,12 @@
 |------|------|
 | `archerhume_jevs-architecture-unmasked.txt` | 9/17 블랙박스 역추적 글. API 실험으로 구조를 추정하고 관찰과 추정을 구분해 적었다 |
 | `systemonemodels_jev-architecture.txt` | 독립 사이트의 정리 글. 공식 공개 범위와 커뮤니티 가설 세 가지 |
+
+## probes/
+
+[`jev.md`](../../topics/jev.md) 7.1절의 근거다. 2026-10-06 연구계에서 실행했다.
+
+| 파일 | 설명 |
+|------|------|
+| `logprob_chat_easy.py`, `.out.txt` | 쉬운 문항 하나를 게이트웨이 채팅 경로(:5015)로 보내 상위 5개 점수를 받는다. B·C가 상위 5개 밖으로 밀린 사례 |
+| `logprob_ambiguous.py`, `.out.txt` | 애매한 문항 하나를 vLLM 전용 경로(:7080 `/generative_scoring`)로 선택지 순서를 돌려 3회 보내고, 같은 문항을 채팅 경로로도 보내 비교한다 |

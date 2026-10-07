@@ -1,0 +1,100 @@
+{"id": "claim-001", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-002", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-003", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-004", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-005", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-006", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-007", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-008", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-009", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-010", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-011", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-012", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-013", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-014", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-015", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-016", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-017", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-018", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-019", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-020", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-021", "answer": "위험한 활동", "confidence": "high", "issue": null}
+{"id": "claim-022", "answer": "미용 목적 성형", "confidence": "high", "issue": null}
+{"id": "claim-023", "answer": "면책 해당 없음", "confidence": "high", "issue": null}
+{"id": "claim-024", "answer": "무면허운전", "confidence": "high", "issue": null}
+{"id": "claim-025", "answer": "면책 해당 없음", "confidence": "high", "issue": null}
+{"id": "claim-026", "answer": "전쟁·내란·폭동", "confidence": "high", "issue": null}
+{"id": "claim-027", "answer": "치료 목적 출국", "confidence": "high", "issue": null}
+{"id": "claim-028", "answer": "지진·분화", "confidence": "high", "issue": null}
+{"id": "claim-029", "answer": "면책 해당 없음", "confidence": "high", "issue": null}
+{"id": "claim-030", "answer": "예방접종 대상 질병", "confidence": "high", "issue": null}
+{"id": "claim-031", "answer": "선천적·유전적 질병", "confidence": "high", "issue": null}
+{"id": "claim-032", "answer": "미용 목적 치료", "confidence": "high", "issue": null}
+{"id": "claim-033", "answer": "면책 해당 없음", "confidence": "high", "issue": null}
+{"id": "claim-034", "answer": "한방 비급여 한약", "confidence": "high", "issue": null}
+{"id": "claim-035", "answer": "사고 후 현장 이탈", "confidence": "medium", "issue": "약관 가항 문구에 사고 인지 요건이 없어 '사고 후 현장 이탈'로 판단했으나, 고객이 '별일 아닌 줄 알았다'며 사고를 인지하지 못했다고 진술해 '면책 해당 없음'도 주장될 여지가 있다."}
+{"id": "claim-036", "answer": "검진·예방접종", "confidence": "high", "issue": null}
+{"id": "claim-037", "answer": "음주·무면허 운전", "confidence": "high", "issue": null}
+{"id": "claim-038", "answer": "면책 해당 없음", "confidence": "high", "issue": null}
+{"id": "claim-039", "answer": "임신·출산", "confidence": "high", "issue": null}
+{"id": "claim-040", "answer": "직무 수행", "confidence": "high", "issue": null}
+{"id": "claim-041", "answer": "진료비 세부내역서", "confidence": "high", "issue": null}
+{"id": "claim-042", "answer": "입퇴원확인서", "confidence": "high", "issue": null}
+{"id": "claim-043", "answer": "수술확인서", "confidence": "high", "issue": null}
+{"id": "claim-044", "answer": "가족관계증명서", "confidence": "high", "issue": null}
+{"id": "claim-045", "answer": "피보험자 인감증명서", "confidence": "high", "issue": null}
+{"id": "claim-046", "answer": "진단서 원본", "confidence": "high", "issue": null}
+{"id": "claim-047", "answer": "기본증명서", "confidence": "high", "issue": null}
+{"id": "claim-048", "answer": "한글 번역문", "confidence": "high", "issue": null}
+{"id": "claim-049", "answer": "자동차보험 사고접수 확인서", "confidence": "high", "issue": null}
+{"id": "claim-050", "answer": "영상 판독지", "confidence": "high", "issue": null}
+{"id": "claim-051", "answer": "누락 서류 없음", "confidence": "high", "issue": null}
+{"id": "claim-052", "answer": "장해진단서", "confidence": "high", "issue": null}
+{"id": "claim-053", "answer": "경찰 도난신고 확인서", "confidence": "high", "issue": null}
+{"id": "claim-054", "answer": "수리 견적서", "confidence": "high", "issue": null}
+{"id": "claim-055", "answer": "지급계좌 지정 동의서", "confidence": "high", "issue": null}
+{"id": "claim-056", "answer": "처방전", "confidence": "high", "issue": null}
+{"id": "claim-057", "answer": "누락 서류 없음", "confidence": "high", "issue": null}
+{"id": "claim-058", "answer": "수술확인서", "confidence": "high", "issue": null}
+{"id": "claim-059", "answer": "진단서", "confidence": "high", "issue": null}
+{"id": "claim-060", "answer": "진단서 재발급", "confidence": "high", "issue": null}
+{"id": "claim-061", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-062", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-063", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-064", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-065", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-066", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-067", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-068", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-069", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-070", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-071", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-072", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-073", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-074", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-075", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-076", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-077", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-078", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-079", "answer": "true", "confidence": "high", "issue": null}
+{"id": "claim-080", "answer": "false", "confidence": "high", "issue": null}
+{"id": "claim-081", "answer": "21만원", "confidence": "high", "issue": null}
+{"id": "claim-082", "answer": "37만원", "confidence": "high", "issue": null}
+{"id": "claim-083", "answer": "1,500만원", "confidence": "high", "issue": null}
+{"id": "claim-084", "answer": "750만원", "confidence": "high", "issue": null}
+{"id": "claim-085", "answer": "100만원", "confidence": "high", "issue": null}
+{"id": "claim-086", "answer": "25만원", "confidence": "high", "issue": null}
+{"id": "claim-087", "answer": "34만원", "confidence": "high", "issue": null}
+{"id": "claim-088", "answer": "35만원", "confidence": "high", "issue": null}
+{"id": "claim-089", "answer": "72만원", "confidence": "high", "issue": null}
+{"id": "claim-090", "answer": "40만원", "confidence": "high", "issue": null}
+{"id": "claim-091", "answer": "30만원", "confidence": "high", "issue": null}
+{"id": "claim-092", "answer": "18만원", "confidence": "high", "issue": null}
+{"id": "claim-093", "answer": "20만원", "confidence": "high", "issue": null}
+{"id": "claim-094", "answer": "9만원", "confidence": "high", "issue": null}
+{"id": "claim-095", "answer": "1,800만원", "confidence": "high", "issue": null}
+{"id": "claim-096", "answer": "5,000만원", "confidence": "high", "issue": null}
+{"id": "claim-097", "answer": "5만원", "confidence": "high", "issue": null}
+{"id": "claim-098", "answer": "152만원", "confidence": "high", "issue": null}
+{"id": "claim-099", "answer": "40만원", "confidence": "high", "issue": null}
+{"id": "claim-100", "answer": "2만원", "confidence": "high", "issue": null}

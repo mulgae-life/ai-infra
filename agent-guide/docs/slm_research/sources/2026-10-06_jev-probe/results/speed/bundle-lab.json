@@ -1,0 +1,38 @@
+[
+ {
+  "mode": "systemone",
+  "n_questions": 1,
+  "chars": 2000,
+  "p50_ms": 531.7,
+  "min_ms": 529.1,
+  "max_ms": 546.5,
+  "reps": 5
+ },
+ {
+  "mode": "systemone",
+  "n_questions": 4,
+  "chars": 2000,
+  "p50_ms": 1030.0,
+  "min_ms": 940.7,
+  "max_ms": 1073.1,
+  "reps": 5
+ },
+ {
+  "mode": "systemone",
+  "n_questions": 8,
+  "chars": 2000,
+  "p50_ms": 1825.6,
+  "min_ms": 1676.8,
+  "max_ms": 2018.1,
+  "reps": 5
+ },
+ {
+  "mode": "systemone",
+  "n_questions": 16,
+  "chars": 2000,
+  "p50_ms": 6378.0,
+  "min_ms": 3519.7,
+  "max_ms": 6673.9,
+  "reps": 5
+ }
+]

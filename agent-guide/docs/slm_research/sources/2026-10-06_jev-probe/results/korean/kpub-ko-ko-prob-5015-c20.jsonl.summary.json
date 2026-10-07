@@ -1,0 +1,20 @@
+{
+ "input": "/workspace/tmp/jev-lab/repos/simple-jev/eval/data/korean-public-ko-ko.jsonl",
+ "endpoint": "http://127.0.0.1:5015",
+ "mode": "prob",
+ "concurrency": 20,
+ "n": 300,
+ "accuracy": 0.8267,
+ "p50_ms": 3297.4,
+ "p95_ms": 3775.1,
+ "mean_ms": 3151.7,
+ "wall_s": 47.49,
+ "items_per_s": 6.32,
+ "prompt_tokens_median": 342.5,
+ "shift": 0,
+ "shuffle": false,
+ "labels": "letter",
+ "system": true,
+ "cover_mean": 0.9988,
+ "all_labels_in_top20": 0.9967
+}

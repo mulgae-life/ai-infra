@@ -1,0 +1,100 @@
+{"id": "fraud-001", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-002", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-003", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-004", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-005", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-006", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-007", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-008", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-009", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-010", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-011", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-012", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-013", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-014", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-015", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-016", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-017", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-018", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-019", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-020", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-021", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-022", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-023", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-024", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-025", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-026", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-027", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-028", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-029", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-030", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-031", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-032", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-033", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-034", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-035", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-036", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-037", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-038", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-039", "answer": "true", "confidence": "high", "issue": null}
+{"id": "fraud-040", "answer": "false", "confidence": "high", "issue": null}
+{"id": "fraud-041", "answer": "고지의무 위반", "confidence": "high", "issue": null}
+{"id": "fraud-042", "answer": "고의 사고", "confidence": "high", "issue": null}
+{"id": "fraud-043", "answer": "사고 경위 조작", "confidence": "high", "issue": null}
+{"id": "fraud-044", "answer": "허위·과다 입원", "confidence": "high", "issue": null}
+{"id": "fraud-045", "answer": "징후 없음", "confidence": "high", "issue": null}
+{"id": "fraud-046", "answer": "피해 과장", "confidence": "high", "issue": null}
+{"id": "fraud-047", "answer": "집중 가입", "confidence": "high", "issue": null}
+{"id": "fraud-048", "answer": "사고 경위 조작", "confidence": "high", "issue": null}
+{"id": "fraud-049", "answer": "고지의무 위반", "confidence": "high", "issue": null}
+{"id": "fraud-050", "answer": "고의 사고", "confidence": "high", "issue": null}
+{"id": "fraud-051", "answer": "피해 과장", "confidence": "high", "issue": null}
+{"id": "fraud-052", "answer": "징후 없음", "confidence": "high", "issue": null}
+{"id": "fraud-053", "answer": "징후 없음", "confidence": "high", "issue": null}
+{"id": "fraud-054", "answer": "고의 사고", "confidence": "high", "issue": null}
+{"id": "fraud-055", "answer": "피해 과장", "confidence": "high", "issue": null}
+{"id": "fraud-056", "answer": "사고 경위 조작", "confidence": "high", "issue": null}
+{"id": "fraud-057", "answer": "허위·과다 입원", "confidence": "high", "issue": null}
+{"id": "fraud-058", "answer": "허위 사고", "confidence": "high", "issue": null}
+{"id": "fraud-059", "answer": "집중 가입", "confidence": "high", "issue": null}
+{"id": "fraud-060", "answer": "허위 사고", "confidence": "high", "issue": null}
+{"id": "fraud-061", "answer": "공개", "confidence": "high", "issue": null}
+{"id": "fraud-062", "answer": "사내한정", "confidence": "high", "issue": null}
+{"id": "fraud-063", "answer": "S등급", "confidence": "high", "issue": null}
+{"id": "fraud-064", "answer": "대외비", "confidence": "high", "issue": null}
+{"id": "fraud-065", "answer": "대외비", "confidence": "high", "issue": null}
+{"id": "fraud-066", "answer": "극비", "confidence": "high", "issue": null}
+{"id": "fraud-067", "answer": "내부", "confidence": "medium", "issue": null}
+{"id": "fraud-068", "answer": "극비", "confidence": "high", "issue": null}
+{"id": "fraud-069", "answer": "일반", "confidence": "high", "issue": null}
+{"id": "fraud-070", "answer": "사내한정", "confidence": "high", "issue": null}
+{"id": "fraud-071", "answer": "대외비", "confidence": "high", "issue": null}
+{"id": "fraud-072", "answer": "A등급", "confidence": "high", "issue": null}
+{"id": "fraud-073", "answer": "기밀", "confidence": "high", "issue": null}
+{"id": "fraud-074", "answer": "대외비", "confidence": "high", "issue": null}
+{"id": "fraud-075", "answer": "S등급", "confidence": "high", "issue": null}
+{"id": "fraud-076", "answer": "내부", "confidence": "high", "issue": null}
+{"id": "fraud-077", "answer": "S등급", "confidence": "high", "issue": null}
+{"id": "fraud-078", "answer": "C등급", "confidence": "high", "issue": null}
+{"id": "fraud-079", "answer": "사내한정", "confidence": "high", "issue": null}
+{"id": "fraud-080", "answer": "내부", "confidence": "high", "issue": null}
+{"id": "fraud-081", "answer": "공공기관 사칭", "confidence": "high", "issue": null}
+{"id": "fraud-082", "answer": "금융회사 사칭·대출 빙자", "confidence": "high", "issue": null}
+{"id": "fraud-083", "answer": "가족·지인 사칭", "confidence": "high", "issue": null}
+{"id": "fraud-084", "answer": "원격제어·악성앱", "confidence": "high", "issue": null}
+{"id": "fraud-085", "answer": "투자 사기", "confidence": "high", "issue": null}
+{"id": "fraud-086", "answer": "해당 없음", "confidence": "high", "issue": null}
+{"id": "fraud-087", "answer": "공공기관 사칭", "confidence": "high", "issue": null}
+{"id": "fraud-088", "answer": "금융회사 사칭·대출 빙자", "confidence": "high", "issue": null}
+{"id": "fraud-089", "answer": "로맨스 스캠", "confidence": "high", "issue": null}
+{"id": "fraud-090", "answer": "금융회사 사칭·대출 빙자", "confidence": "high", "issue": null}
+{"id": "fraud-091", "answer": "해당 없음", "confidence": "high", "issue": null}
+{"id": "fraud-092", "answer": "택배·결제 사칭", "confidence": "high", "issue": null}
+{"id": "fraud-093", "answer": "가족·지인", "confidence": "high", "issue": null}
+{"id": "fraud-094", "answer": "투자 사기", "confidence": "high", "issue": null}
+{"id": "fraud-095", "answer": "해당 없음", "confidence": "high", "issue": null}
+{"id": "fraud-096", "answer": "공공기관 사칭", "confidence": "high", "issue": null}
+{"id": "fraud-097", "answer": "금융회사 사칭·대출 빙자", "confidence": "high", "issue": null}
+{"id": "fraud-098", "answer": "해당 없음", "confidence": "high", "issue": null}
+{"id": "fraud-099", "answer": "원격제어·악성앱", "confidence": "high", "issue": null}
+{"id": "fraud-100", "answer": "결제 알림 사칭", "confidence": "high", "issue": null}

@@ -1,0 +1,100 @@
+{"id": "voc-001", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-002", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-003", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-004", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-005", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-006", "answer": "true", "confidence": "medium", "issue": null}
+{"id": "voc-007", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-008", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-009", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-010", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-011", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-012", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-013", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-014", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-015", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-016", "answer": "true", "confidence": "medium", "issue": "고객이 '불만이 없는 건 아니지만 이번에는 그냥 넘어가려고요'라며 정식 문제 제기를 스스로 접고 향후 개선만 건의해, 정의상 '불만 표시'(true)와 '의견·건의'(false) 두 해석이 모두 성립할 여지가 있다."}
+{"id": "voc-017", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-018", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-019", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-020", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-021", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-022", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-023", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-024", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-025", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-026", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-027", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-028", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-029", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-030", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-031", "answer": "false", "confidence": "high", "issue": null}
+{"id": "voc-032", "answer": "true", "confidence": "high", "issue": null}
+{"id": "voc-033", "answer": "분노", "confidence": "high", "issue": null}
+{"id": "voc-034", "answer": "불안", "confidence": "high", "issue": null}
+{"id": "voc-035", "answer": "만족", "confidence": "high", "issue": null}
+{"id": "voc-036", "answer": "중립", "confidence": "high", "issue": null}
+{"id": "voc-037", "answer": "혼란", "confidence": "high", "issue": null}
+{"id": "voc-038", "answer": "실망", "confidence": "high", "issue": null}
+{"id": "voc-039", "answer": "분노", "confidence": "high", "issue": null}
+{"id": "voc-040", "answer": "실망", "confidence": "high", "issue": null}
+{"id": "voc-041", "answer": "불안", "confidence": "high", "issue": null}
+{"id": "voc-042", "answer": "혼란", "confidence": "high", "issue": null}
+{"id": "voc-043", "answer": "중립", "confidence": "high", "issue": null}
+{"id": "voc-044", "answer": "만족", "confidence": "high", "issue": null}
+{"id": "voc-045", "answer": "불안", "confidence": "high", "issue": null}
+{"id": "voc-046", "answer": "분노", "confidence": "high", "issue": null}
+{"id": "voc-047", "answer": "혼란", "confidence": "high", "issue": null}
+{"id": "voc-048", "answer": "실망", "confidence": "high", "issue": null}
+{"id": "voc-049", "answer": "중립", "confidence": "high", "issue": null}
+{"id": "voc-050", "answer": "즉시", "confidence": "high", "issue": null}
+{"id": "voc-051", "answer": "일반", "confidence": "high", "issue": null}
+{"id": "voc-052", "answer": "당일", "confidence": "high", "issue": null}
+{"id": "voc-053", "answer": "일반", "confidence": "high", "issue": null}
+{"id": "voc-054", "answer": "즉시", "confidence": "high", "issue": null}
+{"id": "voc-055", "answer": "당일", "confidence": "high", "issue": null}
+{"id": "voc-056", "answer": "즉시", "confidence": "high", "issue": null}
+{"id": "voc-057", "answer": "당일", "confidence": "high", "issue": null}
+{"id": "voc-058", "answer": "일반", "confidence": "high", "issue": null}
+{"id": "voc-059", "answer": "즉시", "confidence": "high", "issue": null}
+{"id": "voc-060", "answer": "당일", "confidence": "high", "issue": null}
+{"id": "voc-061", "answer": "일반", "confidence": "high", "issue": null}
+{"id": "voc-062", "answer": "일반", "confidence": "high", "issue": null}
+{"id": "voc-063", "answer": "즉시", "confidence": "high", "issue": null}
+{"id": "voc-064", "answer": "당일", "confidence": "high", "issue": null}
+{"id": "voc-065", "answer": "즉시", "confidence": "high", "issue": null}
+{"id": "voc-066", "answer": "당일", "confidence": "high", "issue": null}
+{"id": "voc-067", "answer": "높음", "confidence": "high", "issue": null}
+{"id": "voc-068", "answer": "낮음", "confidence": "high", "issue": null}
+{"id": "voc-069", "answer": "중간", "confidence": "high", "issue": null}
+{"id": "voc-070", "answer": "높음", "confidence": "high", "issue": null}
+{"id": "voc-071", "answer": "낮음", "confidence": "high", "issue": null}
+{"id": "voc-072", "answer": "중간", "confidence": "high", "issue": null}
+{"id": "voc-073", "answer": "높음", "confidence": "high", "issue": null}
+{"id": "voc-074", "answer": "낮음", "confidence": "high", "issue": null}
+{"id": "voc-075", "answer": "중간", "confidence": "high", "issue": null}
+{"id": "voc-076", "answer": "높음", "confidence": "high", "issue": null}
+{"id": "voc-077", "answer": "중간", "confidence": "medium", "issue": null}
+{"id": "voc-078", "answer": "낮음", "confidence": "high", "issue": null}
+{"id": "voc-079", "answer": "중간", "confidence": "high", "issue": null}
+{"id": "voc-080", "answer": "높음", "confidence": "high", "issue": null}
+{"id": "voc-081", "answer": "낮음", "confidence": "high", "issue": null}
+{"id": "voc-082", "answer": "중간", "confidence": "high", "issue": null}
+{"id": "voc-083", "answer": "높음", "confidence": "high", "issue": null}
+{"id": "voc-084", "answer": "보험금 지급", "confidence": "high", "issue": null}
+{"id": "voc-085", "answer": "불완전판매", "confidence": "high", "issue": null}
+{"id": "voc-086", "answer": "직원 응대", "confidence": "high", "issue": null}
+{"id": "voc-087", "answer": "계약 관리", "confidence": "high", "issue": null}
+{"id": "voc-088", "answer": "개인정보", "confidence": "high", "issue": null}
+{"id": "voc-089", "answer": "전산 장애", "confidence": "high", "issue": null}
+{"id": "voc-090", "answer": "보험금 지급", "confidence": "high", "issue": null}
+{"id": "voc-091", "answer": "직원 응대", "confidence": "high", "issue": null}
+{"id": "voc-092", "answer": "계약 관리", "confidence": "high", "issue": null}
+{"id": "voc-093", "answer": "개인정보", "confidence": "high", "issue": null}
+{"id": "voc-094", "answer": "불완전판매", "confidence": "high", "issue": null}
+{"id": "voc-095", "answer": "전산 장애", "confidence": "high", "issue": null}
+{"id": "voc-096", "answer": "보험금 지급", "confidence": "high", "issue": null}
+{"id": "voc-097", "answer": "계약 관리", "confidence": "high", "issue": null}
+{"id": "voc-098", "answer": "직원 응대", "confidence": "high", "issue": null}
+{"id": "voc-099", "answer": "개인정보", "confidence": "high", "issue": null}
+{"id": "voc-100", "answer": "불완전판매", "confidence": "high", "issue": null}

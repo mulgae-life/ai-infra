@@ -1,0 +1,100 @@
+{"id": "calc-001", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-002", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-003", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-004", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-005", "answer": "증권 기준 경과", "confidence": "high", "issue": null}
+{"id": "calc-006", "answer": "철회 제외 계약", "confidence": "high", "issue": null}
+{"id": "calc-007", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-008", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-009", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-010", "answer": "5월 8일", "confidence": "high", "issue": null}
+{"id": "calc-011", "answer": "3,254원", "confidence": "high", "issue": null}
+{"id": "calc-012", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-013", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-014", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-015", "answer": "2월 4일", "confidence": "high", "issue": null}
+{"id": "calc-016", "answer": "B만", "confidence": "high", "issue": null}
+{"id": "calc-017", "answer": "청약일 기준 경과", "confidence": "high", "issue": null}
+{"id": "calc-018", "answer": "계약 취소", "confidence": "high", "issue": null}
+{"id": "calc-019", "answer": "지금 철회 가능", "confidence": "high", "issue": null}
+{"id": "calc-020", "answer": "4일", "confidence": "high", "issue": null}
+{"id": "calc-021", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-022", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-023", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-024", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-025", "answer": "2,825,000원", "confidence": "high", "issue": null}
+{"id": "calc-026", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-027", "answer": "해지(부활 가능)", "confidence": "high", "issue": null}
+{"id": "calc-028", "answer": "276,930원", "confidence": "high", "issue": null}
+{"id": "calc-029", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-030", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-031", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-032", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-033", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-034", "answer": "2027년 1월 1일", "confidence": "high", "issue": null}
+{"id": "calc-035", "answer": "7월 14일(화)", "confidence": "high", "issue": null}
+{"id": "calc-036", "answer": "납입유예", "confidence": "high", "issue": null}
+{"id": "calc-037", "answer": "41,200원", "confidence": "high", "issue": null}
+{"id": "calc-038", "answer": "2027년 5월 1일", "confidence": "high", "issue": null}
+{"id": "calc-039", "answer": "6월 1일(월)", "confidence": "high", "issue": null}
+{"id": "calc-040", "answer": "3회", "confidence": "high", "issue": null}
+{"id": "calc-041", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-042", "answer": "false", "confidence": "medium", "issue": "'계약일부터 그날을 포함하여 90일이 지난 날의 다음 날'을 계약일+90일(6/1)로 읽으면 false, 90일째의 다음 날을 '지난 날'로 보고 그 다음 날(계약일+91일, 6/2)로 읽으면 true가 되어 문구 해석에 따라 답이 갈린다. calc-043의 '계약일을 1일째로 90일째까지 면책' 정의와 맞춰 계약일+90일로 풀었다."}
+{"id": "calc-043", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-044", "answer": "50% 지급", "confidence": "high", "issue": null}
+{"id": "calc-045", "answer": "100만원", "confidence": "high", "issue": null}
+{"id": "calc-046", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-047", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-048", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-049", "answer": "100% 지급", "confidence": "high", "issue": null}
+{"id": "calc-050", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-051", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-052", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-053", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-054", "answer": "300만원", "confidence": "high", "issue": null}
+{"id": "calc-055", "answer": "둘 다 지급", "confidence": "high", "issue": null}
+{"id": "calc-056", "answer": "2026년 2월 13일", "confidence": "medium", "issue": "'그날을 포함하여 90일이 지난 날의 다음 날'을 계약일+90일로 읽으면 2026년 2월 13일, 계약일+91일로 읽으면 2월 14일이며 두 날짜가 모두 선택지에 있어 해석에 따라 답이 갈린다. calc-043의 면책기간 정의와 맞춰 계약일+90일로 풀었다."}
+{"id": "calc-057", "answer": "500만원", "confidence": "high", "issue": null}
+{"id": "calc-058", "answer": "입원비와 진단비", "confidence": "high", "issue": null}
+{"id": "calc-059", "answer": "보장 기간 중", "confidence": "high", "issue": null}
+{"id": "calc-060", "answer": "100% 지급", "confidence": "high", "issue": null}
+{"id": "calc-061", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-062", "answer": "50,400원", "confidence": "high", "issue": null}
+{"id": "calc-063", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-064", "answer": "대표이사", "confidence": "high", "issue": null}
+{"id": "calc-065", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-066", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-067", "answer": "350,000원", "confidence": "high", "issue": null}
+{"id": "calc-068", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-069", "answer": "공동인증서", "confidence": "high", "issue": null}
+{"id": "calc-070", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-071", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-072", "answer": "24,000원", "confidence": "high", "issue": null}
+{"id": "calc-073", "answer": "42,640원", "confidence": "high", "issue": null}
+{"id": "calc-074", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-075", "answer": "600,000원", "confidence": "high", "issue": null}
+{"id": "calc-076", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-077", "answer": "240,000원", "confidence": "high", "issue": null}
+{"id": "calc-078", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-079", "answer": "3,000,000원", "confidence": "high", "issue": null}
+{"id": "calc-080", "answer": "30,082원", "confidence": "high", "issue": null}
+{"id": "calc-081", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-082", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-083", "answer": "37세", "confidence": "high", "issue": null}
+{"id": "calc-084", "answer": "2026년 8월 19일", "confidence": "high", "issue": null}
+{"id": "calc-085", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-086", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-087", "answer": "33세", "confidence": "high", "issue": null}
+{"id": "calc-088", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-089", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-090", "answer": "38세", "confidence": "high", "issue": null}
+{"id": "calc-091", "answer": "고령자 심사", "confidence": "high", "issue": null}
+{"id": "calc-092", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-093", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-094", "answer": "true", "confidence": "high", "issue": null}
+{"id": "calc-095", "answer": "false", "confidence": "high", "issue": null}
+{"id": "calc-096", "answer": "46세", "confidence": "high", "issue": null}
+{"id": "calc-097", "answer": "3구간", "confidence": "high", "issue": null}
+{"id": "calc-098", "answer": "4명", "confidence": "high", "issue": null}
+{"id": "calc-099", "answer": "영유아형", "confidence": "high", "issue": null}
+{"id": "calc-100", "answer": "2027년 12월 31일", "confidence": "high", "issue": null}

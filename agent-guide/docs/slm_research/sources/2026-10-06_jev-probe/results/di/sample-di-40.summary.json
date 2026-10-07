@@ -1,0 +1,281 @@
+{
+  "edition": "0.2.1",
+  "input_sample": "di-work/sample-di-rr10000.jsonl.gz",
+  "input_rows": 10000,
+  "cap_per_benchmark": 40,
+  "rule": "0.2.1 index benchmarks only; per benchmark, whole linked groups in the sampler's hash order while the running total stays <= cap",
+  "out": "di-work/sample-di-40.jsonl.gz",
+  "rows": 1480,
+  "uncompressed_sha256": "f02f4bfe1ac89195576cab8d25a74b38de072949d6328c4ab1c9968e661b219a",
+  "benchmarks_in_index": 38,
+  "benchmarks_sampled": 37,
+  "per_benchmark": {
+    "1": {
+      "dataset": "BFCL",
+      "requests": 40,
+      "groups": 40,
+      "available": 1694,
+      "all_taken": false
+    },
+    "2": {
+      "dataset": "ToolRet",
+      "requests": 40,
+      "groups": 40,
+      "available": 685,
+      "all_taken": false
+    },
+    "3": {
+      "dataset": "API-Bank",
+      "requests": 40,
+      "groups": 40,
+      "available": 508,
+      "all_taken": false
+    },
+    "4": {
+      "dataset": "BANKING77",
+      "requests": 40,
+      "groups": 40,
+      "available": 3080,
+      "all_taken": false
+    },
+    "5": {
+      "dataset": "CLINC150+OOS",
+      "requests": 40,
+      "groups": 40,
+      "available": 5500,
+      "all_taken": false
+    },
+    "9": {
+      "dataset": "Home appliance simulator",
+      "requests": 40,
+      "groups": 40,
+      "available": 88,
+      "all_taken": false
+    },
+    "11": {
+      "dataset": "ContractNLI",
+      "requests": 40,
+      "groups": 40,
+      "available": 123,
+      "all_taken": false
+    },
+    "12": {
+      "dataset": "ANLI",
+      "requests": 40,
+      "groups": 40,
+      "available": 3200,
+      "all_taken": false
+    },
+    "20": {
+      "dataset": "BPoMP",
+      "requests": 40,
+      "groups": 14,
+      "available": 5000,
+      "all_taken": false
+    },
+    "21": {
+      "dataset": "Humicroedit",
+      "requests": 40,
+      "groups": 40,
+      "available": 2628,
+      "all_taken": false
+    },
+    "22": {
+      "dataset": "POP909-CL",
+      "requests": 40,
+      "groups": 40,
+      "available": 2000,
+      "all_taken": false
+    },
+    "23": {
+      "dataset": "cfcolor",
+      "requests": 40,
+      "groups": 40,
+      "available": 5000,
+      "all_taken": false
+    },
+    "25": {
+      "dataset": "GPQA Diamond",
+      "requests": 40,
+      "groups": 40,
+      "available": 196,
+      "all_taken": false
+    },
+    "28": {
+      "dataset": "WinoGrande",
+      "requests": 40,
+      "groups": 40,
+      "available": 1267,
+      "all_taken": false
+    },
+    "29": {
+      "dataset": "HellaSwag",
+      "requests": 40,
+      "groups": 40,
+      "available": 10042,
+      "all_taken": false
+    },
+    "30": {
+      "dataset": "GSM8K",
+      "requests": 40,
+      "groups": 20,
+      "available": 2638,
+      "all_taken": false
+    },
+    "31": {
+      "dataset": "ChessBench",
+      "requests": 40,
+      "groups": 40,
+      "available": 5000,
+      "all_taken": false
+    },
+    "32": {
+      "dataset": "MuSR",
+      "requests": 40,
+      "groups": 40,
+      "available": 752,
+      "all_taken": false
+    },
+    "33": {
+      "dataset": "SATA-Bench",
+      "requests": 40,
+      "groups": 40,
+      "available": 1650,
+      "all_taken": false
+    },
+    "36": {
+      "dataset": "BRIGHT",
+      "requests": 40,
+      "groups": 40,
+      "available": 220,
+      "all_taken": false
+    },
+    "37": {
+      "dataset": "Amazon ESCI",
+      "requests": 40,
+      "groups": 40,
+      "available": 5000,
+      "all_taken": false
+    },
+    "38": {
+      "dataset": "ACOS",
+      "requests": 40,
+      "groups": 10,
+      "available": 1565,
+      "all_taken": false
+    },
+    "39": {
+      "dataset": "FinEntity",
+      "requests": 40,
+      "groups": 40,
+      "available": 979,
+      "all_taken": false
+    },
+    "40": {
+      "dataset": "iSarcasmEval",
+      "requests": 40,
+      "groups": 40,
+      "available": 4600,
+      "all_taken": false
+    },
+    "41": {
+      "dataset": "VAST",
+      "requests": 40,
+      "groups": 40,
+      "available": 3006,
+      "all_taken": false
+    },
+    "42": {
+      "dataset": "NLI4CT",
+      "requests": 40,
+      "groups": 40,
+      "available": 5500,
+      "all_taken": false
+    },
+    "43": {
+      "dataset": "CRUXEval",
+      "requests": 40,
+      "groups": 40,
+      "available": 570,
+      "all_taken": false
+    },
+    "44": {
+      "dataset": "CLadder",
+      "requests": 40,
+      "groups": 40,
+      "available": 5000,
+      "all_taken": false
+    },
+    "45": {
+      "dataset": null,
+      "requests": 0,
+      "groups": 0,
+      "available": 0,
+      "note": "not in rebuilt suite"
+    },
+    "48": {
+      "dataset": "ForecastBench",
+      "requests": 40,
+      "groups": 40,
+      "available": 10139,
+      "all_taken": false
+    },
+    "50": {
+      "dataset": "Habermas Machine",
+      "requests": 40,
+      "groups": 40,
+      "available": 1676,
+      "all_taken": false
+    },
+    "56": {
+      "dataset": "PhishNChips phishing decisions",
+      "requests": 40,
+      "groups": 40,
+      "available": 2000,
+      "all_taken": false
+    },
+    "57": {
+      "dataset": "MMLU-Pro",
+      "requests": 40,
+      "groups": 40,
+      "available": 12032,
+      "all_taken": false
+    },
+    "58": {
+      "dataset": "BBH fixed-option tasks",
+      "requests": 40,
+      "groups": 40,
+      "available": 5507,
+      "all_taken": false
+    },
+    "59": {
+      "dataset": "RAGTruth response-level hallucination",
+      "requests": 40,
+      "groups": 40,
+      "available": 2700,
+      "all_taken": false
+    },
+    "61": {
+      "dataset": "HoVer claim verification",
+      "requests": 40,
+      "groups": 40,
+      "available": 4000,
+      "all_taken": false
+    },
+    "62": {
+      "dataset": "When2Call MCQ",
+      "requests": 40,
+      "groups": 40,
+      "available": 3652,
+      "all_taken": false
+    },
+    "64": {
+      "dataset": "New Yorker caption matching",
+      "requests": 40,
+      "groups": 40,
+      "available": 528,
+      "all_taken": false
+    }
+  },
+  "problems": []
+}
