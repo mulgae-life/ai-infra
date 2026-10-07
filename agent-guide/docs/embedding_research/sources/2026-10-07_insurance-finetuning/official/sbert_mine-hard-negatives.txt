@@ -1,0 +1,1695 @@
+hard_negatives — Sentence Transformers documentation
+
+Getting Started
+
+Installation
+Install with uv
+
+Install with pip
+
+Install with Conda
+
+Install from Source
+
+Editable Install
+
+Install PyTorch with CUDA support
+
+Quickstart
+Sentence Transformer
+
+Cross Encoder
+
+Sparse Encoder
+
+Multi-Vector Encoder
+
+Next Steps
+
+Migration Guide
+Migrating from v5.x to v6.x
+Breaking changes
+
+Migrating from PyLate
+
+Migrating from colpali-engine
+
+Smaller changes
+
+Migrating from v5.x to v5.4+
+Updated import paths
+
+Renamed methods and parameters
+
+CrossEncoder.max_length property renamed to max_seq_length
+
+Trainer tokenizer parameter renamed to processing_class
+
+tokenizer_kwargs renamed to processor_kwargs
+
+CrossEncoder API changes
+
+Removed tags parameter from push_to_hub
+
+Default pooling for CausalLM models
+
+Changes for custom module and loss authors
+
+Migrating from v4.x to v5.x
+Migration for model.encode
+
+Migration for Asym to Router
+
+Migration of advanced usage
+
+Migrating from v3.x to v4.x
+Migration for parameters on CrossEncoder initialization and methods
+
+Migration for specific parameters from CrossEncoder.fit
+
+Migration for CrossEncoder evaluators
+
+Migrating from v2.x to v3.x
+Migration for specific parameters from SentenceTransformer.fit
+
+Migration for custom Datasets and DataLoaders used in SentenceTransformer.fit
+
+Sentence Transformer
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Computing Embeddings
+Initializing a Sentence Transformer Model
+
+Calculating Embeddings
+
+Prompt Templates
+
+Input Sequence Length
+
+Multi-Process / Multi-GPU Encoding
+
+Semantic Textual Similarity
+Similarity Calculation
+
+Semantic Search
+Background
+
+Symmetric vs. Asymmetric Semantic Search
+
+Manual Implementation
+
+Optimized Implementation
+
+Speed Optimization
+
+Elasticsearch
+
+OpenSearch
+
+Approximate Nearest Neighbor
+
+Retrieve & Re-Rank
+
+Examples
+
+Retrieve & Re-Rank
+Retrieve & Re-Rank Pipeline
+
+Retrieval: Bi-Encoder
+
+Re-Ranker: Cross-Encoder
+
+Example Scripts
+
+Pre-trained Bi-Encoders (Retrieval)
+
+Pre-trained Cross-Encoders (Re-Ranker)
+
+Clustering
+k-Means
+
+Agglomerative Clustering
+
+Fast Clustering
+
+Topic Modeling
+
+Paraphrase Mining
+paraphrase_mining()
+
+Translated Sentence Mining
+Margin Based Mining
+
+Examples
+
+Image Search
+Installation
+
+Usage
+
+Examples
+
+Embedding Quantization
+Binary Quantization
+
+Scalar (int8) Quantization
+
+Additional extensions
+
+Demo
+
+Try it yourself
+
+Creating Custom Models
+Modular Architecture
+
+Sentence Transformer Model from a Transformers Model
+
+Advanced: Custom Modules
+
+Evaluation with MTEB
+Installation
+
+Evaluation
+
+Additional Arguments
+
+Results Handling
+
+Leaderboard Submission
+
+Pretrained Models
+Original Models
+
+Semantic Search Models
+Multi-QA Models
+
+MSMARCO Passage Models
+
+Multilingual Models
+Semantic Similarity Models
+
+Bitext Mining
+
+Multimodal Models
+Image & Text Models
+
+Audio & Video Models
+
+INSTRUCTOR models
+
+Scientific Similarity Models
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Multimodal Datasets
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Deprecated Training
+
+Best Base Embedding Models
+
+Comparisons with CrossEncoder Training
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Loss Table
+
+Loss modifiers
+
+Regularization
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+Semantic Textual Similarity
+Training data
+
+Loss Function
+
+Natural Language Inference
+Data
+
+SoftmaxLoss
+
+MultipleNegativesRankingLoss
+
+Paraphrase Data
+Pre-Trained Models
+
+Quora Duplicate Questions
+Training
+
+MultipleNegativesRankingLoss
+
+Pretrained Models
+
+MS MARCO
+Bi-Encoder
+
+Matryoshka Embeddings
+Use Cases
+
+Results
+
+Training
+
+Inference
+
+Code Examples
+
+Adaptive Layers
+Use Cases
+
+Results
+
+Training
+
+Inference
+
+Code Examples
+
+Multilingual Models
+Extend your own models
+
+Training
+
+Datasets
+
+Sources for Training Data
+
+Evaluation
+
+Available Pre-trained Models
+
+Usage
+
+Performance
+
+Citation
+
+Model Distillation
+Knowledge Distillation
+
+Speed - Performance Trade-Off
+
+Dimensionality Reduction
+
+Quantization
+
+Augmented SBERT
+Motivation
+
+Extend to your own datasets
+
+Methodology
+
+Scenario 1: Limited or small annotated datasets (few labeled sentence-pairs)
+
+Scenario 2: No annotated datasets (Only unlabeled sentence-pairs)
+
+Training
+
+Citation
+
+Training with Prompts
+What are Prompts?
+
+Why would we train with Prompts?
+
+How do we train with Prompts?
+
+Training with PEFT Adapters
+Compatibility Methods
+
+Adding a New Adapter
+
+Loading a Pretrained Adapter
+
+Training Script
+
+Training with Unsloth
+Examples in this repository
+
+Unsloth Colab notebooks
+
+Fine-tuning via FastSentenceTransformer
+
+Inference and deployment
+
+Benchmarks
+
+Multimodal Training
+Supported Input Types
+
+Training
+
+References
+
+Unsupervised Learning
+TSDAE
+
+SimCSE
+
+CT
+
+CT (In-Batch Negative Sampling)
+
+Masked Language Model (MLM)
+
+GenQ
+
+GPL
+
+Performance Comparison
+
+Domain Adaptation
+Domain Adaptation vs. Unsupervised Learning
+
+Adaptive Pre-Training
+
+GPL: Generative Pseudo-Labeling
+
+Hyperparameter Optimization
+HPO Components
+
+Putting It All Together
+
+Example Scripts
+
+Distributed Training
+Comparison
+
+FSDP
+
+Cross Encoder
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Cross-Encoder vs Bi-Encoder
+Cross-Encoder vs. Bi-Encoder
+
+When to use Cross- / Bi-Encoders?
+
+Cross-Encoders Usage
+
+Combining Bi- and Cross-Encoders
+
+Training Cross-Encoders
+
+Retrieve & Re-Rank
+Retrieve & Re-Rank Pipeline
+
+Retrieval: Bi-Encoder
+
+Re-Ranker: Cross-Encoder
+
+Example Scripts
+
+Pre-trained Bi-Encoders (Retrieval)
+
+Pre-trained Cross-Encoders (Re-Ranker)
+
+Creating Custom Models
+Modular Architecture
+
+Advanced: Custom Modules
+
+Pretrained Models
+MS MARCO
+
+SQuAD (QNLI)
+
+STSbenchmark
+
+Quora Duplicate Questions
+
+NLI
+
+Multimodal Rerankers
+
+Community Models
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Multimodal Datasets
+
+Hard Negatives Mining
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Training Tips
+
+Deprecated Training
+
+Comparisons with SentenceTransformer Training
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Loss Table
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+Semantic Textual Similarity
+Training data
+
+Loss Function
+
+Inference
+
+Natural Language Inference
+Data
+
+CrossEntropyLoss
+
+Inference
+
+Quora Duplicate Questions
+Training
+
+Inference
+
+MS MARCO
+Cross Encoder
+
+Training Scripts
+
+Inference
+
+Rerankers
+BinaryCrossEntropyLoss
+
+CachedMultipleNegativesRankingLoss
+
+Inference
+
+Model Distillation
+Cross Encoder Knowledge Distillation
+
+Inference
+
+Multimodal Training
+Transformer (Any-to-Any) + LogitScore
+
+Transformer (Feature Extraction) + Pooling + Dense
+
+Comparing the Two Approaches
+
+Other Module Chains
+
+References
+
+Distributed Training
+Comparison
+
+FSDP
+
+Sparse Encoder
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Computing Sparse Embeddings
+Initializing a Sparse Encoder Model
+
+Calculating Embeddings
+
+Input Sequence Length
+
+Controlling Sparsity
+
+Interpretability with SPLADE Models
+
+Multi-Process / Multi-GPU Encoding
+
+Semantic Textual Similarity
+Similarity Calculation
+
+Semantic Search
+Manual Search
+
+Vector Database Search
+
+Qdrant Integration
+
+OpenSearch Integration
+
+Elasticsearch Integration
+
+Seismic Integration
+
+SPLADE-index Integration
+
+Retrieve & Re-Rank
+Overview
+
+Interactive Demo: Simple Wikipedia Search
+
+Comprehensive Evaluation: Hybrid Search Pipeline
+
+Pre-trained Models
+
+Sparse Encoder Evaluation
+Example with Retrieval Evaluation:
+
+Pretrained Models
+Core SPLADE Models
+
+Inference-Free SPLADE Models
+
+Model Collections
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Training Tips
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Sparse specific Loss Functions
+SPLADE Loss
+
+CSR Loss
+
+Loss Table
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+Model Distillation
+MarginMSE
+
+MS MARCO
+SparseMultipleNegativesRankingLoss
+
+Semantic Textual Similarity
+Training data
+
+Loss Function
+
+Natural Language Inference
+Data
+
+SpladeLoss
+
+Quora Duplicate Questions
+Training
+
+Information Retrieval
+SparseMultipleNegativesRankingLoss (MNRL)
+
+Inference & Evaluation
+
+Distributed Training
+Comparison
+
+FSDP
+
+Multi-Vector Encoder
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Applications
+Semantic Search
+
+Retrieve & Rerank
+
+Interpretability
+
+Compression
+
+Multi-Vector Encoder Evaluation
+Example with NanoBEIR Evaluation:
+
+Other Evaluators
+
+Creating Custom Models
+Modular Architecture
+
+What Released Checkpoints Configure
+
+Saving Multi-Vector Encoder Models
+
+Loading Multi-Vector Encoder Models
+
+Extra Per-Token Features
+
+Pretrained Models
+Text Retrieval Models
+
+Visual Document Retrieval Models
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Multimodal Datasets
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Training Tips
+
+Comparisons with SentenceTransformer Training
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Loss Table
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+MS MARCO
+MultiVectorMultipleNegativesRankingLoss
+
+MultiVectorDistillKLDivLoss
+
+Domain-specific MultiVectorEncoder training on MIRIAD
+
+XTR
+
+Visual Document Retrieval
+Training from a multimodal embedding backbone
+
+Finetuning a pretrained ColVLM
+
+Training with PEFT Adapters
+Compatibility Methods
+
+Adding a New Adapter
+
+Training Script
+
+Distributed Training
+Comparison
+
+FSDP
+
+Package Reference
+
+Sentence Transformer
+SentenceTransformer
+SentenceTransformer
+
+SentenceTransformerModelCardData
+
+Trainer
+SentenceTransformerTrainer
+
+Training Arguments
+SentenceTransformerTrainingArguments
+
+Losses
+BatchAllTripletLoss
+
+BatchHardSoftMarginTripletLoss
+
+BatchHardTripletLoss
+
+BatchSemiHardTripletLoss
+
+ContrastiveLoss
+
+OnlineContrastiveLoss
+
+ContrastiveTensionLoss
+
+ContrastiveTensionLossInBatchNegatives
+
+CoSENTLoss
+
+AnglELoss
+
+CosineSimilarityLoss
+
+DenoisingAutoEncoderLoss
+
+GISTEmbedLoss
+
+CachedGISTEmbedLoss
+
+GlobalOrthogonalRegularizationLoss
+
+EmbedDistillLoss
+
+MSELoss
+
+MarginMSELoss
+
+MatryoshkaLoss
+
+Matryoshka2dLoss
+
+AdaptiveLayerLoss
+
+MegaBatchMarginLoss
+
+MultipleNegativesRankingLoss
+
+CachedMultipleNegativesRankingLoss
+
+MultipleNegativesSymmetricRankingLoss
+
+CachedMultipleNegativesSymmetricRankingLoss
+
+SoftmaxLoss
+
+TripletLoss
+
+DistillKLDivLoss
+
+Evaluation
+BinaryClassificationEvaluator
+
+EmbeddingSimilarityEvaluator
+
+InformationRetrievalEvaluator
+
+NanoBEIREvaluator
+
+MSEEvaluator
+
+ParaphraseMiningEvaluator
+
+RerankingEvaluator
+
+TranslationEvaluator
+
+TripletEvaluator
+
+Datasets
+ParallelSentencesDataset
+
+SentenceLabelDataset
+
+DenoisingAutoEncoderDataset
+
+NoDuplicatesDataLoader
+
+Modules
+Main Modules
+
+Further Modules
+
+Cross Encoder
+CrossEncoder
+CrossEncoder
+
+CrossEncoderModelCardData
+
+Trainer
+CrossEncoderTrainer
+
+Training Arguments
+CrossEncoderTrainingArguments
+
+Losses
+ADRMSELoss
+
+BinaryCrossEntropyLoss
+
+CrossEntropyLoss
+
+LambdaLoss
+
+ListMLELoss
+
+PListMLELoss
+
+ListNetLoss
+
+MultipleNegativesRankingLoss
+
+CachedMultipleNegativesRankingLoss
+
+MSELoss
+
+MarginMSELoss
+
+RankNetLoss
+
+Evaluation
+CrossEncoderRerankingEvaluator
+
+CrossEncoderNanoBEIREvaluator
+
+CrossEncoderClassificationEvaluator
+
+CrossEncoderCorrelationEvaluator
+
+Modules
+LogitScore
+
+Sparse Encoder
+SparseEncoder
+SparseEncoder
+
+SparseEncoderModelCardData
+
+Trainer
+SparseEncoderTrainer
+
+Training Arguments
+SparseEncoderTrainingArguments
+
+Losses
+SpladeLoss
+
+CachedSpladeLoss
+
+FlopsLoss
+
+CSRLoss
+
+CSRReconstructionLoss
+
+SparseMultipleNegativesRankingLoss
+
+SparseMarginMSELoss
+
+SparseDistillKLDivLoss
+
+SparseTripletLoss
+
+SparseCosineSimilarityLoss
+
+SparseCoSENTLoss
+
+SparseAnglELoss
+
+SparseMSELoss
+
+Samplers
+BatchSamplers
+
+MultiDatasetBatchSamplers
+
+Evaluation
+SparseInformationRetrievalEvaluator
+
+SparseNanoBEIREvaluator
+
+SparseEmbeddingSimilarityEvaluator
+
+SparseBinaryClassificationEvaluator
+
+SparseTripletEvaluator
+
+SparseRerankingEvaluator
+
+SparseTranslationEvaluator
+
+SparseMSEEvaluator
+
+ReciprocalRankFusionEvaluator
+
+Modules
+SPLADE Pooling
+
+SparseAutoEncoder
+
+SparseStaticEmbedding
+
+Callbacks
+SpladeRegularizerWeightSchedulerCallback
+
+Search Engines
+semantic_search_elasticsearch()
+
+semantic_search_opensearch()
+
+semantic_search_qdrant()
+
+semantic_search_seismic()
+
+Multi-Vector Encoder
+MultiVectorEncoder
+MultiVectorEncoder
+
+MultiVectorEncoderModelCardData
+
+Trainer
+MultiVectorEncoderTrainer
+
+Training Arguments
+MultiVectorEncoderTrainingArguments
+
+Losses
+MultiVectorMultipleNegativesRankingLoss
+
+CachedMultiVectorMultipleNegativesRankingLoss
+
+MultiVectorDistillKLDivLoss
+
+MultiVectorMarginMSELoss
+
+Samplers
+BatchSamplers
+
+MultiDatasetBatchSamplers
+
+Evaluation
+MultiVectorInformationRetrievalEvaluator
+
+MultiVectorNanoBEIREvaluator
+
+MultiVectorTripletEvaluator
+
+MultiVectorRerankingEvaluator
+
+MultiVectorDistillationEvaluator
+
+Modules
+MultiVectorMask
+
+BaseTokenPooling
+
+HierarchicalTokenPooling
+
+LambdaTokenPooling
+
+Scoring
+ColBERT scoring
+
+MeanMaxSim scoring
+
+XTRScores
+
+XTRKDScores
+
+Interpretability
+Heatmaps
+
+Building blocks
+
+Base
+Model
+BaseModel
+
+BaseModelCardData
+
+Trainer
+BaseTrainer
+
+Training Arguments
+BaseTrainingArguments
+
+Samplers
+BatchSamplers
+
+MultiDatasetBatchSamplers
+
+Modules
+Common Modules
+
+Base Modules
+
+Evaluation
+BaseEvaluator
+
+SequentialEvaluator
+
+Utility Functions
+dataset
+resolve_ids()
+
+distributed
+all_gather()
+
+all_gather_padded()
+
+all_gather_with_grad()
+
+get_rank()
+
+get_world_size()
+
+environment
+check_package_availability()
+
+check_version_requirements()
+
+get_device_name()
+
+get_installed_version()
+
+is_accelerate_available()
+
+is_datasets_available()
+
+is_dist_initialized()
+
+is_training_available()
+
+suggest_extra_on_exception()
+
+file_io
+disabled_tqdm
+
+http_get()
+
+is_sentence_transformer_model()
+
+load_dir_path()
+
+load_file_path()
+
+hard_negatives
+mine_hard_negatives()
+
+misc
+check_teacher_targets()
+
+disable_datasets_caching()
+
+disable_logging()
+
+fullname()
+
+import_from_string()
+
+import_module_class()
+
+similarity_fct_name()
+
+quantization
+quantize_embeddings()
+
+semantic_search_faiss()
+
+semantic_search_usearch()
+
+retrieval
+community_detection()
+
+information_retrieval()
+
+paraphrase_mining()
+
+paraphrase_mining_embeddings()
+
+semantic_search()
+
+similarity
+SimilarityFunction
+
+cos_sim()
+
+dot_score()
+
+euclidean_sim()
+
+manhattan_sim()
+
+maxsim()
+
+maxsim_pairwise()
+
+mean_maxsim()
+
+mean_maxsim_pairwise()
+
+pairwise_angle_sim()
+
+pairwise_cos_sim()
+
+pairwise_dot_score()
+
+pairwise_euclidean_sim()
+
+pairwise_manhattan_sim()
+
+pytorch_cos_sim()
+
+tensor
+batch_to_device()
+
+cat_padded_token_embeddings()
+
+compute_count_vector()
+
+normalize_embeddings()
+
+repad_flattened_features()
+
+select_max_active_dims()
+
+stack_padded_token_embeddings()
+
+to_scipy_coo()
+
+truncate_embeddings()
+
+Sentence Transformers
+
+Utility Functions
+
+hard_negatives
+
+Edit on GitHub
+
+hard_negatives
+
+sentence_transformers.util.hard_negatives.mine_hard_negatives(dataset: Dataset, model: SentenceTransformer, anchor_column_name: str | None = None, positive_column_name: str | None = None, corpus: list[str] | None = None, cross_encoder: CrossEncoder | None = None, range_min: int = 0, range_max: int | None = None, max_score: float | None = None, min_score: float | None = None, absolute_margin: float | None = None, relative_margin: float | None = None, num_negatives: int = 3, sampling_strategy: Literal['random', 'top'] = 'top', query_prompt_name: str | None = None, query_prompt: str | None = None, corpus_prompt_name: str | None = None, corpus_prompt: str | None = None, include_positives: bool = False, output_format: Literal['triplet', 'n-tuple', 'labeled-pair', 'labeled-list'] = 'triplet', output_scores: bool = False, batch_size: int = 32, faiss_batch_size: int = 16384, use_faiss: bool = False, use_multi_process: list[str] | bool = False, verbose: bool = True, cache_folder: str | None = None, as_triplets: bool | None = None, margin: float | None = None) → Dataset[source]
+Add hard negatives to a dataset of (anchor, positive) pairs to create (anchor, positive, negative) triplets or
+(anchor, positive, negative_1, …, negative_n) tuples.
+
+Hard negative mining is a technique to improve the quality of a dataset by adding hard negatives, which are
+texts that may appear similar to the anchor, but are not. Using hard negatives can improve the performance of
+models trained on the dataset.
+
+This function uses a SentenceTransformer model to embed the inputs in the dataset, and then finds the closest
+matches to each anchor input in the dataset. It then samples negatives from the closest matches, optionally
+using a CrossEncoder model to rescore the candidates.
+
+Supports prompt formatting for models that expect specific instruction-style input.
+
+You can influence the candidate negative selection in various ways:
+
+range_min: Minimum rank of the closest matches to consider as negatives: useful to skip the most similar texts to
+avoid marking texts as negative that are actually positives.
+
+range_max: Maximum rank of the closest matches to consider as negatives: useful to limit the number of candidates
+to sample negatives from. A lower value makes processing faster, but may result in less candidate negatives that
+satisfy the margin or max_score conditions.
+
+max_score: Maximum score to consider as a negative: useful to skip candidates that are too similar to the anchor.
+
+min_score: Minimum score to consider as a negative: useful to skip candidates that are too dissimilar to the anchor.
+
+absolute_margin: Absolute margin for hard negative mining: useful to skip candidate negatives whose similarity
+to the anchor is within a certain margin of the positive pair. A value of 0 can be used to enforce that the negative
+is always further away from the anchor than the positive.
+
+relative_margin: Relative margin for hard negative mining: useful to skip candidate negatives whose similarity
+to the anchor is within a certain margin of the positive pair. A value of 0.05 keeps a negative only if its
+similarity to the anchor is at least 5% of the positive score magnitude below the positive.
+
+sampling_strategy: Sampling strategy for negatives: “top” or “random”. “top” will always sample the top n
+candidates as negatives, while “random” will sample n negatives randomly from the candidates that satisfy the
+margin or max_score conditions.
+
+Tip
+
+The excellent NV-Retriever paper is a great resource for understanding the
+details of hard negative mining and how to use it effectively. Notably, it reaches the strongest performance using
+these settings:
+
+dataset = mine_hard_negatives(
+dataset=dataset,
+model=model,
+relative_margin=0.05, # keep negatives at least 5% of the positive score magnitude below the positive
+num_negatives=num_negatives, # 10 or less is recommended
+sampling_strategy="top", # "top" means that we sample the top candidates as negatives
+batch_size=batch_size, # Adjust as needed
+use_faiss=True, # Optional: Use faiss/faiss-gpu for faster similarity search
+)
+
+This corresponds with the TopK-PercPos (95%) mining method.
+
+Example
+
+>>> from sentence_transformers.util import mine_hard_negatives
+>>> from sentence_transformers import SentenceTransformer
+>>> from datasets import load_dataset
+>>> # Load a Sentence Transformer model
+>>> model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+>>>
+>>> # Load a dataset to mine hard negatives from
+>>> dataset = load_dataset("sentence-transformers/natural-questions", split="train")
+>>> dataset
+Dataset({
+features: ['query', 'answer'],
+num_rows: 100231
+})
+>>> dataset = mine_hard_negatives(
+... dataset=dataset,
+... model=model,
+... range_min=10,
+... range_max=50,
+... max_score=0.8,
+... relative_margin=0.05,
+... num_negatives=5,
+... sampling_strategy="random",
+... batch_size=128,
+... use_faiss=True,
+... )
+Batches: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 588/588 [00:32<00:00, 18.07it/s]
+Batches: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 784/784 [00:08<00:00, 96.41it/s]
+Querying FAISS index: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:06<00:00, 1.06it/s]
+Negative candidates mined, preparing dataset...
+Metric Positive Negative Difference
+Count 100,231 487,865
+Mean 0.6866 0.4194 0.2752
+Median 0.7010 0.4102 0.2760
+Std 0.1125 0.0719 0.1136
+Min 0.0303 0.1702 0.0209
+25% 0.6221 0.3672 0.1899
+50% 0.7010 0.4102 0.2760
+75% 0.7667 0.4647 0.3590
+Max 0.9584 0.7621 0.7073
+Skipped 427,503 potential negatives (8.36%) due to the relative_margin of 0.05.
+Skipped 978 potential negatives (0.02%) due to the max_score of 0.8.
+Could not find enough negatives for 13290 samples (2.65%). Consider adjusting the range_max, range_min, relative_margin and max_score parameters if you'd like to find more valid negatives.
+>>> dataset
+Dataset({
+features: ['query', 'answer', 'negative'],
+num_rows: 487865
+})
+>>> dataset[0]
+{
+'query': 'when did richmond last play in a preliminary final',
+'answer': "Richmond Football Club Richmond began 2017 with 5 straight wins, a feat it had not achieved since 1995. A series of close losses hampered the Tigers throughout the middle of the season, including a 5-point loss to the Western Bulldogs, 2-point loss to Fremantle, and a 3-point loss to the Giants. Richmond ended the season strongly with convincing victories over Fremantle and St Kilda in the final two rounds, elevating the club to 3rd on the ladder. Richmond's first final of the season against the Cats at the MCG attracted a record qualifying final crowd of 95,028; the Tigers won by 51 points. Having advanced to the first preliminary finals for the first time since 2001, Richmond defeated Greater Western Sydney by 36 points in front of a crowd of 94,258 to progress to the Grand Final against Adelaide, their first Grand Final appearance since 1982. The attendance was 100,021, the largest crowd to a grand final since 1986. The Crows led at quarter time and led by as many as 13, but the Tigers took over the game as it progressed and scored seven straight goals at one point. They eventually would win by 48 points – 16.12 (108) to Adelaide's 8.12 (60) – to end their 37-year flag drought.[22] Dustin Martin also became the first player to win a Premiership medal, the Brownlow Medal and the Norm Smith Medal in the same season, while Damien Hardwick was named AFL Coaches Association Coach of the Year. Richmond's jump from 13th to premiers also marked the biggest jump from one AFL season to the next.",
+'negative': "2018 NRL Grand Final The 2018 NRL Grand Final was the conclusive and premiership-deciding game of the 2018 National Rugby League season and was played on Sunday September 30 at Sydney's ANZ Stadium.[1] The match was contested between minor premiers the Sydney Roosters and defending premiers the Melbourne Storm. In front of a crowd of 82,688, Sydney won the match 21â€“6 to claim their 14th premiership title and their first since 2013. Roosters five-eighth Luke Keary was awarded the Clive Churchill Medal as the game's official man of the match."
+}
+>>> # To include similarity scores, use output_scores=True
+>>> dataset_with_scores = mine_hard_negatives(
+... dataset=dataset,
+... model=model,
+... output_scores=True,
+... # ... other parameters
+... )
+>>> dataset_with_scores
+Dataset({
+features: ['query', 'answer', 'negative', 'scores'],
+num_rows: 487865
+})
+>>> dataset.push_to_hub("natural-questions-hard-negatives", "triplet-all")
+
+Parameters:
+
+dataset (Dataset) – A dataset containing (anchor, positive) pairs.
+
+model (SentenceTransformer) – A SentenceTransformer model to use for embedding the inputs.
+
+anchor_column_name (str, optional) – The column name in dataset that contains the anchor/query. Defaults to None, in which case the first column in dataset will be used.
+
+positive_column_name (str, optional) – The column name in dataset that contains the positive candidates. Defaults to None, in which case the second column in dataset will be used.
+
+corpus (List[str], optional) – A list containing documents as strings that will be used as candidate negatives
+in addition to the second column in dataset. Defaults to None, in which case the second column in
+dataset will exclusively be used as the negative candidate corpus.
+
+cross_encoder (CrossEncoder, optional) – A CrossEncoder model to use for rescoring the candidates. Defaults to None.
+
+range_min (int) – Minimum rank of the closest matches to consider as negatives. Must be non-negative.
+Defaults to 0.
+
+range_max (int, optional) – Maximum rank of the closest matches to consider as negatives. Must leave at least
+num_negatives candidates after range_min. Defaults to None.
+
+max_score (float, optional) – Maximum score to consider as a negative. Defaults to None.
+
+min_score (float, optional) – Minimum score to consider as a negative. Defaults to None.
+
+absolute_margin (float, optional) – Absolute margin for hard negative mining, i.e. the minimum distance between
+the positive similarity and the negative similarity. Defaults to None.
+
+relative_margin (float, optional) – Relative margin for hard negative mining, i.e. the minimum distance between
+the positive similarity and the negative similarity as a fraction of the positive score magnitude. A value
+of 0.05 discards negatives whose similarity is greater than positive_score - abs(positive_score) * 0.05.
+Defaults to None.
+
+num_negatives (int) – Number of negatives to sample. Must be at least 1, and must fit in the candidate
+window left by range_min and range_max. Defaults to 3.
+
+sampling_strategy (Literal["random", "top"]) – Sampling strategy for negatives: “top” or “random”. Defaults to “top”.
+
+query_prompt_name (Optional[str], optional) – The name of a predefined prompt to use when encoding the first/anchor dataset column.
+It must match a key in the model.prompts dictionary, which can be set during model initialization
+or loaded from the model configuration.
+
+For example, if query_prompt_name="query" and the model prompts dictionary includes {“query”: “query: “},
+then the input “What is the capital of France?” is transformed into: “query: What is the capital of France?”
+before encoding. This is useful for models that were trained or fine-tuned with specific prompt formats.
+
+Ignored if query_prompt is provided. Defaults to None.
+
+query_prompt (Optional[str], optional) – A raw prompt string to prepend directly to the first/anchor dataset column during encoding.
+
+For instance, query_prompt=”query: “ transforms the input “What is the capital of France?” into:
+“query: What is the capital of France?”. Use this to override the prompt logic entirely and supply your own prefix.
+This takes precedence over query_prompt_name. Defaults to None.
+
+corpus_prompt_name (Optional[str], optional) – The name of a predefined prompt to use when encoding the corpus. See
+query_prompt_name for more information. Defaults to None.
+
+corpus_prompt (Optional[str], optional) – A raw prompt string to prepend directly to the corpus during encoding.
+See query_prompt for more information. Defaults to None.
+
+include_positives (bool) – Whether to include the positives in the negative candidates.
+Setting this to True is primarily useful for creating Reranking evaluation datasets for CrossEncoder models,
+where it can be useful to get a full ranking (including the positives) from a first-stage retrieval model.
+Defaults to False.
+
+output_format (Literal["triplet", "n-tuple", "labeled-pair", "labeled-list"]) – Output format for the datasets.Dataset.
+When output_scores=False (default), options are:
+
+”triplet”: (anchor, positive, negative) triplets, i.e. 3 columns. Useful for e.g. CachedMultipleNegativesRankingLoss.
+
+”n-tuple”: (anchor, positive, negative_1, …, negative_n) tuples, i.e. 2 + num_negatives columns. Useful for e.g. CachedMultipleNegativesRankingLoss.
+
+”labeled-pair”: (anchor, document, label) tuples with a label of 0 for negative and 1 for positive, i.e. 3 columns. Useful for e.g. BinaryCrossEntropyLoss.
+
+”labeled-list”: (anchor, [doc1, doc2, …, docN], [label1, label2, …, labelN]) tuples with labels of 0 for negative and 1 for positive, i.e. 3 columns. Useful for e.g. LambdaLoss.
+
+Defaults to “triplet”. See output_scores for the output formats when output_scores=True.
+
+output_scores (bool) – Whether to include similarity scores in the output dataset. When True, adds score fields to the output:
+- For “triplet” format: adds scores column with query-positive and query-negative similarity scores, for 4 columns total.
+- For “n-tuple” format: adds scores column with a list of similarity scores for the query-positive and each of the query-negative pairs, for 3 + num_negatives columns total. Useful for e.g. SparseMarginMSELoss.
+- For “labeled-pair” format: replaces the label column with a score column. Labels are binary (1 for positive, 0 for negative), but scores contain the actual similarity scores computed by the model or cross_encoder. The output has 3 columns.
+- For “labeled-list” format: replaces the labels column with a scores column. Labels are binary (1 for positive, 0 for negative), but scores contain the actual similarity scores computed by the model or cross_encoder. The output has 3 columns.
+Defaults to False.
+
+batch_size (int) – Batch size for encoding the dataset. Defaults to 32.
+
+faiss_batch_size (int) – Batch size of queries for the top-k similarity search, both with FAISS and without
+(use_faiss=False), where it bounds the size of the intermediate similarity matrix to
+faiss_batch_size * len(corpus). Defaults to 16384.
+
+use_faiss (bool) – Whether to use FAISS for similarity search. May be recommended for large datasets. Requires
+the faiss-cpu or faiss-gpu package. On GPU, FAISS can retrieve at most 2048 documents per query,
+so an automatically derived range_max is capped to fit. Defaults to False.
+
+use_multi_process (bool | List[str], optional) – Whether to use multi-GPU/CPU processing. If True, uses all GPUs if CUDA
+is available, and 4 CPU processes if it’s not available. You can also pass a list of PyTorch devices like
+[“cuda:0”, “cuda:1”, …] or [“cpu”, “cpu”, “cpu”, “cpu”].
+
+verbose (bool) – Whether to print statistics and logging. Defaults to True.
+
+cache_folder (str, optional) – Directory path for caching embeddings. If provided, the function will save
+query_embeddings_{hash}.npy and corpus_embeddings_{hash}.npy under this folder after the first run,
+and on subsequent calls will load from these files if they exist to avoid recomputation. The hashes are
+computed based on the model name, the query/corpus prompts, and the queries/corpus, so changing the prompt
+arguments invalidates the cache rather than silently returning embeddings from a different prompt.
+Defaults to None.
+
+as_triplets (bool, optional) – Deprecated. Use output_format instead. Defaults to None.
+
+margin (float, optional) – Deprecated. Use absolute_margin or relative_margin instead. Defaults to None.
+
+Returns:
+A dataset containing the specified output format. If output_scores=False (default), the formats are:
+
+”triplet”: (anchor, positive, negative)
+
+”n-tuple”: (anchor, positive, negative_1, …, negative_n)
+
+”labeled-pair”: (anchor, document, label)
+
+”labeled-list”: (anchor, [documents], [labels])
+
+And if output_scores=True, the formats are:
+
+”triplet”: (anchor, positive, negative, [scores])
+
+”n-tuple”: (anchor, positive, negative_1, …, negative_n, [scores])
+
+”labeled-pair”: (anchor, document, score)
+
+”labeled-list”: (anchor, [documents], [scores])
+
+Return type:
+Dataset
+
+Previous
+Next
+
+© Copyright 2026.
+
+Built with Sphinx using a
+theme
+provided by Read the Docs.

@@ -1,0 +1,8 @@
+원문 URL: https://www.fss.or.kr/robots.txt
+수집 기준일: 2026-10-07
+
+User-agent : Yeti
+Disallow: /bos/
+Disallow: /upload/
+Disallow: /fss/cvpl/stepNotice/
+Disallow: /fss/cvpl/extincNotice/

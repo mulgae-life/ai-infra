@@ -1,0 +1,1679 @@
+Domain Adaptation — Sentence Transformers documentation
+
+Getting Started
+
+Installation
+Install with uv
+
+Install with pip
+
+Install with Conda
+
+Install from Source
+
+Editable Install
+
+Install PyTorch with CUDA support
+
+Quickstart
+Sentence Transformer
+
+Cross Encoder
+
+Sparse Encoder
+
+Multi-Vector Encoder
+
+Next Steps
+
+Migration Guide
+Migrating from v5.x to v6.x
+Breaking changes
+
+Migrating from PyLate
+
+Migrating from colpali-engine
+
+Smaller changes
+
+Migrating from v5.x to v5.4+
+Updated import paths
+
+Renamed methods and parameters
+
+CrossEncoder.max_length property renamed to max_seq_length
+
+Trainer tokenizer parameter renamed to processing_class
+
+tokenizer_kwargs renamed to processor_kwargs
+
+CrossEncoder API changes
+
+Removed tags parameter from push_to_hub
+
+Default pooling for CausalLM models
+
+Changes for custom module and loss authors
+
+Migrating from v4.x to v5.x
+Migration for model.encode
+
+Migration for Asym to Router
+
+Migration of advanced usage
+
+Migrating from v3.x to v4.x
+Migration for parameters on CrossEncoder initialization and methods
+
+Migration for specific parameters from CrossEncoder.fit
+
+Migration for CrossEncoder evaluators
+
+Migrating from v2.x to v3.x
+Migration for specific parameters from SentenceTransformer.fit
+
+Migration for custom Datasets and DataLoaders used in SentenceTransformer.fit
+
+Sentence Transformer
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Computing Embeddings
+Initializing a Sentence Transformer Model
+
+Calculating Embeddings
+
+Prompt Templates
+
+Input Sequence Length
+
+Multi-Process / Multi-GPU Encoding
+
+Semantic Textual Similarity
+Similarity Calculation
+
+Semantic Search
+Background
+
+Symmetric vs. Asymmetric Semantic Search
+
+Manual Implementation
+
+Optimized Implementation
+
+Speed Optimization
+
+Elasticsearch
+
+OpenSearch
+
+Approximate Nearest Neighbor
+
+Retrieve & Re-Rank
+
+Examples
+
+Retrieve & Re-Rank
+Retrieve & Re-Rank Pipeline
+
+Retrieval: Bi-Encoder
+
+Re-Ranker: Cross-Encoder
+
+Example Scripts
+
+Pre-trained Bi-Encoders (Retrieval)
+
+Pre-trained Cross-Encoders (Re-Ranker)
+
+Clustering
+k-Means
+
+Agglomerative Clustering
+
+Fast Clustering
+
+Topic Modeling
+
+Paraphrase Mining
+paraphrase_mining()
+
+Translated Sentence Mining
+Margin Based Mining
+
+Examples
+
+Image Search
+Installation
+
+Usage
+
+Examples
+
+Embedding Quantization
+Binary Quantization
+
+Scalar (int8) Quantization
+
+Additional extensions
+
+Demo
+
+Try it yourself
+
+Creating Custom Models
+Modular Architecture
+
+Sentence Transformer Model from a Transformers Model
+
+Advanced: Custom Modules
+
+Evaluation with MTEB
+Installation
+
+Evaluation
+
+Additional Arguments
+
+Results Handling
+
+Leaderboard Submission
+
+Pretrained Models
+Original Models
+
+Semantic Search Models
+Multi-QA Models
+
+MSMARCO Passage Models
+
+Multilingual Models
+Semantic Similarity Models
+
+Bitext Mining
+
+Multimodal Models
+Image & Text Models
+
+Audio & Video Models
+
+INSTRUCTOR models
+
+Scientific Similarity Models
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Multimodal Datasets
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Deprecated Training
+
+Best Base Embedding Models
+
+Comparisons with CrossEncoder Training
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Loss Table
+
+Loss modifiers
+
+Regularization
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+Semantic Textual Similarity
+Training data
+
+Loss Function
+
+Natural Language Inference
+Data
+
+SoftmaxLoss
+
+MultipleNegativesRankingLoss
+
+Paraphrase Data
+Pre-Trained Models
+
+Quora Duplicate Questions
+Training
+
+MultipleNegativesRankingLoss
+
+Pretrained Models
+
+MS MARCO
+Bi-Encoder
+
+Matryoshka Embeddings
+Use Cases
+
+Results
+
+Training
+
+Inference
+
+Code Examples
+
+Adaptive Layers
+Use Cases
+
+Results
+
+Training
+
+Inference
+
+Code Examples
+
+Multilingual Models
+Extend your own models
+
+Training
+
+Datasets
+
+Sources for Training Data
+
+Evaluation
+
+Available Pre-trained Models
+
+Usage
+
+Performance
+
+Citation
+
+Model Distillation
+Knowledge Distillation
+
+Speed - Performance Trade-Off
+
+Dimensionality Reduction
+
+Quantization
+
+Augmented SBERT
+Motivation
+
+Extend to your own datasets
+
+Methodology
+
+Scenario 1: Limited or small annotated datasets (few labeled sentence-pairs)
+
+Scenario 2: No annotated datasets (Only unlabeled sentence-pairs)
+
+Training
+
+Citation
+
+Training with Prompts
+What are Prompts?
+
+Why would we train with Prompts?
+
+How do we train with Prompts?
+
+Training with PEFT Adapters
+Compatibility Methods
+
+Adding a New Adapter
+
+Loading a Pretrained Adapter
+
+Training Script
+
+Training with Unsloth
+Examples in this repository
+
+Unsloth Colab notebooks
+
+Fine-tuning via FastSentenceTransformer
+
+Inference and deployment
+
+Benchmarks
+
+Multimodal Training
+Supported Input Types
+
+Training
+
+References
+
+Unsupervised Learning
+TSDAE
+
+SimCSE
+
+CT
+
+CT (In-Batch Negative Sampling)
+
+Masked Language Model (MLM)
+
+GenQ
+
+GPL
+
+Performance Comparison
+
+Domain Adaptation
+Domain Adaptation vs. Unsupervised Learning
+
+Adaptive Pre-Training
+
+GPL: Generative Pseudo-Labeling
+
+Hyperparameter Optimization
+HPO Components
+
+Putting It All Together
+
+Example Scripts
+
+Distributed Training
+Comparison
+
+FSDP
+
+Cross Encoder
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Cross-Encoder vs Bi-Encoder
+Cross-Encoder vs. Bi-Encoder
+
+When to use Cross- / Bi-Encoders?
+
+Cross-Encoders Usage
+
+Combining Bi- and Cross-Encoders
+
+Training Cross-Encoders
+
+Retrieve & Re-Rank
+Retrieve & Re-Rank Pipeline
+
+Retrieval: Bi-Encoder
+
+Re-Ranker: Cross-Encoder
+
+Example Scripts
+
+Pre-trained Bi-Encoders (Retrieval)
+
+Pre-trained Cross-Encoders (Re-Ranker)
+
+Creating Custom Models
+Modular Architecture
+
+Advanced: Custom Modules
+
+Pretrained Models
+MS MARCO
+
+SQuAD (QNLI)
+
+STSbenchmark
+
+Quora Duplicate Questions
+
+NLI
+
+Multimodal Rerankers
+
+Community Models
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Multimodal Datasets
+
+Hard Negatives Mining
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Training Tips
+
+Deprecated Training
+
+Comparisons with SentenceTransformer Training
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Loss Table
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+Semantic Textual Similarity
+Training data
+
+Loss Function
+
+Inference
+
+Natural Language Inference
+Data
+
+CrossEntropyLoss
+
+Inference
+
+Quora Duplicate Questions
+Training
+
+Inference
+
+MS MARCO
+Cross Encoder
+
+Training Scripts
+
+Inference
+
+Rerankers
+BinaryCrossEntropyLoss
+
+CachedMultipleNegativesRankingLoss
+
+Inference
+
+Model Distillation
+Cross Encoder Knowledge Distillation
+
+Inference
+
+Multimodal Training
+Transformer (Any-to-Any) + LogitScore
+
+Transformer (Feature Extraction) + Pooling + Dense
+
+Comparing the Two Approaches
+
+Other Module Chains
+
+References
+
+Distributed Training
+Comparison
+
+FSDP
+
+Sparse Encoder
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Computing Sparse Embeddings
+Initializing a Sparse Encoder Model
+
+Calculating Embeddings
+
+Input Sequence Length
+
+Controlling Sparsity
+
+Interpretability with SPLADE Models
+
+Multi-Process / Multi-GPU Encoding
+
+Semantic Textual Similarity
+Similarity Calculation
+
+Semantic Search
+Manual Search
+
+Vector Database Search
+
+Qdrant Integration
+
+OpenSearch Integration
+
+Elasticsearch Integration
+
+Seismic Integration
+
+SPLADE-index Integration
+
+Retrieve & Re-Rank
+Overview
+
+Interactive Demo: Simple Wikipedia Search
+
+Comprehensive Evaluation: Hybrid Search Pipeline
+
+Pre-trained Models
+
+Sparse Encoder Evaluation
+Example with Retrieval Evaluation:
+
+Pretrained Models
+Core SPLADE Models
+
+Inference-Free SPLADE Models
+
+Model Collections
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Training Tips
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Sparse specific Loss Functions
+SPLADE Loss
+
+CSR Loss
+
+Loss Table
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+Model Distillation
+MarginMSE
+
+MS MARCO
+SparseMultipleNegativesRankingLoss
+
+Semantic Textual Similarity
+Training data
+
+Loss Function
+
+Natural Language Inference
+Data
+
+SpladeLoss
+
+Quora Duplicate Questions
+Training
+
+Information Retrieval
+SparseMultipleNegativesRankingLoss (MNRL)
+
+Inference & Evaluation
+
+Distributed Training
+Comparison
+
+FSDP
+
+Multi-Vector Encoder
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Applications
+Semantic Search
+
+Retrieve & Rerank
+
+Interpretability
+
+Compression
+
+Multi-Vector Encoder Evaluation
+Example with NanoBEIR Evaluation:
+
+Other Evaluators
+
+Creating Custom Models
+Modular Architecture
+
+What Released Checkpoints Configure
+
+Saving Multi-Vector Encoder Models
+
+Loading Multi-Vector Encoder Models
+
+Extra Per-Token Features
+
+Pretrained Models
+Text Retrieval Models
+
+Visual Document Retrieval Models
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Multimodal Datasets
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Training Tips
+
+Comparisons with SentenceTransformer Training
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Loss Table
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+MS MARCO
+MultiVectorMultipleNegativesRankingLoss
+
+MultiVectorDistillKLDivLoss
+
+Domain-specific MultiVectorEncoder training on MIRIAD
+
+XTR
+
+Visual Document Retrieval
+Training from a multimodal embedding backbone
+
+Finetuning a pretrained ColVLM
+
+Training with PEFT Adapters
+Compatibility Methods
+
+Adding a New Adapter
+
+Training Script
+
+Distributed Training
+Comparison
+
+FSDP
+
+Package Reference
+
+Sentence Transformer
+SentenceTransformer
+SentenceTransformer
+
+SentenceTransformerModelCardData
+
+Trainer
+SentenceTransformerTrainer
+
+Training Arguments
+SentenceTransformerTrainingArguments
+
+Losses
+BatchAllTripletLoss
+
+BatchHardSoftMarginTripletLoss
+
+BatchHardTripletLoss
+
+BatchSemiHardTripletLoss
+
+ContrastiveLoss
+
+OnlineContrastiveLoss
+
+ContrastiveTensionLoss
+
+ContrastiveTensionLossInBatchNegatives
+
+CoSENTLoss
+
+AnglELoss
+
+CosineSimilarityLoss
+
+DenoisingAutoEncoderLoss
+
+GISTEmbedLoss
+
+CachedGISTEmbedLoss
+
+GlobalOrthogonalRegularizationLoss
+
+EmbedDistillLoss
+
+MSELoss
+
+MarginMSELoss
+
+MatryoshkaLoss
+
+Matryoshka2dLoss
+
+AdaptiveLayerLoss
+
+MegaBatchMarginLoss
+
+MultipleNegativesRankingLoss
+
+CachedMultipleNegativesRankingLoss
+
+MultipleNegativesSymmetricRankingLoss
+
+CachedMultipleNegativesSymmetricRankingLoss
+
+SoftmaxLoss
+
+TripletLoss
+
+DistillKLDivLoss
+
+Evaluation
+BinaryClassificationEvaluator
+
+EmbeddingSimilarityEvaluator
+
+InformationRetrievalEvaluator
+
+NanoBEIREvaluator
+
+MSEEvaluator
+
+ParaphraseMiningEvaluator
+
+RerankingEvaluator
+
+TranslationEvaluator
+
+TripletEvaluator
+
+Datasets
+ParallelSentencesDataset
+
+SentenceLabelDataset
+
+DenoisingAutoEncoderDataset
+
+NoDuplicatesDataLoader
+
+Modules
+Main Modules
+
+Further Modules
+
+Cross Encoder
+CrossEncoder
+CrossEncoder
+
+CrossEncoderModelCardData
+
+Trainer
+CrossEncoderTrainer
+
+Training Arguments
+CrossEncoderTrainingArguments
+
+Losses
+ADRMSELoss
+
+BinaryCrossEntropyLoss
+
+CrossEntropyLoss
+
+LambdaLoss
+
+ListMLELoss
+
+PListMLELoss
+
+ListNetLoss
+
+MultipleNegativesRankingLoss
+
+CachedMultipleNegativesRankingLoss
+
+MSELoss
+
+MarginMSELoss
+
+RankNetLoss
+
+Evaluation
+CrossEncoderRerankingEvaluator
+
+CrossEncoderNanoBEIREvaluator
+
+CrossEncoderClassificationEvaluator
+
+CrossEncoderCorrelationEvaluator
+
+Modules
+LogitScore
+
+Sparse Encoder
+SparseEncoder
+SparseEncoder
+
+SparseEncoderModelCardData
+
+Trainer
+SparseEncoderTrainer
+
+Training Arguments
+SparseEncoderTrainingArguments
+
+Losses
+SpladeLoss
+
+CachedSpladeLoss
+
+FlopsLoss
+
+CSRLoss
+
+CSRReconstructionLoss
+
+SparseMultipleNegativesRankingLoss
+
+SparseMarginMSELoss
+
+SparseDistillKLDivLoss
+
+SparseTripletLoss
+
+SparseCosineSimilarityLoss
+
+SparseCoSENTLoss
+
+SparseAnglELoss
+
+SparseMSELoss
+
+Samplers
+BatchSamplers
+
+MultiDatasetBatchSamplers
+
+Evaluation
+SparseInformationRetrievalEvaluator
+
+SparseNanoBEIREvaluator
+
+SparseEmbeddingSimilarityEvaluator
+
+SparseBinaryClassificationEvaluator
+
+SparseTripletEvaluator
+
+SparseRerankingEvaluator
+
+SparseTranslationEvaluator
+
+SparseMSEEvaluator
+
+ReciprocalRankFusionEvaluator
+
+Modules
+SPLADE Pooling
+
+SparseAutoEncoder
+
+SparseStaticEmbedding
+
+Callbacks
+SpladeRegularizerWeightSchedulerCallback
+
+Search Engines
+semantic_search_elasticsearch()
+
+semantic_search_opensearch()
+
+semantic_search_qdrant()
+
+semantic_search_seismic()
+
+Multi-Vector Encoder
+MultiVectorEncoder
+MultiVectorEncoder
+
+MultiVectorEncoderModelCardData
+
+Trainer
+MultiVectorEncoderTrainer
+
+Training Arguments
+MultiVectorEncoderTrainingArguments
+
+Losses
+MultiVectorMultipleNegativesRankingLoss
+
+CachedMultiVectorMultipleNegativesRankingLoss
+
+MultiVectorDistillKLDivLoss
+
+MultiVectorMarginMSELoss
+
+Samplers
+BatchSamplers
+
+MultiDatasetBatchSamplers
+
+Evaluation
+MultiVectorInformationRetrievalEvaluator
+
+MultiVectorNanoBEIREvaluator
+
+MultiVectorTripletEvaluator
+
+MultiVectorRerankingEvaluator
+
+MultiVectorDistillationEvaluator
+
+Modules
+MultiVectorMask
+
+BaseTokenPooling
+
+HierarchicalTokenPooling
+
+LambdaTokenPooling
+
+Scoring
+ColBERT scoring
+
+MeanMaxSim scoring
+
+XTRScores
+
+XTRKDScores
+
+Interpretability
+Heatmaps
+
+Building blocks
+
+Base
+Model
+BaseModel
+
+BaseModelCardData
+
+Trainer
+BaseTrainer
+
+Training Arguments
+BaseTrainingArguments
+
+Samplers
+BatchSamplers
+
+MultiDatasetBatchSamplers
+
+Modules
+Common Modules
+
+Base Modules
+
+Evaluation
+BaseEvaluator
+
+SequentialEvaluator
+
+Utility Functions
+dataset
+resolve_ids()
+
+distributed
+all_gather()
+
+all_gather_padded()
+
+all_gather_with_grad()
+
+get_rank()
+
+get_world_size()
+
+environment
+check_package_availability()
+
+check_version_requirements()
+
+get_device_name()
+
+get_installed_version()
+
+is_accelerate_available()
+
+is_datasets_available()
+
+is_dist_initialized()
+
+is_training_available()
+
+suggest_extra_on_exception()
+
+file_io
+disabled_tqdm
+
+http_get()
+
+is_sentence_transformer_model()
+
+load_dir_path()
+
+load_file_path()
+
+hard_negatives
+mine_hard_negatives()
+
+misc
+check_teacher_targets()
+
+disable_datasets_caching()
+
+disable_logging()
+
+fullname()
+
+import_from_string()
+
+import_module_class()
+
+similarity_fct_name()
+
+quantization
+quantize_embeddings()
+
+semantic_search_faiss()
+
+semantic_search_usearch()
+
+retrieval
+community_detection()
+
+information_retrieval()
+
+paraphrase_mining()
+
+paraphrase_mining_embeddings()
+
+semantic_search()
+
+similarity
+SimilarityFunction
+
+cos_sim()
+
+dot_score()
+
+euclidean_sim()
+
+manhattan_sim()
+
+maxsim()
+
+maxsim_pairwise()
+
+mean_maxsim()
+
+mean_maxsim_pairwise()
+
+pairwise_angle_sim()
+
+pairwise_cos_sim()
+
+pairwise_dot_score()
+
+pairwise_euclidean_sim()
+
+pairwise_manhattan_sim()
+
+pytorch_cos_sim()
+
+tensor
+batch_to_device()
+
+cat_padded_token_embeddings()
+
+compute_count_vector()
+
+normalize_embeddings()
+
+repad_flattened_features()
+
+select_max_active_dims()
+
+stack_padded_token_embeddings()
+
+to_scipy_coo()
+
+truncate_embeddings()
+
+Sentence Transformers
+
+Training Examples
+
+Domain Adaptation
+
+Edit on GitHub
+
+Domain Adaptation
+
+The goal of Domain Adaptation is to adapt text embedding models to your specific text domain without the need to have labeled training data.
+
+Domain adaptation is still an active research field and there exists no perfect solution yet. However, in our two recent papers TSDAE and GPL we evaluated several methods how text embeddings model can be adapted to your specific domain. You can find an overview of these methods in my talk on unsupervised domain adaptation.
+
+Domain Adaptation vs. Unsupervised Learning
+
+There exists methods for unsupervised text embedding learning, however, they generally perform rather badly: They are not really able to learn domain specific concepts.
+
+A much better approach is domain adaptation: Here you have an unlabeled corpus from your specific domain together with an existing labeled corpus. You can find many suitable labeled training datasets here: Embedding Model Datasets Collection
+
+Adaptive Pre-Training
+
+When using adaptive pre-training, you first pre-train on your target corpus using e.g. Masked Language Modeling or TSDAE and then you fine-tune on an existing training dataset (see Embedding Model Datasets Collection).
+
+In our paper TSDAE we evaluated several methods for domain adaptation on 4 domain specific sentence embedding tasks:
+
+Approach |
+AskUbuntu |
+CQADupStack |
+Twitter |
+SciDocs |
+Avg |
+
+Zero-Shot Model |
+54.5 |
+12.9 |
+72.2 |
+69.4 |
+52.3 |
+
+TSDAE |
+59.4 |
+14.4 |
+74.5 |
+77.6 |
+56.5 |
+
+MLM |
+60.6 |
+14.3 |
+71.8 |
+76.9 |
+55.9 |
+
+CT |
+56.4 |
+13.4 |
+72.4 |
+69.7 |
+53.0 |
+
+SimCSE |
+56.2 |
+13.1 |
+71.4 |
+68.9 |
+52.4 |
+
+As we can see, the performance can improve up-to 8 points when you first perform pre-training on your specific corpus and then fine-tune on provided labeled training data.
+
+In GPL we evaluate these methods for semantic search: Given a short query, find the relevant passage. Here, performance can improve up to 10 points:
+
+Approach |
+FiQA |
+SciFact |
+BioASQ |
+TREC-COVID |
+CQADupStack |
+Robust04 |
+Avg |
+
+Zero-Shot Model |
+26.7 |
+57.1 |
+52.9 |
+66.1 |
+29.6 |
+39.0 |
+45.2 |
+
+TSDAE |
+29.3 |
+62.8 |
+55.5 |
+76.1 |
+31.8 |
+39.4 |
+49.2 |
+
+MLM |
+30.2 |
+60.0 |
+51.3 |
+69.5 |
+30.4 |
+38.8 |
+46.7 |
+
+ICT |
+27.0 |
+58.3 |
+55.3 |
+69.7 |
+31.3 |
+37.4 |
+46.5 |
+
+SimCSE |
+26.7 |
+55.0 |
+53.2 |
+68.3 |
+29.0 |
+37.9 |
+45.0 |
+
+CD |
+27.0 |
+62.7 |
+47.7 |
+65.4 |
+30.6 |
+34.5 |
+44.7 |
+
+CT |
+28.3 |
+55.6 |
+49.9 |
+63.8 |
+30.5 |
+35.9 |
+44.0 |
+
+A big disadvantage of adaptive pre-training is the high computational overhead, as you must first run pre-training on your corpus and then supervised learning on a labeled training dataset. The labeled trained datasets can be quite large (e.g. the all-*-v1 models had been trained on over 1 billion training pairs).
+
+GPL: Generative Pseudo-Labeling
+
+GPL overcomes the aforementioned issue: It can be applied on-top of a fine-tuned model. Hence, you can use one of the pre-trained models and adapt it to your specific domain:
+
+The longer you train, the better your model gets. In our experiments, we were training the models for about 1 day on a V100-GPU. GPL can be combined with adaptive pre-training, which can give another performance boost.
+
+GPL Steps
+
+GPL works in three phases:
+
+Query Generation: For a given text from our domain, we first use a T5 model that generates a possible query for the given text. E.g. when your text is “Python is a high-level general-purpose programming language”, the model might generate a query like “What is Python”. You can find various query generators on our doc2query-hub.
+
+Negative Mining: Next, for the generated query “What is Python” we mine negative passages from our corpus, i.e. passages that are similar to the query but which a user would not consider relevant. Such a negative passage could be “Java is a high-level, class-based, object-oriented programming language.”. We do this mining using dense retrieval, i.e. we use one of the existing text embedding models and retrieve relevant paragraphs for the given query.
+
+Pseudo Labeling: It might be that in the negative mining step we retrieve a passage that is actually relevant for the query (like another definition for “What is Python”). To overcome this issue, we use a Cross-Encoder to score all (query, passage)-pairs.
+
+Training: Once we have the triplets (generated query, positive passage, mined negative passage) and the Cross-Encoder scores for (query, positive) and (query, negative) we can start training the text embedding model using MarginMSELoss.
+
+The pseudo labeling step is quite important and which results in the increased performance compared to the previous method QGen, which treated passages just as positive (1) or negative (0). As we see in the following picture, for a generate query (“what is futures contract”), the negative mining step retrieves passages that are partly or highly relevant to the generated query. Using MarginMSELoss and the Cross-Encoder, we can identify these passages and teach the text embedding model that these passages are also relevant for the given query.
+
+The following tables gives an overview of GPL in comparison to adaptive pre-training (MLM and TSDAE). As mentioned, GPL can be combined with adaptive pre-training.
+
+Approach |
+FiQA |
+SciFact |
+BioASQ |
+TREC-COVID |
+CQADupStack |
+Robust04 |
+Avg |
+
+Zero-Shot model |
+26.7 |
+57.1 |
+52.9 |
+66.1 |
+29.6 |
+39.0 |
+45.2 |
+
+TSDAE + GPL |
+33.3 |
+67.3 |
+62.8 |
+74.0 |
+35.1 |
+42.1 |
+52.4 |
+
+GPL |
+33.1 |
+65.2 |
+61.6 |
+71.7 |
+34.4 |
+42.1 |
+51.4 |
+
+TSDAE |
+29.3 |
+62.8 |
+55.5 |
+76.1 |
+31.8 |
+39.4 |
+49.2 |
+
+MLM |
+30.2 |
+60.0 |
+51.3 |
+69.5 |
+30.4 |
+38.8 |
+46.7 |
+
+GPL Code
+
+You can find the code for GPL here: https://github.com/UKPLab/gpl
+
+We made the code simple to use, so that you just need to pass your corpus and everything else is handled by the training code.
+
+Citation
+
+If you find these resources helpful, feel free to cite our papers.
+
+TSDAE: Using Transformer-based Sequential Denoising Auto-Encoderfor Unsupervised Sentence Embedding Learning
+
+@inproceedings{wang-2021-TSDAE,
+title = "TSDAE: Using Transformer-based Sequential Denoising Auto-Encoderfor Unsupervised Sentence Embedding Learning",
+author = "Wang, Kexin and Reimers, Nils and Gurevych, Iryna",
+booktitle = "Findings of the Association for Computational Linguistics: EMNLP 2021",
+month = nov,
+year = "2021",
+address = "Punta Cana, Dominican Republic",
+publisher = "Association for Computational Linguistics",
+pages = "671--688",
+url = "https://arxiv.org/abs/2104.06979",
+}
+
+GPL: Generative Pseudo Labeling for Unsupervised Domain Adaptation of Dense Retrieval:
+
+@inproceedings{wang-2021-GPL,
+title = "GPL: Generative Pseudo Labeling for Unsupervised Domain Adaptation of Dense Retrieval",
+author = "Wang, Kexin and Thakur, Nandan and Reimers, Nils and Gurevych, Iryna",
+journal= "arXiv preprint arXiv:2112.07577",
+month = "12",
+year = "2021",
+url = "https://arxiv.org/abs/2112.07577",
+}
+
+Previous
+Next
+
+© Copyright 2026.
+
+Built with Sphinx using a
+theme
+provided by Read the Docs.

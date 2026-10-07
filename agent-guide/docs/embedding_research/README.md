@@ -17,9 +17,10 @@
 | 문서 | 조사일 | 내용 | 원본 자료 |
 |------|--------|------|-----------|
 | [korean-retrieval.md](topics/korean-retrieval.md) | 2026-10-07 | OpenAI `text-embedding-3-large`를 기준으로 본 공개 임베딩 모델. EmbeddingGemma 2의 위치, 한국어 검색 직접 비교, Qwen3-Embedding 한국어 추가 학습, 목적별 후보 | [2026-10-07_korean-retrieval](sources/2026-10-07_korean-retrieval/README.md) |
+| [insurance-finetuning.md](topics/insurance-finetuning.md) | 2026-10-07 | 보험 용어·약관 검색용 임베딩 파인튜닝 설계. 데이터 원천과 이용 조건, 합성 질의와 거짓 네거티브, 평가셋, 학습 설정, 착수 순서와 합격 기준. Claude와 코덱스 협업 조사 | [2026-10-07_insurance-finetuning](sources/2026-10-07_insurance-finetuning/README.md) |
 
 ## 새 조사를 넣을 때
 
 - 모델 하나를 다루면 `models/<패밀리><버전>.md`, 여러 모델이나 기법을 다루면 `topics/<주제>.md`에 둔다.
-- 원본 자료를 남기면 `sources/<YYYY-MM-DD>_<주제>/`를 만들고 README에 근거 대상 문서와 하위 폴더 설명을 적는다. 하위 폴더 이름은 `slm_research`와 같은 것을 쓴다: `official/`(제작사 공식 자료), `model-cards/`, `benchmarks/`, `papers/`, `community/`, `repos/`, `probes/`(직접 돌린 실측), `collect/`(수집 스크립트).
+- 원본 자료를 남기면 `sources/<YYYY-MM-DD>_<주제>/`를 만들고 README에 근거 대상 문서와 하위 폴더 설명을 적는다. 하위 폴더 이름은 `slm_research`와 같은 것을 쓴다: `official/`(제작사 공식 자료), `model-cards/`, `benchmarks/`, `papers/`, `community/`, `repos/`, `probes/`(직접 돌린 실측), `collect/`(수집 스크립트). 데이터셋 카드나 데이터 제공 기관의 안내는 `datasets/`에 둔다.
 - 이 표에 한 줄을 추가한다.

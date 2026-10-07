@@ -1,0 +1,432 @@
+원문 URL: https://aclanthology.org/2022.cai-1.5.pdf
+수집 기준일: 2026-10-07
+
+         Insurance Question Answering via Single-turn Dialogue Modeling
+
+                      Seon-Ok Na and Young-Min Kim ∗ and Seung-Hwan Cho
+                             Department of Industrial Data Engineering
+                            Hanyang University, Seoul, Republic of Korea
+                         {nso94,yngmnkim,shcho95}@hanyang.ac.kr
+
+
+
+                        Abstract                              the dialogues between users and experts on cancer
+                                                              insurance. The first is Q&A data from a Korean
+    With great success in single-turn question an-            online QA service.
+    swering (QA), conversational QA is currently
+    receiving considerable attention. Several stud-              Although our goal is to construct a multi-turn
+    ies have been conducted on this topic from                dialogue system, this study covers only the single-
+    different perspectives. However, building a               turn QA corresponding to the target system’s front
+    real-world conversational system remains a                part. The novelty of the present study is that we
+    challenge. This study introduces our ongoing              designed the system considering the further exten-
+    project, which uses Korean QA data to de-                 sion to multi-turns. Therefore, unlike the existing
+    velop a dialogue system in the insurance do-
+                                                              KB-based or neural QA systems, we borrow the
+    main. The goal is to construct a system that
+    provides informative responses to general in-             concept of intent detection and slot filling from
+    surance questions. We present the current re-             task-oriented dialogue systems (Gao et al., 2018).
+    sults of single-turn QA. A unique aspect of                  The Transformer-based pre-trained models such
+    our approach is that we borrow the concepts               as Bidirectional Encoder Representations from
+    of intent detection and slot filling from task-           Transformers (BERT) achieved excellent perfor-
+    oriented dialogue systems. We present details
+                                                              mance for NLP tasks. BERT is one of the pioneers
+    of the data construction process and the exper-
+    imental results on both learning tasks.
+                                                              of the pre-trained language representation models
+                                                              (Devlin et al., 2018). Since it was proposed in 2018,
+1   Introduction                                              a paradigm shift has taken place in the NLP domain.
+                                                              Most NLP tasks now are based on pre-trained lan-
+Although there has been significant progress in               guage models. Meanwhile, there are also previous
+single-turn question answering (QA), it cannot                studies using directly BERT embeddings directly
+cover complex questions of realistic scenarios (Fu            to express queries for conversational QA or FAQ
+et al., 2020). Recently, multi-turn (conversational)          retrieval (Qu et al., 2019b; Mass et al., 2020; Qu
+QA has emerged as an alternative to address this              et al., 2020; Sakata et al., 2019). We use a Korean
+problem by clarifying the questions via conver-               version of Electra (Clark et al., 2020), a variant of
+sation (Qu et al., 2019a, 2020; Li et al., 2019;              BERT, for intent detection and slot filling.
+Reddy et al., 2019). Conversational QA is a cat-                 This study introduces intermediate results of our
+egory of dialogue systems which are divided into              ongoing project on dialogue system construction
+task-oriented, chitchat, and QA systems (Deriu                in the insurance domain. We encountered many
+et al., 2020; Zaib et al., 2021). However, QA is              challenging situations from the first stage, data col-
+not always distinct from the other two categories.            lection. We designed the system to be constructed
+   In this study, we are interested in building a dia-        using single-turn QA data but to finally serve as
+logue system in a restricted domain, insurance. The           a multi-turn dialogue system. In the remainder of
+system aims to provide users with general descrip-            this paper, we describe the process of constructing
+tions of cancer insurance. We assumed the task                training data for insurance QA in Section 2. Then
+is not pre-defined and should be specified from               the methods used for intent detection, slot filling,
+the data. A significant difficulty is that complete           and the other approaches for the answer retrieval
+conversational data does not exist. Therefore, we             are presented in Section 3. Section 4 presents the
+needed to find other types of source data similar to          experimental results for both learning tasks, includ-
+    ∗
+        Corresponding author: Young-Min Kim                   ing a quantitative analysis of the answer retrieval
+                                                         35
+    Proceedings of the 2nd Workshop on When Creative AI Meets Conversational AI (CAI2), COLING 2022, pages 35–41
+                                               October 12–17, 2022.
+result. Then we conclude with some future works              priate solution to address this problem. It identifies
+in Section 5.                                                latent topics from a set of documents in an unsu-
+                                                             pervised manner. We applied the following LDA
+2       Insurance Data for Question                          (Blei et al., 2003), on the question data to extract
+        Answering                                            common themes of user questions.
+2.1       Data Collection and Preprocessing                     Several preprocessing such as stopwords elimi-
+                                                             nation and noun extraction have been applied be-
+Consumer counseling data in the insurance domain
+                                                             fore training the model. The number of topics was
+does not come to the public because of informa-
+                                                             fixed to 30, considering perplexity, coherence, and
+tion privacy. Therefore, we collected single-turn
+                                                             manual validation of topic model results. We re-
+Q&A data from an online QA service called Naver
+                                                             categorized the extracted topics as six different
+Knowledge iN (KiN)1 , which is part of the biggest
+                                                             upper topics: recommendation, specific cancers,
+Korean web portal, Naver. Login portal users can
+                                                             money-related, special contracts, particular insur-
+ask questions and the answerers voluntarily par-
+                                                             ance companies, and insurance terminologies.
+ticipate in the service. There are various subject
+sections in which tasks are allocated according to              Then we manually classified each question into
+their nature. We scraped the Q&A pairs answered              one of the six topics. To facilitate the process, we
+by 25 insurance experts in the insurance sector. The         distributed keywords to each topic that represent
+number of scraped Q&A pairs is 12,734.                       the topics well. The candidate keywords were high-
+   For a realistic system, we limited our target to          rank words of topic modeling results. A question
+cancer insurance. We filtered out the pairs that did         with several keywords of a particular topic can be
+not include “cancer” in the title. The remaining             classified as the topic. Finally, we had the Q&A
+data had three main issues for constructing a di-            pairs with the topic label. The pairs of two topics,
+alogue system. First, it is not conversational be-           recommendation and particular insurance compa-
+cause Naver KiN consists of single-turn Q&A data             nies, were eliminated because the answers related
+that are inappropriate for dialogue systems. Sec-            to these two topics can be too subjective. For con-
+ond, both task-oriented and QA types of questions            venience, we excluded samples with more than 200
+were mixed. Although the questions sought rele-              syllables in the question. Finally, we ahd 2,295
+vant information, some were relatively close to the          Q&A pairs as source data.
+task completion, such as recommendations or buy-
+ing. Third, the intents and slots were not explicit.         2.3   User Intents and Main Task
+Though there are rough sub-categories of the ques-           The Q&A pairs with the topic label were the source
+tions, it is challenging to specify user intentions.         data for the system construction. We preprocessed
+Moreover, the primary entity types were unclear              the questions to imitate multi-turn conversations. A
+because the task was undefined. Considering all              question was first separated into sentences, and we
+these issues, we began by defining the user intents          supposed that each corresponded to an utterance.
+and main tasks, unlike the general QA system. We             Each sentence was a data instance in terms of intent
+then defined the appropriate slots to complete the           detection.
+task. This is also intended for further extension to            We manually annotated each sentence with a
+multiple turns.                                              user intent label considering the pre-annotated
+                                                             topic. A user intent here means a detailed purpose
+2.2       Topic Modeling
+                                                             of the utterance. Therefore, it is different from the
+The user intentions in our data are not explicit, un-        higher-level user intention that can be interpreted
+like typical task-oriented systems. Moreover, the            as a task. The finally defined intent types are listed
+questions are usually not represented clearly be-            in Table 1. In addition to the 2,295 Q&A pairs, we
+cause general users do not know the insurance ter-           added manually generated 892 pairs to handle the
+minologies that precisely describe their situations.         class imbalance and data insufficiency issues. As
+We also found that some sentences were literal               an utterance can be a question or an information-
+questions, while the others provided information.            offering one, the intents were also classified into
+   All of the above characteristics make defining in-        two different categories: Request and Inform.
+tents challenging. Topic modeling can be an appro-              The high-level categories of Request intents may
+    1
+        https://kin.naver.com/                               be interpreted as tasks for the dialogue system. For
+                                                        36
+                                         Table 1: Intent type definition
+
+  Intent type                    Definition                                                    Action Type   Count
+  Personal information           Provide personal information for consultation                   Inform      503
+  Subscription information       Subscribed insurance policy                                    Inform       480
+  Emphasis                       Emphasis user request                                          Inform       147
+  Insurance options required     Options added to insurance policies                             Inform      197
+  Cancer diagnosis details       A history of cancer diagnosis                                  Inform       149
+  Approximate premium or claim   Premium or claim that cannot be categorized into the others    Request      576
+  Claim availability             Questions about claim availability                             Request      189
+  Claim process                  Queries the insurance claims payment process                   Request       63
+  Claim                          Questions about claim with a stated amount                     Request       75
+  Duplicate coverage             Questions about duplicate coverage availability                Request       85
+  Premium                        Questions about premium with a stated amount                   Request       67
+  Non-payment                    Payment of unpaid insurance premiums                           Request       41
+  Considerations                 Questions to consider when subscribing to insurance            Request       80
+  Subscribe                      Insurance policy subscription request                          Request      288
+  Terminology Meaning            Request explain on Terminology terms                           Request       95
+  Termination                    Request for termination of insurance                           Request       62
+  Greeting                       Greeting                                                       Greeting      94
+
+
+
+example, Claim availability, Claim process, and              3       Methods
+Claim can be classified into a high-level category,
+Claim-related. Although the high-level category              3.1      Intent Detection and Slot Filling
+does not correspond to a task to complete like task-         We used a Korean ELECTRA version for intent
+oriented systems; it can serve to reduce the scope of        detection and slot filling. ELECTRA is an efficient
+the QA. In other words, we borrowed the concepts             model which modified Masked LM in BERT to
+of “task” and “slot” from task-oriented systems,             achieve performance similar to BERT with a lower
+expecting they could contribute to the clarification         computing power. Multilingual versions are also
+of user requirements.                                        available, but a language-specific model generally
+                                                             outputs a better result.
+2.4   Slots                                                     Intent detection is interpreted as a classification
+The slots necessary for filling can be defined using         problem, and slot filling corresponds to a sequence
+concrete examples. We assumed several hypotheti-             labeling task. The two models are trained sepa-
+cal conversation scenarios because the source data           rately using the same pre-trained model learned
+did not include conversational situations. Several           using Korean Wikipedia data. The selected pre-
+slots can be defined from these scenarios. More-             trained model is KoElectra-base_v3 developed by
+over, we examined the frequent nouns extracted               monologg2 . The model has been fine-tuned for both
+from the source data to determine whether they               tasks.
+could be used as slot values. Finally, we obtained
+                                                             3.2      Sentence BERT for FAQ mapping
+11 slots, as presented in Table 2.
+                                                             Even if we finished the construction of the KB
+2.5   KB for Answers                                         and the training data, we had a critical issue with
+                                                             building a dialogue system. We did not know which
+Once the system recognizes what the user asks, it
+                                                             questions in the source data were answerable by
+returns an appropriate answer. To this end, we con-
+                                                             the FAQ in KB. In other words, we needed the
+structed a KB as an FAQ, apart from the source
+                                                             mappings between the source and KB questions.
+Q&A pairs. We preferred choosing an operator
+                                                             This process was for making a golden standard.
+from the KB over the source data because the real
+                                                             Therefore, manual mapping is ideal; however, it is
+solutions are diverse for the same questions. The
+                                                             time-consuming.
+KB was constructed using FAQs provided by nine
+                                                                Sentence-BERT(SBERT) can be an effective
+insurance companies and included various tech-
+                                                             labor-saving tool. SBERT is a derivative model
+niques, from common insurance sense to insurance
+                                                             of BERT and is mainly used to calculate sentence
+products. There were 817 FAQ pairs. We also con-
+                                                             expressions (Reimers and Gurevych, 2019). It has
+structed an insurance terminology dictionary using
+                                                                 2
+term lists provided by four insurance companies.                     https://github.com/monologg/KoELECTRA
+                                                        37
+                                      Table 2: Slot definition and the examples
+
+  Slot                   Definition                                               Example                    Count
+  GENDER                 User’s gender                                        여성(woman)                       127
+  INSURANT               Family relation of the insurant                     아버지(father)                      189
+  COMPANY                Insurance company name                        삼성생명(Samsung Life Insurance)           117
+  PAYMENT                Costs paid by users, including premium             보험료(premium)                      773
+  CANCER_TYPE            Cancer to be covered by insurance               위암(cancer of the stomach)            151
+  DISEASE_LOG            User’s disease history                          위암(cancer of the stomach)            679
+  JARGON                 Insurance-specific terms                         고지의무(duty to notify)                907
+  PLAM_NAME              Name of insurance policy                    내인생플러스보험(My Life Plus Insurance)          51
+  BODY_PART              Body parts subject to disease                      갑상선(Thyroid)                      157
+  OPERATION_LOG          User’s surgical history                        갑상선 수술(thyroid surgery)               288
+  INSURANCE_TYPE         Types of insurance                             실손보험(indemnity insurance)            1,555
+
+
+
+a pooling layer that is added to the existing BERT             from other slots. Many existing plan names include
+and uses Siamese Network and Triplet Network                   the words signifying INSURANCE_TYPE or COM-
+architectures. SBERT provides better sentence em-              PANY. We could handle this issue by replacing the
+beddings, especially when computing sentence sim-              plan names with symbols. Second, it can contribute
+ilarity. Therefore, we used a Korean version of                to solving the imbalanced dataset problem. This
+SBERT to map the source and KB questions.                      method showed similar effects to synonym substitu-
+   The mapping process is as follows: 1) compute               tion, one of the text data augmentation methods. As
+the SBERT embeddings of the source and FAQ                     a result, the prediction performance was improved
+questions, 2) for each source question, find the               by 3-5% compared to the previous one. Third, post-
+three most similar FAQ questions using cosine sim-             processing was unnecessary, even though we use
+ilarity, 3) manually map the source question and               a dictionary as important external information. We
+a FAQ question if the questions are semantically               got both the benefits of dictionary matching and
+similar.                                                       language model at a time. In this way, we could
+   Two annotators carried out the mapping for                  enhance the recall value of PLAN_NAME. Figure 1
+cross-validation. After the annotation, approxi-               shows the sentence embedding architecture when
+mately half of the source questions were mapped                applying our approach.
+to the FAQ questions Q.
+                                                               3.4    Answer Retrieval
+3.3      Symbol replacement in slot filling data               There are two types of QA: Knowledge-based QA
+         via dictionary mapping                                and IR-based QA (Jurafsky and Martin, 2009). The
+Among the slots, PLAN_NAME is difficult to detect              former requires a well-structured KB, whereas the
+because of its low occurrence and high diversity in            latter the large quantities of texts. However, as our
+values. Moreover, the slot values usually consist of           case does not apply to either, we take another ap-
+multiple words and have descriptive phrases. These             proach similar to the FAQ retrieval. Even though
+characteristics make recognizing the slot challeng-            the further goal of this study is a conversational di-
+ing. Another problem is that the newly-coined plan             alogue system, we aim at a single-turn QA for now.
+names continuously occur.                                      Therefore, we propose a transitionary retrieval ap-
+   To enhance the detection performance of the slot,           proach to select the most similar FAQ given a user
+we invented a simple but effective heuristic method.           question.
+The method uses a dictionary of insurance product                 After manual FAQ mapping in Section 3.2, we
+names. The dictionary was constructed using real               got a set of source questions mapped to the most
+plan names scraped from insurance company web-                 similar FAQs. Given a source question (utterance),
+sites. In addition to the original training data for           the mapped FAQ can be the correct response that
+slot filling, we added sentences with the masked               our QA system should return. We devised a simple
+product names. The added sentences had product                 but effective method to retrieve the most similar
+names identified by dictionary mapping and prede-              FAQ for a user utterance.
+fined special symbols replace the product names.                  We used the detected slot values and the TF-IDF-
+   This method has three advantages. First, it is ef-          based keywords in the proposed method to retrieve
+fective for the complex slot values, including words           a proper FAQ. There were three different types of
+                                                          38
+                 Figure 1: Sentence embeddings by symbol replacement via dictionary mapping
+
+
+information to retrieve a good FAQ: 1) set A - the           model classified the query into the class Premium.
+slot values and keywords detected from the user              If not, the result was usually the class Approximate
+utterance; 2) set B - the slot values and keywords           premium or claim. There are also a contextual sim-
+existing in the question part of each FAQ; and 3)            ilarity between the classes Claim availability and
+set C - the slot values and keywords existing in the         Claim process.
+source questions that were mapped to each FAQ.
+   The overlapping score between sets A and B was                           Table 3: Intent detection result
+computed for a given utterance and FAQ pair. A
+                                                              Intent type                        precision recall   f1-score
+similar score was also computed for A and C. The
+                                                              Personal information              0.83       0.79     0.81
+weighted sum of these scores was the similarity               Subscription information          0.84       0.83     0.83
+score of the utterance-FAQ pair. We selected the              Emphasis                          0.97       0.89     0.93
+FAQ that had the highest similarity score given an            Insurance options required        0.51       0.56     0.54
+                                                              Cancer diagnosis details          0.59       0.79     0.68
+utterance.                                                    Approximate premium or claim      0.58       0.57     0.58
+                                                              Claim availability                0.67       0.83     0.74
+4     Experiments                                             Claim process                     0.17       0.08     0.11
+                                                              Claim                             0.55       0.79     0.65
+First, we present the experimental results for intent         Duplicate coverage                0.88       0.68     0.77
+detection and slot filling. The former is a typical           Premium                           0.30       0.25     0.27
+                                                              Non-payment                       0.75       0.50     0.60
+classification problem, and the latter can be inter-          Considerations                    0.78       0.44     0.56
+preted as a sequence labeling task, as introduced in          Subscribe                         0.64       0.69     0.67
+                                                              Terminology meaning               0.64       0.64     0.64
+Section 3. KoElectra was for the training in both             Termination                       0.86       0.92     0.89
+tasks. Second, we described the performance of                Greeting                          1.00       0.92     0.96
+answer retrieval from the FAQs. The weighted sum              macro average                     0.68       0.66     0.66
+of the three scores was the similarity score of the           micro average                     0.71       0.71     0.71
+utterance-FAQ pair: We selected the FAQ that had
+the highest similarity score given an utterance.                For further verification, we show T-SNE visual-
+                                                             ization of 12th layer of the trained KoELECTRA
+4.1    Intent detection and slot filling                     in Figure 2. In the area marked with “1”, there is a
+Table 3 presents the experimental results of intent          mix of the instances from two different classes, Pre-
+detection. The micro-averaged f1-score for 17 dif-           mium (light green) and Approximate premium or
+ferent intent types was 0.71. The result can be re-          claim (yellow). There is also another area, marked
+garded as good given insufficient training data and          with “2”, where the instances from Claim availabil-
+many classes.                                                ity (dark green) Claim process (cyan). This result
+   We had unsatisfactory results in the Claim pro-           signifies that we further need to modify the cate-
+cess and Premium because some categories were                gory definition to separate well these confusable
+similar to them, such as Approximate premium or              ones.
+claim and Claim availability. If the question was               Table 4 lists the slot filling results. The micro-
+precisely for the insurance premium amount, the              averaged f1-score is 0.95, which is a high value
+                                                        39
+                                                                 the word “다시” (again) is the primary keyword
+                                                                 enabling the mapping, which came from the set A
+                                                                 introduced in Section 3.4. The second FAQ corre-
+                                                                 sponds to a vast range of queries. Therefore, the
+                                                                 FAQ is mapped to the appropriate queries espe-
+                                                                 cially conditioned on the slots and keywords of
+                                                                 mapped source questions in the training data (set C
+                                                                 in Section 3.4). Thus, the reason for mapping varies
+                                                                 such that our strategy using the weighted sum score
+                                                                 is proven effective for the answer retrieval.
+
+                                                                           Table 5: FAQ retrieval examples
+
+                                                                                     example
+                                                                  Query              이전에 위암으로 보장을 받았는데, 다
+                                                                                     시 암에 걸리면 보장 받을 수 있나요?
+Figure 2: The T-SNE visualization of 12th layer of the                               (I had previously guaranteed stomach
+trained KoELECTRA.                                                                   cancer. Can I get it if it recurs?)
+
+                                                                  1. Retrieved FAQ   보험금은 한번만 보장되나요?
+considering the number of slots. The worst f1-score,                                 (Is this insurance guaranteed only once?)
+                                                                  2. Retrieved FAQ   암 진단 확정 시 보험금 청구서류 및 절
+0.58, is observed in the class PLAN_NAME, as we                                      차가 어떻게 되는 지 궁금합니다.
+can easily guess from the discussion in Section 3.3.                                 (What are the procedures and documents
+However, the result is enhanced compared to the                                      required to claim insurance when diag-
+                                                                                     nosed with cancer?)
+other models trained without dictionary mapping,                  3. Retrieved FAQ   지급기준이 어떻게 되나요?
+introduced in Section 3.3. Considering the class                                     (What are the claim requirements for
+imbalance and insufficient training data, we found                                   customer insurance?)
+that the result was satisfactory.                                 Query              오늘 보험에 가입했는데 언제부터 보
+                                                                                     장을 받을 수 있나요?
+                Table 4: Slot filling result                                         (I bought insurance today, when I could
+                                                                                     get a guarantee?)
+  Entity type              precision    recall   f1-score         1. Retrieved FAQ   지급기준이 어떻게 되나요?
+  GENDER                      1.00      0.96      0.98                               (What are the claim requirements for
+  INSURANT                    0.97      0.97      0.97                               customer insurance?)
+  COMPANY                     0.81      0.80      0.81            2. Retrieved FAQ   가입하면 바로 보장을 받을 수 있나요?
+  PAYMENT                     0.93      0.99      0.96                               (Can I get a guarantee right away if I
+  CANCER_TYPE                 0.93      0.83      0.88                               subscribe?)
+  DISEASE_LOG                 0.89      0.93      0.91            3. Retrieved FAQ   보험금 청구를 하면 언제쯤 보험금이
+  JARGON                      0.90      0.93      0.91                               지급되나요?
+  PLAN_NAME                   0.46      0.76      0.58                               (How long does it take to claim insur-
+  BODY_PART                   0.84      0.89      0.86                               ance?)
+  OPERATION_LOG               0.95      1.00      0.97
+  INSURANCE_TYPE              0.97      0.96      0.97
+  macro average               0.88      0.91      0.89           5   Conclusions
+  micro average               0.95      0.95      0.95
+                                                                 In this study, we built a single-turn dialogue sys-
+                                                                 tem corresponding to the front part of our target
+4.2   Answer Retrieval                                           system for the insurance domain. Our final goal is
+We evaluated the FAQ retrieval results using the                 to construct a multi-turn dialogue system that can
+gold standard described in section 3.2. The accu-                return informative counselors about insurance. For
+racy was 70% on the test data. We also obtained                  future scalability, the concept of intention detec-
+acceptable results when generating random ques-                  tion and slot filling was borrowed, therefore, for
+tions.                                                           this purpose, training data and KB was constructed
+   Table 5 presents two examples of the FAQ re-                  on their own. We obtained an encouraging result
+trieval. Patterns exist in the mappings between the              for both tasks despite the limited quantity of the
+query and the FAQ. The two questions in the table                source. To enhance the performance of the slots
+show the representative ways. For the first query,               with low occurrence and high-value diversity, we
+                                                            40
+proposed a slot replacement method through dic-                  Yosi Mass, Boaz Carmeli, Haggai Roitman, and David
+tionary mapping. The method also provided a good                   Konopnicki. 2020. Unsupervised FAQ retrieval with
+                                                                   question generation and BERT. In Proceedings of
+result. Future work first includes modifying cat-
+                                                                   the 58th Annual Meeting of the Association for Com-
+egory definitions and improving answer retrieval                   putational Linguistics, pages 807–812, Online. As-
+performance. Furthermore, we will re-design the                    sociation for Computational Linguistics.
+system for the multi-turn dialogues. We expect the
+                                                                 Chen Qu, Liu Yang, Cen Chen, Minghui Qiu, W. Bruce
+extracted intents and slot values to be effectively                Croft, and Mohit Iyyer. 2020. Open-retrieval con-
+used for the multi-turn system.                                    versational question answering. In Proceedings of
+                                                                   the 43rd International ACM SIGIR Conference on
+Acknowledgement                                                    Research and Development in Information Retrieval,
+                                                                   SIGIR ’20, page 539–548, New York, NY, USA. As-
+This work was supported by two projects, AI-based                  sociation for Computing Machinery.
+ScienceOn User Behavior Prediction Technology,
+                                                                 Chen Qu, Liu Yang, W. Bruce Croft, Yongfeng Zhang,
+funded by KISTI (202200000001712) and Devel-
+                                                                   Johanne R. Trippas, and Minghui Qiu. 2019a. User
+opment of Next Generation Artificial Intelligence                  intent prediction in information-seeking conversa-
+Assistant System Technology, funded by AIITONE                     tions. In Proceedings of the 2019 Conference on Hu-
+(202200000000124).                                                 man Information Interaction and Retrieval, CHIIR
+                                                                   ’19, page 25–33, New York, NY, USA. Association
+                                                                   for Computing Machinery.
+References                                                       Chen Qu, Liu Yang, Minghui Qiu, W. Bruce Croft,
+David M. Blei, Andrew Y. Ng, Michael I. Jordan, and                Yongfeng Zhang, and Mohit Iyyer. 2019b. Bert with
+  John Lafferty. 2003. Latent dirichlet allocation.                history answer embedding for conversational ques-
+  Journal of Machine Learning Research, 3:2003.                    tion answering. In Proceedings of the 42nd Interna-
+                                                                   tional ACM SIGIR Conference on Research and De-
+Kevin Clark, Minh-Thang Luong, Quoc V. Le, and                     velopment in Information Retrieval, SIGIR’19, page
+  Christopher D. Manning. 2020. ELECTRA: pre-                      1133–1136, New York, NY, USA. Association for
+  training text encoders as discriminators rather than             Computing Machinery.
+  generators. CoRR, abs/2003.10555.
+                                                                 Siva Reddy, Danqi Chen, and Christopher D. Manning.
+Jan Deriu, Alvaro Rodrigo, Arantxa Otegi, Guillermo                 2019. CoQA: A Conversational Question Answer-
+   Echegoyen, Sophie Rosset, Eneko Agirre, and Mark                 ing Challenge. Transactions of the Association for
+   Cieliebak. 2020. Survey on evaluation methods for                Computational Linguistics, 7:249–266.
+   dialogue systems. Artificial Intelligence Review.
+                                                                 Nils Reimers and Iryna Gurevych. 2019. Sentence-
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and                      BERT: Sentence embeddings using Siamese BERT-
+   Kristina Toutanova. 2018. Bert: Pre-training of deep            networks. In Proceedings of the 2019 Conference
+   bidirectional transformers for language understand-             on Empirical Methods in Natural Language Process-
+   ing. arXiv preprint arXiv:1810.04805.                           ing and the 9th International Joint Conference on
+                                                                   Natural Language Processing (EMNLP-IJCNLP),
+Bin Fu, Yunqi Qiu, Chengguang Tang, Yang Li,                       pages 3982–3992, Hong Kong, China. Association
+  Haiyang Yu, and Jian Sun. 2020.      A survey                    for Computational Linguistics.
+  on complex question answering over knowledge
+  base: Recent advances and challenges. CoRR,                    Wataru Sakata, Tomohide Shibata, Ribeka Tanaka, and
+  abs/2007.13069.                                                  Sadao Kurohashi. 2019. Faq retrieval using query-
+                                                                   question similarity and bert-based query-answer rel-
+Jianfeng Gao, Michel Galley, and Lihong Li. 2018.
+                                                                   evance. In Proceedings of the 42nd International
+   Neural approaches to conversational AI. In Proceed-
+                                                                  ACM SIGIR Conference on Research and Devel-
+   ings of the 56th Annual Meeting of the Association
+                                                                   opment in Information Retrieval, SIGIR’19, page
+   for Computational Linguistics: Tutorial Abstracts,
+                                                                  1113–1116, New York, NY, USA. Association for
+   pages 2–7.
+                                                                   Computing Machinery.
+Dan Jurafsky and James H. Martin. 2009. Speech
+  and language processing: an introduction to natural            Munazza Zaib, Wei Emma Zhang, Quan Z. Sheng,
+  language processing, computational linguistics, and             Adnan Mahmood, and Yang Zhang. 2021. Con-
+  speech recognition, 2nd Edition. Prentice Hall se-              versational question answering: A survey. CoRR,
+  ries in artificial intelligence. Prentice Hall, Pearson         abs/2106.00874.
+  Education International.
+Xiaoya Li, Fan Yin, Zijun Sun, Xiayu Li, Arianna
+  Yuan, Duo Chai, Mingxin Zhou, and Jiwei Li. 2019.
+  Entity-relation extraction as multi-turn question an-
+  swering. CoRR, abs/1905.05529.
+                                                            41
+

@@ -1,0 +1,1093 @@
+원문 URL: https://aclanthology.org/2025.emnlp-main.179.pdf
+수집 기준일: 2026-10-07
+
+                 FinMTEB: Finance Massive Text Embedding Benchmark
+
+
+                                         Yixuan Tang , Yi Yang
+                             The Hong Kong University of Science and Technology
+                               ytangch@connect.ust.hk, imyiyang@ust.hk
+
+
+
+
+                           Abstract                              et al., 2013; Pennington et al., 2014; Peters et al.,
+                                                                 2018). Their quality significantly impacts down-
+        The efficacy of text embedding models in repre-
+                                                                 stream applications like information retrieval and
+        senting and retrieving information is crucial for
+        many NLP applications, with performance sig-             semantic understanding. While recent Large Lan-
+        nificantly advanced by Large Language Mod-               guage Model (LLM)-based embeddings (Wang
+        els (LLMs). Despite this progress, exist-                et al., 2023; Li et al., 2023; Meng et al., 2024)
+        ing benchmarks predominantly use general-                demonstrate remarkable performance on general
+        purpose datasets, inadequately addressing the            benchmarks, their efficacy in specialized domains,
+        nuanced requirements of specialized domains              particularly finance, remains under-explored. Fi-
+        like finance. To bridge this gap, we intro-              nancial text analysis presents unique challenges, in-
+        duce the Finance Massive Text Embedding
+        Benchmark (FinMTEB), a comprehensive eval-
+                                                                 cluding domain-specific terminology, temporal sen-
+        uation suite specifically designed for the fi-           sitivity, and complex numerical relationships (Li
+        nancial domain. FinMTEB encompasses 64                   et al., 2024; Anderson et al., 2024), raising critical
+        datasets across 7 task types, including classifi-        questions: How effectively do modern embedding
+        cation, clustering, retrieval, pair classification,      models capture domain-specific financial informa-
+        reranking, summarization, and semantic tex-              tion? Can domain adaptation enhance LLM-based
+        tual similarity (STS) in English and Chinese.            embeddings for financial applications?
+        Alongside this benchmark, we introduce Fin-
+                                                                    These questions are motivated by three key in-
+        E5, a state-of-the-art finance-adapted embed-
+        ding model, ranking first on FinMTEB. Fin-               sights. First, financial semantics often diverge from
+        E5 is developed by fine-tuning e5-Mistral-7B-            general language usage. For instance, "liability"
+        Instruct on a novel persona-based synthetic              inherently carries negative sentiment in financial
+        dataset tailored for diverse financial embed-            contexts due to its association with obligations and
+        ding tasks. Evaluating 15 prominent embed-               risks, contrasting with its neutral denotation of le-
+        ding models on FinMTEB, we derive three                  gal responsibility in general usage. Such semantic
+        key findings: (1) domain-specific models, in-            divergence is critical for applications like Retrieval
+        cluding our Fin-E5, significantly outperform
+        general-purpose models; (2) performance on
+                                                                 Augmented Generation (RAG) systems, where ac-
+        general benchmarks is a poor predictor of suc-           curate document retrieval is important for effec-
+        cess on financial tasks; and (3) surprisingly,           tive knowledge augmentation. While recent work
+        traditional Bag-of-Words (BoW) models sur-               adapts RAG for finance (Li et al., 2024; Malandri
+        pass dense embedding models on financial STS             et al., 2025), the fundamental role of embedding
+        tasks. This work provides a robust benchmark             quality in retrieval efficacy is often overlooked.
+        for financial NLP and offers actionable insights            Second, empirical evidence highlights the neces-
+        for developing future domain-adapted embed-
+                                                                 sity of domain adaptation for optimal performance
+        ding solutions. Both FinMTEB and Fin-E5 will
+        be open-sourced for the research community. 1            in specialized fields (Ling et al., 2023; Gururangan
+                                                                 et al., 2020), even with advanced LLMs. This has
+1       Introduction                                             led to models like BiMedLM (Bolton et al., 2024)
+                                                                 for biomedical texts and BloombergGPT (Wu et al.,
+Embedding models, transforming text into dense                   2023) for finance. This specialization extends to
+vector representations, are foundational to many                 embedding models, with examples like BioWord-
+natural language processing (NLP) tasks (Mikolov                 Vec (Zhang et al., 2019) and FinBERT (Yang et al.,
+    1
+        Github: https://github.com/yixuantt/FinMTEB              2020). Notably, the financial industry itself con-
+                                                              3620
+          Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing, pages 3620–3638
+                              November 4-9, 2025 ©2025 Association for Computational Linguistics
+                                                FinMTEB: Finance Massive Text Embedding Benchmark
+
+
+                                 Clustering                                           Retrieval                                     Reranking
+   Task Type                                          Corpus Type                                       Corpus Type
+
+     Intention         arXiv          Event               News              10K             Terms           Fact            Web           QA
+      Consumer Complaint              News                 Numerical QA                Disclosure                   Finance Knowledge
+        PII          Company to Industry                   Web                    Open Book QA
+                                                                                                                    3 English Datasets
+                                                                                                                   3 Chinese Datasets
+                6 English Datasets                                   10 English Datasets
+
+               5 Chinese Datasets                                   10 Chinese Datasets
+                                                                                                        Corpus Type             Summarization
+
+                                                                                                          10K          News        Long Context
+                               Classification                                              STS              3 English               3 Chinese
+    Task Type                                        Corpus Type
+                                                                                                            Datasets                Datasets
+      Sentiment        Fake News         ESG                                10K
+
+         Forward-looking Statement                                  Bank Question Corpus                Task Type             Pair-Classification
+
+      Hawkish vs. Dovish             Fraud                          Consumer Complaint
+                                                                                                              News                 Consumer
+                                                                                                            Sentiment              Complaint
+                8 English Datasets                                   2 English Datasets
+
+                5 Chinese Datasets                                  2 Chinese Datasets                     3 English               1 Chinese
+                                                                                                           Datasets                Datasets
+
+
+
+Figure 1: An overview of tasks and datasets used in FinMTEB. All the dataset descriptions and examples are
+provided in the Appendix A.
+
+
+tributes to these advancements; for instance, BAM,                                nese and covering seven critical financial embed-
+a RoBERTa-based model from Balyasny Asset                                         ding tasks: classification, clustering, retrieval, pair
+Management (Anderson et al., 2024), has demon-                                    classification, reranking, summarization, and se-
+strated improvements. Compared to the general do-                                 mantic textual similarity (STS). Concurrently, we
+main, a significant gap exists: despite commercial                                develop and release Fin-E5, a finance-adapted em-
+solutions like voyage-finance-2 (VoyageAI, 2025),                                 bedding model that achieves state-of-the-art perfor-
+there is a lack of open-source, LLM-based finan-                                  mance on FinMTEB. Fin-E5 is built by fine-tuning
+cial embedding models accessible to the research                                  e5-Mistral-7B-Instruct (Wang et al., 2023) on a
+community.                                                                        persona-based synthetic dataset designed to gener-
+   Third, financial NLP lacks comprehensive evalu-                                ate diverse training data relevant to various finan-
+ation frameworks specifically for embedding mod-                                  cial embedding tasks. Our extensive experiments,
+els. Current benchmarks like FinanceBench (Is-                                    evaluating 15 prominent embedding models on Fin-
+lam et al., 2023) and FinQA (Chen et al., 2021)                                   MTEB, yield three crucial insights: (1) LLM-based
+primarily assess text generation, while embedding-                                embeddings, particularly when domain-adapted
+specific evaluations (FiQA, 2018; Liu et al., 2024a)                              like Fin-E5, generally outperform traditional meth-
+are often narrow in scope, targeting single task                                  ods and their general-purpose LLM counterparts,
+types or limited text types. This gap is exacer-                                  providing significant performance gains. (2) Perfor-
+bated by unique characteristics of financial texts,                               mance on general benchmarks is a poor predictor
+such as the prevalence of boilerplate language (e.g.,                             of success on financial tasks; (3) Traditional Bag-
+"The company’s performance is subject to various                                  of-Words (BoW) models unexpectedly surpass all
+risks..."). Such standardized disclaimers, frequent                               tested dense embedding models on financial STS
+but low in informational content, complicate mod-                                 tasks, highlighting persistent challenges for current
+els’ ability to distinguish meaningful business in-                               embeddings in capturing nuanced financial seman-
+sights from routine compliance text. Thus, a critical                             tics.
+need exists for comprehensive financial embedding                                    Apart from these insights, our practical contri-
+benchmarks.                                                                       butions are twofold: First, we propose FinMTEB,
+  To bridge this gap, we introduce the Finance                                    the first comprehensive financial domain evaluation
+Massive Text Embedding Benchmark (FinMTEB).                                       benchmark encompassing 64 datasets across seven
+This comprehensive benchmark comprises 64                                         distinct tasks in both Chinese and English. Second,
+domain-specific datasets spanning English and Chi-                                we develop and release Fin-E5, a finance-adapted
+                                                                          3621
+embedding model that achieves state-of-the-art per-     2024) for biomedicine, SaulLM-7B (Colombo
+formance on FinMTEB. To support future research,        et al., 2024) for legal texts, and BloombergGPT
+we will make both the FinMTEB benchmark and             (Wu et al., 2023) for finance. The second strat-
+our Fin-E5 model available as open source.              egy fine-tunes existing models for domain-specific
+                                                        tasks, as demonstrated by InvestLM (Yang et al.,
+2   Related Work                                        2023b) and FinGPT (Yang et al., 2023a). This
+Recent advances in embedding models have shown          trend extends to embedding models, with special-
+remarkable success in general domain tasks, yet         ized versions such as BioWordVec (Zhang et al.,
+their effectiveness in specialized domains remains      2019), BioSentVec (Chen et al., 2019), and Fin-
+a critical challenge.                                   BERT (Yang et al., 2020) showing superior domain-
+                                                        specific performance. However, evaluating these
+2.1 General-purpose Embedding Models                    specialized embedding models remains challenging
+The evolution of embedding models marks signifi-        due to the lack of comprehensive domain-specific
+cant progress in natural language processing. Start-    benchmarks.
+ing with static word representations like Word2Vec
+(Mikolov et al., 2013) and GloVe (Pennington et al.,    2.4    The Gap in Domain-specific Evaluation
+2014), the field advanced to contextualized em-         While domain-specific language models have stim-
+beddings through transformer-based architectures        ulated the development of specialized evaluation
+such as BERT (Devlin et al., 2019) and RoBERTa          frameworks across various fields, these bench-
+(Liu, 2019). A notable advancement came with            marks primarily emphasize generative and reason-
+Sentence-BERT (Reimers and Gurevych, 2019),             ing capabilities instead of embedding quality. The
+which introduced Siamese and triplet network ar-        financial sector has seen the emergence of frame-
+chitectures to generate meaningful sentence-level       works like CFLUE (Zhu et al., 2024), FinEval
+representations. Recent developments in large lan-      (Zhang et al., 2023), and FinanceBench (Islam
+guage models have further pushed the boundaries,        et al., 2023), whereas the legal and medical do-
+with models such as e5-mistral-7b-instruct (Wang        mains have introduced LawBench (Fei et al., 2023),
+et al., 2023) and gte-Qwen2-1.5B-instruct (Yang         MedBench (Liu et al., 2024b), and DrBenchmark
+et al., 2024) achieving better performance in var-      (Labrak et al., 2024). These benchmarks consis-
+ious embedding tasks. However, these general-           tently illustrate that general-purpose models often
+purpose models may not adequately capture the           fall short in specialized areas (Zhu et al., 2024; Fei
+nuanced semantics of specialized domains.               et al., 2023), highlighting the necessity of domain
+                                                        adaptation (Ling et al., 2023). Despite this acknowl-
+2.2 Current Embedding Evaluation
+                                                        edgment, there is still a critical lack of compre-
+    Landscape
+                                                        hensive evaluation frameworks for domain-specific
+To assess embedding quality, several evaluation         embeddings that assess performance across essen-
+frameworks have been developed. General-purpose         tial tasks such as semantic similarity, classification,
+embedding benchmarks, such as the Massive Text          and retrieval. Even recent financial embedding de-
+Embedding Benchmark (MTEB) (Muennighoff                 velopments, such as BAM embedding (Anderson
+et al., 2022), provide broad coverage across multi-     et al., 2024), rely on narrow evaluation frameworks,
+ple tasks and languages. Specialized benchmarks         typically focusing on single-task performance met-
+like BEIR (Thakur et al., 2021) focus on specific as-   rics (e.g., FinanceBench (Islam et al., 2023) for
+pects, such as information retrieval. Although they     retrieval tasks). This limited evaluation may not
+incorporate some domain-specific datasets, such as      fully reflect how the models perform in real-world
+FiQA (FiQA, 2018), the size of the data and the         financial applications.
+coverage of the task are limited.
+
+2.3 Domain Adaptation Approaches
+                                                        3     The FinMTEB Benchmark
+Recognizing the limitations of general-purpose          In this section, we introduce the Finance MTEB
+models in specialized domains, researchers have         (FinMTEB) benchmark. As illustrated in Figure 1,
+pursued two main adaptation strategies. The first       FinMTEB encompasses seven embedding tasks,
+approach develops domain-specific models from           following a structure similar to MTEB (Muen-
+scratch, exemplified by BioMedLM (Bolton et al.,        nighoff et al., 2022) but with datasets specifically
+                                                    3622
+curated for the finance domain.                        CFPB2 , financial intent detection data (Gerz et al.,
+                                                       2021a; Watson et al., 2024), and other established
+3.1 FinMTEB Tasks                                      datasets. Model performance is quantified using
+                                                       the V-measure (Rosenberg and Hirschberg, 2007),
+Semantic Textual Similarity (STS) evaluates the        a comprehensive metric that evaluates cluster qual-
+semantic similarity between pairs of financial text.   ity through both completeness (all members of a
+This task is crucial for automated financial analy-    class are assigned to the same cluster) and homo-
+sis and risk management; for example, detecting        geneity (each cluster contains only members of a
+subtle semantic differences between quarterly earn-    single class).
+ings statements could reveal important shifts in          Classification evaluates a model’s ability to cate-
+a company’s financial strategy that impact invest-     gorize financial texts into predefined classes based
+ment decisions. To ensure comprehensive eval-          on their semantic content. This capability is es-
+uation, we incorporate diverse financial datasets,     sential for automated financial decision-making;
+including FinSTS (Liu et al., 2024a) and FINAL         for example, in algorithmic trading, accurately
+(Ju et al., 2023) from company annual reports,         classifying sentiment in earnings calls or news
+and BQ-Corpus (Chen et al., 2018) from banking         articles can directly influence trading strategies
+documents. Model performance is quantified us-         and portfolio adjustments. The classification task
+ing Spearman’s rank correlation, which measures        encompasses diverse financial scenarios through
+the alignment between predicted cosine similarity      multiple specialized datasets, including: finan-
+scores and human-annotated similarity ratings.         cial sentiment analysis (Malo et al., 2014; FiQA,
+   Retrieval evaluates a model’s capability to         2018; Cortis et al., 2017; Lu et al., 2023), Fed-
+identify and extract relevant financial information    eral Reserve monetary policy classification (Shah
+in response to specific queries. Unlike general        et al., 2023), organization’s strategy classification,
+domain retrieval, financial information retrieval      and forward-looking statement identification (Yang
+presents unique challenges, requiring precise han-     et al., 2023b). Performance is measured using
+dling of complex numerical data, temporal depen-       Mean Average Precision (MAP), which provides
+dencies, and regulatory context. For comprehen-        a comprehensive assessment of classification ac-
+sive evaluation, we leverage established finance       curacy while accounting for ranking quality and
+QA datasets including FinanceBench (Islam et al.,      confidence scores.
+2023), FiQA2018 (FiQA, 2018), and HPC3 (Guo               Reranking evaluates the model’s ability to
+et al., 2023). To further assess models’ understand-   order retrieved documents based on their rele-
+ing of professional financial terminology, we intro-   vance to financial queries. We utilize financial
+duce TheGoldman dataset, constructed from the          question-answering datasets such as Fin-Fact and
+Goldman Sachs Financial Dictionary. Performance        FinQA(Rangapur et al., 2023; Chen et al., 2021) to
+is measured using NDCG@10, a metric that eval-         construct the reranking tasks. Specifically, for each
+uates both the relevance of retrieved information      query in these datasets, we retrieve top-k relevant
+and its ranking position, reflecting the real-world    documents along with the ground truth answers
+requirement for highly precise top results in finan-   to construct the reranking training and evaluation
+cial applications.                                     pairs. The main evaluation metric for reranking in
+   Clustering evaluates a model’s ability to auto-     Finance MTEB is Mean Average Precision (MAP).
+matically group similar financial texts based on          Pair-Classification evaluates a model’s ability
+their semantic content. To ensure comprehen-           to determine semantic relationships between finan-
+sive evaluation, we developed multiple special-        cial text pairs. This task includes two datasets: (1)
+ized datasets that capture different aspects of fi-    the AFQMC dataset3 for customer intention, and
+nancial text clustering: (1) FinanceArxiv-s2s and      (2) three financial news headline datasets (Sinha
+FinanceArxiv-p2p, constructed from titles and ab-      and Khandait, 2021). We use Average Precision
+stracts of finance-related papers on arXiv, provid-    (AP) as the evaluation metric to assess model per-
+ing rich academic financial content; (2) Compa-        formance across different decision thresholds.
+nyWiki2Industry dataset, derived from Wikipedia           Summarization is evaluated based on how well
+company descriptions, offering diverse industry            2
+                                                             https://huggingface.co/datasets/CFPB/consumer-
+categorization scenarios; and (3) complementary        finance-complaints
+resources including consumer complaints from               3
+                                                             https://tianchi.aliyun.com/dataset/106411
+
+                                                   3623
+the semantic similarity between an original text            Seed Data. Our seed data comes from the
+and its summary, as captured by embeddings, cor-         finance-specific QA dataset provided by InvestLM
+relates with human judgments of summary quality.         (Yang et al., 2023b), which offers expert-validated
+The evaluation corpus encompasses a comprehen-           financial content across various domains, such as
+sive range of financial texts, including earnings        market analysis, investment strategies, and corpo-
+call transcripts (Mukherjee et al., 2022), financial     rate finance. To ensure evaluation integrity, we con-
+news articles (Lu et al., 2023), and SEC Form 10-K       duct rigorous overlap checks between our training
+filings (El-Haj et al., 2022), ensuring robust assess-   data and the FinMTEB benchmark, guaranteeing
+ment across diverse financial contexts and writing       no overlap.
+styles.                                                     Persona-based Data Augmentation. To en-
+                                                         hance the diversity of financial task representations
+3.2 Characteristics of FinMTEB                           and generate varied (query, positive context, hard
+FinMTEB is constructed to provide a comprehen-           negative context) triplets for contrastive training,
+sive evaluation platform for financial text embed-       we develop a persona-based data augmentation
+ding models. It encompasses a total of 64 datasets,      framework derived from QA data generation (Ge
+specifically 35 datasets in English and 29 datasets      et al., 2024). Our framework employs a three-
+in Chinese. Beyond the number of datasets, Fin-          stage process that specifically targets the expansion
+MTEB exhibits distinct linguistic and semantic           of task coverage while preserving domain consis-
+properties crucial for domain-specific benchmark-        tency:
+ing. The descriptions of these individual datasets
+are available in Appendix A, and the detailed con-          • Persona and Associated Task Identification:
+struction process for the new dataset is illustrated          We begin by analyzing each question-answer
+in the Appendix A.2                                           pair from our seed data. Using Qwen2.5-14B-
+                                                              Instruct (Team, 2024) with the prompt "Who
+4   Fin-E5: Finance-Adapted Text                              is likely to use this text?", the model generates
+    Embedding Model                                           a detailed persona description. This descrip-
+                                                              tion inherently captures the persona (e.g., ven-
+Data is vital for domain adaptation (Ling et al.,
+                                                              ture capitalist, financial advisor) and their typ-
+2023). However, existing public financial retrieval
+                                                              ical job-related tasks (e.g., evaluating startup
+datasets exhibit a narrow scope, which creates a
+                                                              investments and managing client portfolios).
+gap in training an LLM-based embedding model.
+                                                              For example, a generated description might
+For example, FiQA (FiQA, 2018), a widely used
+                                                              be:
+financial retrieval dataset, primarily focuses on
+opinion-based content from online platforms, ne-                Example Persona&Task Description
+glecting crucial aspects such as fundamental finan-
+cial knowledge, technical terminology, and essen-               A compliance officer at a financial insti-
+tial investment data. Thus, we start by curating a              tution (Persona), responsible for track-
+finance training dataset for adaptation.                        ing major economic indicators and their
+                                                                potential regulatory implications (Task),
+4.1 Data Formation                                              with a focus on market stability and ac-
+We aim to construct each training instance as a                 curate risk assessment.
+triplet structure (q, d+ , D− ), where q represents a
+financial query, d+ denotes a relevant document             • Contextual Query Generation: Based on
+that provides substantive information addressing              the rich persona description obtained in the
+the query, and D− comprises carefully selected                previous step, we then prompt Qwen2.5-72B-
+negative examples that share the financial domain             Instruct (Team, 2024) to generate new queries
+but differ in semantic intent.                                q that this persona might ask. The prompt
+                                                              used is: "Guess a prompt (i.e., instructions)
+4.2 Training Data Construction                                that the following persona may ask you to do:"
+To create a comprehensive dataset tailored for finan-         The term "contextual" in this stage refers to
+cial embedding training, we employ a systematic               our filtering process: we select queries that
+approach that combines expert-curated seed data               inherently require external documents or in-
+with persona-based synthetic data generation.                 formation for a comprehensive answer. This
+                                                     3624
+  is crucial for forming the (query q, positive               Example Synthesized Positive Document
+  document d+ ) pairs needed for training. For                (d+ )
+  example, deriving from the compliance of-                   A recent analysis by the Financial Mon-
+  ficer persona, the following example query                  itoring Group, dated May 15, 2025, in-
+  would be considered contextual as it necessi-               dicates that the coordinated interest rate
+  tates specific external analyses or regulatory              increases by G7 central banks are antici-
+  interpretations:                                            pated to impact short-term funding mar-
+                                                              kets significantly...
+    Example Contextual Query q
+
+    What is the latest analysis on how the             4.3   Training Pipeline
+    recent G7 central bank interest rate hikes         Our primary objective in this training phase
+    might affect liquidity risk reporting for          is to further adapt the e5-mistral-7b-instruct
+    commercial banks?                                  model (Wang et al., 2023) to the financial domain’s
+                                                       specific linguistic nuances and informational struc-
+                                                       tures. This adaptation directly leverages the diverse
+• Synthetic Positive Document (d+ ) Genera-            financial query (q) and corresponding synthetic pos-
+  tion: For each selected contextual query q, we       itive document (d+ ) pairs generated through the
+  synthesize a relevant positive financial docu-       persona-based data construction process detailed
+  ment d+ . This document is generated using           previously.
+  an LLM (e.g., Qwen2.5-72B-Instruct (Team,               The foundation of our training methodology is
+  2024)) with the prompt: "Synthesize context          a contrastive learning approach utilizing (query,
+  information related to this question: [Insert        positive context, hard negative context) triplets.
+  query q here]". The aim is for d+ to provide         Each training instance is structured as (q, d+ , D− ),
+  substantive, focused information that directly       where:
+  addresses the query q, aligning with the infor-         • q represents the financial query, which serves
+  mation needs implied by the persona’s role                as the anchor point for learning.
+  and their associated tasks. For the example
+  query about EPS growth, the synthesized doc-            • d+ is the synthetic document, specifically gen-
+  ument would contain plausible (though syn-                erated in our data construction phase to be a
+  thetic) data, analyses, or relevant financial dis-        highly relevant positive contextual passage for
+  cussions.                                                 the query q.
+                                                          • D− denotes a set of hard negative contexts.
+• Synthetic Positive Document (d+ ) Genera-                 These are documents also from the financial
+  tion: For each selected contextual query q, we            domain that, while potentially semantically
+  synthesize a relevant positive financial docu-            similar to the query q (making them challeng-
+  ment d+ . This document is generated using                ing examples), are not the correct or directly
+  an LLM (e.g., Qwen2.5-72B-Instruct (Team,                 relevant positive context d+ . To identify these
+  2024)) with the prompt: "Synthesize context               hard negatives, we employ an auxiliary em-
+  information related to this question: [Insert             bedding model, all-MiniLM-L12-v2 (Reimers
+  query q here]". The aim is for d+ to provide              and Gurevych, 2019), to mine for documents
+  substantive, focused information that directly            that are close to q in its embedding space but
+  addresses the query q, aligning with the infor-           are distinct from d+ .
+  mation needs implied by the persona’s role              In line with the training recipe for e5-mistral-
+  and their associated tasks. For the example          7b-instruct (Wang et al., 2023), we utilize the last
+  query about the impact of interest rate hikes on     token pooling method to derive fixed-size embed-
+  liquidity risk reporting, the synthesized doc-       dings for both queries and documents. The e5-
+  ument d+ would contain plausible (though             mistral-7b-instruct model is then fine-tuned using
+  synthetic) expert analysis or excerpts from          these (q, d+ , D− ) triplets. The training process
+  regulatory guidance, as illustrated below:           is guided by the InfoNCE (Noise Contrastive Es-
+                                                       timation) loss function (Oord et al., 2018). This
+                                                   3625
+loss function incentivizes the model to learn rep-          • LLM-based Models:           We investigate
+resentations where the embedding of the query q               several state-of-the-art decoder-based or
+is closer to the embedding of its positive context            LLM-enhanced embedding models: (1)
+d+ compared to its distance from the embeddings               Mistral-7B-based models including bge-
+of all hard negative contexts D− within the same              en-icl (Mistral-7B backbone with further
+training batch (referred to as in-batch negatives).           instruction tuning) (Xiao et al., 2023), e5-
+   Full details regarding the fine-tuning process, in-        mistral-7b-instruct (Wang et al., 2023), and
+cluding specific hyperparameters (such as batch               Echo (Springer et al., 2024); (2) NV-Embed
+sizes and learning rates), any input formatting tem-          v2 (Lee et al., 2024); and (3) gte-Qwen1.5-
+plates utilized, and optimization settings for adapt-         7B-instruct (Li et al., 2023), built on the
+ing e5-mistral-7b-instruct, are comprehensively               Qwen (Yang et al., 2024) architecture.
+documented in Appendix B.
+                                                            • Commercial Models:        For a compre-
+5    Experimental Evaluation                                  hensive comparison, we include leading
+                                                              closed-source commercial solutions, specif-
+In this section, we conduct a comprehensive evalu-            ically OpenAI’s text-embedding-3-large, text-
+ation of various embedding models on FinMTEB.                 embedding-3-small (OpenAI, 2024), and
+Our primary goals are to benchmark their perfor-              voyage-3-large (VoyageAI, 2025)4 .
+mance in the financial domain, analyze the impact
+of different model characteristics (such as domain       5.2    Overall Performance on FinMTEB
+adaptation and architecture), and investigate the        The comprehensive performance of all evaluated
+necessity of domain-specific benchmarks like Fin-        models across the various tasks in the FinMTEB
+MTEB. Since most of the evaluated pre-trained            benchmark is presented in Table 1. This table
+models are predominantly trained on English cor-         serves as the primary basis for the subsequent anal-
+pora, our main evaluation focuses on the English         yses.
+datasets within FinMTEB; the evaluation results
+                                                         5.2.1 Impact of Domain Adaptation
+based on Chinese datasets are illustrated in Ap-
+pendix C. The benchmark time is reported in Ap-          Domain specialization considerably boosts per-
+pendix D.                                                formance on financial tasks, as illustrated in Ta-
+                                                         ble 1. For instance, the finance-specific FinBERT
+                                                         outperforms the general BERT by 15.6% in the
+5.1 Experimental Setup                                   average score (0.6721 vs. 0.5812 on relevant
+                                                         FinMTEB tasks). Similarly, our finance-adapted
+Evaluated Models In addition to Fin-E5, our pro-         Fin-E5 model exceeds its general-domain counter-
+posed finance-adapted model, we evaluate four            part, e5-mistral-7b-instruct, by 4.5% in the average
+broad categories of existing embedding models on         score. This overall improvement is supported by
+the FinMTEB benchmark. These include:                    statistically significant gains in several key task cat-
+    • Bag-of-Words (BOW): A traditional baseline         egories, as detailed in Table 14. Specifically, Fin-
+      representing text as sparse vectors based on       E5 demonstrates a significant advantage in Clas-
+      word frequencies.                                  sification, achieving a score of 0.7565 compared
+                                                         to the baseline’s 0.6449 (p = 0.0206), and also
+    • Encoder-based Models: This category in-            in Retrieval, scoring 0.7105 against the baseline’s
+      cludes various transformer encoder architec-       0.6749 (p = 0.0489). Fin-E5’s slight underperfor-
+      tures: (1) classical models like BERT (CLS         mance on Clustering and Summarization compared
+      pooling) (Devlin et al., 2019) and the domain-     with e5-mistral-7b-instruct is not statistically sig-
+      specific FinBERT (Yang et al., 2020); (2)          nificant (p > 0.05). Fin-E5 also achieves state-of-
+      models optimized for semantic search such as       the-art performance (0.6767 average scores) on Fin-
+      msmarco-bert-base-dot-v5 and all-MiniLM-           MTEB, surpassing general-purpose, open-source,
+      L12-v2 (Reimers and Gurevych, 2019); and           and leading commercial models. This increased
+      (3) advanced architectures including bge-          performance comes from an efficient adaptation
+      large-en-v1.5 (Xiao et al., 2023), AnglE-          process requiring only 100 training steps.
+      BERT (Li and Li, 2023), and instructor-               4
+                                                             We thank Voyage AI for providing API credits that sup-
+      base (Su et al., 2022).                            ported us in conducting the evaluation with their model.
+
+                                                     3626
+                                                                                   Tasks
+ Model                 Size                                                                                                                        Avg.
+                                  STS           Retrieval          Class.         Cluster.         Rerank.         PairClass.        Summ.
+                                                            *               *                                *                *
+                              (N=2, p=0.10)   (N=10, p<0.05 )   (N=8, p<0.05 )   (N=6, p=0.12)   (N=3, p<0.05 )   (N=3, p<0.05 )   (N=3, p=0.45)
+
+ BOW                     -      0.4845           0.2084            0.4696          0.2547           0.7628           0.7143          0.2584        0.4504
+ Encoder based Models
+ BERT                    110M   0.3789           0.0207            0.5496          0.1744           0.3930           0.7111          0.1686        0.3423
+ FinBERT                 110M   0.4198           0.1102            0.5923          0.2833           0.6404           0.6967          0.2010        0.4205
+ instructor-base         110M   0.3732           0.5772            0.6208          0.5300           0.9734           0.6138          0.4315        0.5886
+ bge-large-en-v1.5       335M   0.3396           0.6463            0.6436          0.5725           0.9825           0.7400          0.4857        0.6301
+ AnglE-BERT              335M   0.3080           0.5730            0.6439          0.5774           0.9650           0.6891          0.5049        0.6088
+ LLM-based Models
+ gte-Qwen1.5-7B-instruct 7B     0.3758           0.6697            0.6438          0.5854           0.9890           0.6998          0.5354        0.6427
+ Echo                    7B     0.4380           0.6443            0.6525          0.5776           0.9765           0.6261          0.4722        0.6267
+ bge-en-icl              7B     0.3233           0.6789            0.6569          0.5742           0.9898           0.6738          0.5197        0.6309
+ NV-Embed v2             7B     0.3739           0.7061            0.6393          0.6096           0.9822           0.6043          0.5103        0.6322
+ e5-mistral-7b-instruct  7B     0.3800           0.6749            0.6449          0.5783           0.9875           0.7394          0.5275        0.6475
+ Commercial Models
+ text-embedding-3-small  -      0.3254           0.6641            0.6387          0.5802           0.9825           0.5957          0.5085        0.6136
+ text-embedding-3-large  -      0.3615           0.7112            0.6596          0.6081           0.9910           0.7309          0.5671        0.6613
+ voyage-3-large          -      0.4145           0.7463            0.6861          0.5944           0.9938           0.6519          0.6484        0.6765
+ Finance Adapted LLM-based Models
+ Fin-E5                  7B     0.4342           0.7105           0.7565†          0.5650           0.9896           0.8014          0.4797        0.6767
+
+
+Table 1: Performance comparison across different embedding models on FinMTEB benchmark. Tasks include
+semantic textual similarity (STS), retrieval, classification (Class.), clustering (Cluster.), reranking (Rerank.), pair
+classification (PairClass.), and summarization (Summ.). For each task, N indicates the number of datasets, and
+p is the p-value from one-way ANOVA testing for significant differences across all models; * denotes p < 0.05.
+Bold indicates best performance, underline indicates second-best, and † indicates statistically significant differences
+between the best two models (p < 0.05).
+
+
+5.2.2 Limitations of Current Models in                                      key factors, the embedding model (Model Factor)
+      Financial STS Tasks                                                   and the benchmark domain (Domain Factor: Gen-
+The Semantic Textual Similarity (STS) task results                          eral vs. Finance), on model performance. Detailed
+reveal a counterintuitive finding: the simple BOW                           experimental settings are provided in Appendix E.
+model (achieving a score of 0.4845) outperforms all                         The results reveal that the Domain Factor demon-
+evaluated dense embedding architectures on STS.                             strates statistical significance across all tasks (p
+The observation highlights fundamental limitations                          < 0.001), with large F statistics in classification,
+in dense embedding strategies for specialized fi-                           clustering, and STS. These findings indicate that
+nancial documents. The STS datasets (Liu et al.,                            domain-specific characteristics significantly influ-
+2024a; Ju et al., 2023) are sourced from the Com-                           ence embedding model evaluation.
+pany Annual Reports. Thus, this reversal of typi-
+cal performance hierarchies likely arises from the
+specialized financial corpus, which can decrease
+                                                                            7     Conclusion
+performance for models not finely tuned to this vo-
+cabulary, whereas BOW benefits from exact term                              This paper introduces FinMTEB, the first compre-
+matches in such standardized disclosures.                                   hensive benchmark for evaluating embedding mod-
+                                                                            els in the financial domain. Our main contribu-
+6   The Necessity of Domain-Specific                                        tions include establishing a large-scale evaluation
+    Benchmarks: An ANOVA Study                                              framework with 64 datasets across seven tasks in
+                                                                            Chinese and English, and developing Fin-E5, a
+This section addresses another research question.                           finance-adapted embedding model demonstrating
+To what extent do general-purpose embedding eval-                           competitive performance through persona-based
+uations appropriately capture domain-specific per-                          data augmentation. Our empirical results highlight
+formance? To investigate this, we conduct a quan-                           the importance of domain-specific adaptation and
+titative comparison between the general-purpose                             reveal current limitations in financial text embed-
+MTEB benchmark (Muennighoff et al., 2022) and                               dings. We believe FinMTEB will serve as a valu-
+our domain-specific FinMTEB. We employ Analy-                               able resource for both researchers and practitioners
+sis of Variance to examine the main effects of two                          in advancing financial language models.
+                                                                    3627
+Limitation                                               Zhiyu Chen, Wenhu Chen, Charese Smiley, Sameena
+                                                           Shah, Iana Borova, Dylan Langdon, Reema Moussa,
+This work has two primary limitations. First, it re-       Matt Beane, Ting-Hao Huang, Bryan Routledge, and
+lies on several existing financial datasets that could     William Yang Wang. 2021. FinQA: A dataset of nu-
+                                                           merical reasoning over financial data. In Proceedings
+potentially overlap with the training data of con-         of the 2021 Conference on Empirical Methods in Nat-
+temporary embedding models. This overlap may               ural Language Processing, pages 3697–3711, Online
+introduce contamination, making it difficult to en-        and Punta Cana, Dominican Republic. Association
+sure completely fair comparisons between different         for Computational Linguistics.
+models. Second, our adapted model and evalua-            Pierre Colombo, Telmo Pessoa Pires, Malik Boudiaf,
+tion methods are currently limited to the English           Dominic Culver, Rui Melo, Caio Corro, Andre FT
+language, which restricts their applicability to non-       Martins, Fabrizio Esposito, Vera Lúcia Raposo, Sofia
+English financial texts.                                    Morgado, et al. 2024. Saullm-7b: A pioneer-
+                                                            ing large language model for law. arXiv preprint
+                                                            arXiv:2403.03883.
+
+References                                               Keith Cortis, André Freitas, Tobias Daudert, Manuela
+                                                           Huerlimann, Manel Zarrouk, Siegfried Handschuh,
+Peter Anderson, Mano Vikash Janardhanan, Jason He,         and Brian Davis. 2017. SemEval-2017 task 5: Fine-
+  Wei Cheng, and Charlie Flanagan. 2024. Greenback         grained sentiment analysis on financial microblogs
+  bears and fiscal hawks: Finance is a jungle and text     and news. In Proceedings of the 11th International
+  embeddings must adapt. In Proceedings of the 2024        Workshop on Semantic Evaluation (SemEval-2017),
+  Conference on Empirical Methods in Natural Lan-          pages 519–535, Vancouver, Canada. Association for
+  guage Processing: Industry Track, pages 362–370,         Computational Linguistics.
+  Miami, Florida, US. Association for Computational
+  Linguistics.                                           Jacob Devlin, Ming-Wei Chang, Kenton Lee, and
+                                                            Kristina Toutanova. 2019. BERT: Pre-training of
+Elliot Bolton, Abhinav Venigalla, Michihiro Yasunaga,       deep bidirectional transformers for language under-
+   David Hall, Betty Xiong, Tony Lee, Roxana                standing. In Proceedings of the 2019 Conference of
+   Daneshjou, Jonathan Frankle, Percy Liang, Michael        the North American Chapter of the Association for
+   Carbin, et al. 2024. Biomedlm: A 2.7 b parameter        Computational Linguistics: Human Language Tech-
+   language model trained on biomedical text. arXiv         nologies, Volume 1 (Long and Short Papers), pages
+   preprint arXiv:2403.18421.                              4171–4186, Minneapolis, Minnesota. Association for
+                                                            Computational Linguistics.
+CCKS. 2022. Ccks2022: Few-shot event extraction for
+  the financial sector. https://www.biendata.xyz/        Mahmoud El-Haj, Nadhem Zmandar, Paul Rayson,
+  competition/ccks2022_eventext/.                         Ahmed AbuRa’ed, Marina Litvak, Nikiforos Pittaras,
+                                                          George Giannakopoulos, Aris Kosmopoulos, Blanca
+CFPB. 2024.      Consumer finance complaints.             Carbajo-Coronado, and Antonio Moreno-Sandoval.
+  https://huggingface.co/datasets/CFPB/                   2022. The financial narrative summarisation shared
+  consumer-finance-complaints.                            task (FNS 2022). In Proceedings of the 4th Finan-
+                                                          cial Narrative Processing Workshop @LREC2022,
+Jing Chen, Qingcai Chen, Xin Liu, Haijun Yang, Daohe      pages 43–52, Marseille, France. European Language
+   Lu, and Buzhou Tang. 2018. The BQ corpus: A large-     Resources Association.
+   scale domain-specific Chinese corpus for sentence
+                                                         Zhiwei Fei, Xiaoyu Shen, Dawei Zhu, Fengzhe Zhou,
+   semantic equivalence identification. In Proceedings
+                                                           Zhuo Han, Songyang Zhang, Kai Chen, Zongwen
+   of the 2018 Conference on Empirical Methods in Nat-
+                                                           Shen, and Jidong Ge. 2023. Lawbench: Benchmark-
+   ural Language Processing, pages 4946–4951, Brus-
+                                                           ing legal knowledge of large language models. arXiv
+   sels, Belgium. Association for Computational Lin-
+                                                           preprint arXiv:2309.16289.
+   guistics.
+                                                         FiQA. 2018. Financial question answering. https:
+Qingyu Chen, Yifan Peng, and Zhiyong Lu. 2019.             //sites.google.com/view/fiqa.
+  Biosentvec: creating sentence embeddings for
+  biomedical texts. In 2019 IEEE International Con-      Tao Ge, Xin Chan, Xiaoyang Wang, Dian Yu, Haitao
+  ference on Healthcare Informatics (ICHI), pages 1–5.     Mi, and Dong Yu. 2024. Scaling synthetic data cre-
+  IEEE.                                                    ation with 1,000,000,000 personas. arXiv preprint
+                                                           arXiv:2406.20094.
+Wei Chen, Qiushi Wang, Zefei Long, Xianyin Zhang,
+ Zhongtian Lu, Bingxuan Li, Siyuan Wang, Jiarong         Daniela Gerz, Pei-Hao Su, Razvan Kusztos, Avishek
+ Xu, Xiang Bai, Xuanjing Huang, and Zhongyu Wei.           Mondal, Michał Lis, Eshan Singhal, Nikola Mrkšić,
+ 2023. Disc-finllm: A chinese financial large lan-         Tsung-Hsien Wen, and Ivan Vulić. 2021a. Multilin-
+ guage model based on multiple experts fine-tuning.        gual and cross-lingual intent detection from spoken
+ arXiv preprint arXiv:2310.15205.                          data. In Proceedings of the 2021 Conference on
+                                                     3628
+  Empirical Methods in Natural Language Processing,       Xiang Li, Zhenyu Li, Chen Shi, Yong Xu, Qing
+  pages 7468–7475, Online and Punta Cana, Domini-           Du, Mingkui Tan, Jun Huang, and Wei Lin. 2024.
+  can Republic. Association for Computational Lin-          Alphafin: Benchmarking financial analysis with
+  guistics.                                                 retrieval-augmented stock-chain framework. arXiv
+                                                            preprint arXiv:2403.12582.
+Daniela Gerz, Pei-Hao Su, Razvan Kusztos, Avishek
+  Mondal, Michał Lis, Eshan Singhal, Nikola Mrkšić,      Xianming Li and Jing Li. 2023. Angle-optimized text
+  Tsung-Hsien Wen, and Ivan Vulić. 2021b. Multilin-        embeddings. arXiv preprint arXiv:2309.12871.
+  gual and cross-lingual intent detection from spoken
+  data. arXiv preprint arXiv:2104.08524.                  Zehan Li, Xin Zhang, Yanzhao Zhang, Dingkun Long,
+                                                            Pengjun Xie, and Meishan Zhang. 2023. Towards
+Biyang Guo, Xin Zhang, Ziyuan Wang, Minqi Jiang,            general text embeddings with multi-stage contrastive
+  Jinran Nie, Yuxuan Ding, Jianwei Yue, and Yupeng          learning. arXiv preprint arXiv:2308.03281.
+  Wu. 2023. How close is chatgpt to human experts?        Chen Ling, Xujiang Zhao, Jiaying Lu, Chengyuan Deng,
+  comparison corpus, evaluation, and detection. arXiv       Can Zheng, Junxiang Wang, Tanmoy Chowdhury,
+  preprint arXiv:2301.07597.                                Yun Li, Hejie Cui, Xuchao Zhang, et al. 2023. Do-
+                                                            main specialization as the key to make large language
+Suchin Gururangan, Ana Marasović, Swabha                   models disruptive: A comprehensive survey. arXiv
+  Swayamdipta, Kyle Lo, Iz Beltagy, Doug Downey,            preprint arXiv:2305.18703.
+  and Noah A. Smith. 2020. Don’t stop pretraining:
+  Adapt language models to domains and tasks. In          Jiaxin Liu, Yi Yang, and Kar Yan Tam. 2024a. Beyond
+  Proceedings of the 58th Annual Meeting of the              surface similarity: Detecting subtle semantic shifts
+  Association for Computational Linguistics, pages           in financial narratives. In Findings of the Association
+  8342–8360, Online. Association for Computational           for Computational Linguistics: NAACL 2024, pages
+  Linguistics.                                               2641–2652, Mexico City, Mexico. Association for
+                                                             Computational Linguistics.
+Pranab Islam, Anand Kannappan, Douwe Kiela, Re-
+  becca Qian, Nino Scherrer, and Bertie Vidgen. 2023.     Mianxin Liu, Jinru Ding, Jie Xu, Weiguo Hu, Xiaoyang
+  Financebench: A new benchmark for financial ques-         Li, Lifeng Zhu, Zhian Bai, Xiaoming Shi, Benyou
+  tion answering. arXiv preprint arXiv:2311.11944.          Wang, Haitao Song, et al. 2024b. Medbench: A com-
+                                                            prehensive, standardized, and reliable benchmarking
+Albert Q Jiang, Alexandre Sablayrolles, Arthur Men-         system for evaluating chinese medical large language
+  sch, Chris Bamford, Devendra Singh Chaplot, Diego         models. arXiv preprint arXiv:2407.10990.
+  de las Casas, Florian Bressand, Gianna Lengyel, Guil-
+  laume Lample, Lucile Saulnier, et al. 2023. Mistral     Shuaiqi Liu, Jiannong Cao, Ruosong Yang, and Zhiyuan
+  7b. arXiv preprint arXiv:2310.06825.                      Wen. 2022. Long text and multi-table summarization:
+                                                            Dataset and method. In Findings of the Association
+Jia-Huei Ju, Yu-Shiang Huang, Cheng-Wei Lin, Che Lin,       for Computational Linguistics: EMNLP 2022, pages
+   and Chuan-Ju Wang. 2023. A compare-and-contrast          1995–2010, Abu Dhabi, United Arab Emirates. Asso-
+   multistage pipeline for uncovering financial signals     ciation for Computational Linguistics.
+   in financial reports. In Proceedings of the 61st An-
+   nual Meeting of the Association for Computational      Yinhan Liu. 2019.      Roberta: A robustly opti-
+   Linguistics (Volume 1: Long Papers), pages 14307–        mized bert pretraining approach. arXiv preprint
+   14321, Toronto, Canada. Association for Computa-         arXiv:1907.11692.
+   tional Linguistics.                                    Dakuan Lu, Hengkui Wu, Jiaqing Liang, Yipei Xu,
+                                                            Qianyu He, Yipeng Geng, Mengkun Han, Yingsi
+Yanis Labrak, Adrien Bazoge, Oumaima El Khettari,           Xin, and Yanghua Xiao. 2023. Bbt-fin: Compre-
+  Mickaël Rouvier, Natalia Grabar, Beatrice Daille,         hensive construction of chinese financial domain
+  Solen Quiniou, Emmanuel Morin, Pierre-Antoine             pre-trained language model, corpus and benchmark.
+  Gourraud, Richard Dufour, et al. 2024. Drbench-           arXiv preprint arXiv:2302.09432.
+  mark: A large language understanding evaluation
+  benchmark for french biomedical domain. arXiv           Lorenzo Malandri, Fabio Mercorio, Mario Mezzan-
+  preprint arXiv:2402.13432.                                zanica, and Filippo Pallucchini. 2025. RE-FIN:
+                                                            Retrieval-based enrichment for financial data. In
+Yinyu Lan, Yanru Wu, Wang Xu, Weiqiang Feng, and            Proceedings of the 31st International Conference on
+  Youhao Zhang. 2023. Chinese fine-grained financial        Computational Linguistics: Industry Track, pages
+  sentiment analysis with large language models. arXiv      751–759, Abu Dhabi, UAE. Association for Compu-
+  preprint arXiv:2306.14096.                                tational Linguistics.
+Chankyu Lee, Rajarshi Roy, Mengyao Xu, Jonathan           Pekka Malo, Ankur Sinha, Pekka Korhonen, Jyrki Wal-
+  Raiman, Mohammad Shoeybi, Bryan Catanzaro, and            lenius, and Pyry Takala. 2014. Good debt or bad
+  Wei Ping. 2024. Nv-embed: Improved techniques for         debt: Detecting semantic orientations in economic
+  training llms as generalist embedding models. arXiv       texts. Journal of the Association for Information
+  preprint arXiv:2405.17428.                                Science and Technology, 65(4):782–796.
+                                                      3629
+Rui Meng, Ye Liu, Shafiq Rayhan Joty, Caiming            Aman Rangapur, Haoran Wang, Ling Jian, and Kai Shu.
+  Xiong, Yingbo Zhou, and Semih Yavuz. 2024. Sfr-          2023. Fin-fact: A benchmark dataset for multimodal
+  embedding-2: Advanced text embedding with multi-         financial fact checking and explanation generation.
+  stage training.                                          arXiv preprint arXiv:2309.08793.
+
+Tomas Mikolov, Kai Chen, Greg Corrado, and Jef-          Nils Reimers and Iryna Gurevych. 2019. Sentence-bert:
+  frey Dean. 2013. Efficient estimation of word            Sentence embeddings using siamese bert-networks.
+  representations in vector space. arXiv preprint          In Proceedings of the 2019 Conference on Empirical
+  arXiv:1301.3781.                                         Methods in Natural Language Processing. Associa-
+                                                           tion for Computational Linguistics.
+Niklas Muennighoff, Nouamane Tazi, Loïc Magne, and
+  Nils Reimers. 2022. Mteb: Massive text embedding       Andrew Rosenberg and Julia Hirschberg. 2007. V-
+  benchmark. arXiv preprint arXiv:2210.07316.              measure: A conditional entropy-based external clus-
+                                                           ter evaluation measure. In Proceedings of the 2007
+Rajdeep Mukherjee, Abhinav Bohra, Akash Banerjee,          Joint Conference on Empirical Methods in Natural
+  Soumya Sharma, Manjunath Hegde, Afreen Shaikh,           Language Processing and Computational Natural
+  Shivani Shrivastava, Koustuv Dasgupta, Niloy Gan-        Language Learning (EMNLP-CoNLL), pages 410–
+  guly, Saptarshi Ghosh, et al. 2022. Ectsum: A new        420, Prague, Czech Republic. Association for Com-
+  benchmark dataset for bullet point summarization         putational Linguistics.
+  of long earnings call transcripts. arXiv preprint
+  arXiv:2210.12467.                                      Agam Shah, Suvan Paturi, and Sudheer Chava. 2023.
+                                                           Trillion dollar words: A new financial dataset, task &
+Qiong Nan, Juan Cao, Yongchun Zhu, Yanyan Wang,            market analysis. In Proceedings of the 61st Annual
+  and Jintao Li. 2021. Mdfend: Multi-domain fake           Meeting of the Association for Computational Lin-
+  news detection. In Proceedings of the 30th ACM In-       guistics (Volume 1: Long Papers), pages 6664–6679,
+  ternational Conference on Information & Knowledge        Toronto, Canada. Association for Computational Lin-
+  Management, pages 3343–3347.                             guistics.
+
+Aaron van den Oord, Yazhe Li, and Oriol Vinyals. 2018.   Ankur Sinha and Tanmay Khandait. 2021. Impact of
+  Representation learning with contrastive predictive      news on the commodity market: Dataset and results.
+  coding. arXiv preprint arXiv:1807.03748.                 In Advances in Information and Communication:
+                                                           Proceedings of the 2021 Future of Information and
+OpenAI. 2024. Openai (august 24 version). https:           Communication Conference (FICC), Volume 2, pages
+  //api.openai.com/v1/embeddings.                          589–601. Springer.
+
+Masanori Oya. 2011. Syntactic dependency distance        Jacob Mitchell Springer, Suhas Kotha, Daniel Fried,
+ as sentence complexity measure. In Proceedings             Graham Neubig, and Aditi Raghunathan. 2024. Rep-
+ of the 16th International Conference of Pan-Pacific        etition improves language model embeddings. arXiv
+ Association of Applied Linguistics, volume 1.              preprint arXiv:2402.15449.
+
+Jeffrey Pennington, Richard Socher, and Christopher      Hongjin Su, Weijia Shi, Jungo Kasai, Yizhong Wang,
+   Manning. 2014. GloVe: Global vectors for word           Yushi Hu, Mari Ostendorf, Wen-tau Yih, Noah A
+   representation. In Proceedings of the 2014 Confer-      Smith, Luke Zettlemoyer, and Tao Yu. 2022. One
+   ence on Empirical Methods in Natural Language Pro-      embedder, any task: Instruction-finetuned text em-
+   cessing (EMNLP), pages 1532–1543, Doha, Qatar.          beddings. arXiv preprint arXiv:2212.09741.
+   Association for Computational Linguistics.
+                                                         Maosong Sun, Jingyang Li, Zhipeng Guo, Yu Zhao,
+Matthew E. Peters, Mark Neumann, Mohit Iyyer, Matt        Yabin Zheng, Xiance Si, and Zhiyuan Liu. 2016.
+ Gardner, Christopher Clark, Kenton Lee, and Luke         Thuctc: An efficient chinese text classifier. http:
+ Zettlemoyer. 2018. Deep contextualized word repre-       //thuctc.thunlp.org/.
+ sentations. In Proceedings of the 2018 Conference of
+ the North American Chapter of the Association for       Qwen Team. 2024. Qwen2.5: A party of foundation
+ Computational Linguistics: Human Language Tech-          models.
+ nologies, Volume 1 (Long Papers), pages 2227–2237,
+ New Orleans, Louisiana. Association for Computa-        Nandan Thakur, Nils Reimers, Andreas Rücklé, Ab-
+ tional Linguistics.                                       hishek Srivastava, and Iryna Gurevych. 2021. BEIR:
+                                                           A heterogeneous benchmark for zero-shot evaluation
+Colin Raffel, Noam Shazeer, Adam Roberts, Katherine        of information retrieval models. In Thirty-fifth Con-
+  Lee, Sharan Narang, Michael Matena, Yanqi Zhou,          ference on Neural Information Processing Systems
+  Wei Li, and Peter J Liu. 2020. Exploring the lim-        Datasets and Benchmarks Track (Round 2).
+  its of transfer learning with a unified text-to-text
+  transformer. Journal of machine learning research,     VoyageAI. 2025. Voyageai (jan 25 version). https:
+  21(140):1–67.                                            //api.voyageai.com/v1/embeddings.
+                                                     3630
+Liang Wang, Nan Yang, Xiaolong Huang, Linjun Yang,       Fengbin Zhu, Wenqiang Lei, Youcheng Huang, Chao
+  Rangan Majumder, and Furu Wei. 2023. Improving           Wang, Shuo Zhang, Jiancheng Lv, Fuli Feng, and
+  text embeddings with large language models. arXiv        Tat-Seng Chua. 2021. Tat-qa: A question answering
+  preprint arXiv:2401.00368.                               benchmark on a hybrid of tabular and textual content
+                                                           in finance. arXiv preprint arXiv:2105.07624.
+Alex Watson, Yev Meyer, Maarten Van Segbroeck,
+  Matthew Grossman, Sami Torbey, Piotr Mlocek,           Jie Zhu, Junhui Li, Yalong Wen, and Lifan Guo. 2024.
+  and Johnny Greco. 2024. Synthetic-PII-Financial-          Benchmarking large language models on cflue–a
+  Documents-North-America: A synthetic dataset for          chinese financial language understanding evaluation
+  training language models to label and detect pii in       dataset. arXiv preprint arXiv:2405.10542.
+  domain specific formats.
+                                                         A        Datasets in FinMTEB
+Shijie Wu, Ozan Irsoy, Steven Lu, Vadim Dabravolski,
+  Mark Dredze, Sebastian Gehrmann, Prabhanjan Kam-       The detailed description of each dataset used in this
+  badur, David Rosenberg, and Gideon Mann. 2023.         work is listed in the Table tables 2 to 8.
+  Bloomberggpt: A large language model for finance.
+  arXiv preprint arXiv:2303.17564.                       A.1       Detailed Characteristics of FinMTEB
+Shitao Xiao, Zheng Liu, Peitian Zhang, and Niklas        Linguistic Pattern. Table 9 presents a com-
+  Muennighoff. 2023. C-pack: Packaged resources to       parative analysis of linguistic features between
+  advance general chinese embedding. arXiv preprint
+  arXiv:2309.07597.                                      MTEB (Muennighoff et al., 2022) and FinMTEB
+                                                         benchmarks, examining aspects such as average
+Ziyue Xu, Peilin Zhou, Xinyu Shi, Jiageng Wu, Yikang     sentence length, token length, syllables per token,
+  Jiang, Bin Ke, and Jie Yang. 2024. Fintruthqa:
+  A benchmark dataset for evaluating the quality of
+                                                         and dependency distance (Oya, 2011). The results
+  financial information disclosure. arXiv preprint       indicate that texts in FinMTEB consistently exhibit
+  arXiv:2406.12009.                                      longer and more complex sentences than those in
+                                                         MTEB, with an average sentence length of 26.37
+An Yang, Baosong Yang, Binyuan Hui, Bo Zheng,
+  Bowen Yu, Chang Zhou, Chengpeng Li, Chengyuan          tokens compared to MTEB’s 18.2 tokens. This
+  Li, Dayiheng Liu, Fei Huang, et al. 2024. Qwen2        highlights the linguistic differences between finan-
+  technical report. arXiv preprint arXiv:2407.10671.     cial and general domain texts.
+Hongyang Yang, Xiao-Yang Liu, and Christina Dan
+                                                            Semantic Diversity. We examine the inter-
+  Wang. 2023a. Fingpt: Open-source financial large       dataset semantic similarity within FinMTEB. Us-
+  language models. arXiv preprint arXiv:2306.06031.      ing the all-MiniLM-L6-v2 model13 , we embed
+                                                         1,000 randomly sampled texts from each dataset,
+Yi Yang, Yixuan Tang, and Kar Yan Tam. 2023b. In-
+  vestlm: A large language model for investment using    compute their mean embeddings to represent each
+  financial domain instruction tuning. arXiv preprint    dataset, and measure inter-dataset similarities us-
+  arXiv:2309.13064.                                      ing cosine similarity. As shown in Figure 2, most
+Yi Yang, Mark Christopher Siy Uy, and Allen Huang.       datasets in FinMTEB display inter-dataset similar-
+  2020. Finbert: A pretrained language model             ity scores below 0.6, with a mean cosine similarity
+  for financial communications.     arXiv preprint       of 0.4, indicating semantic distinctions among vari-
+  arXiv:2006.08097.                                      ous types of financial texts.
+Liwen Zhang, Weige Cai, Zhaowei Liu, Zhi Yang,
+  Wei Dai, Yujie Liao, Qianru Qin, Yifei Li, Xingyu
+  Liu, Zhiqiang Liu, et al. 2023. Fineval: A chi-
+  nese financial domain knowledge evaluation bench-
+  mark for large language models. arXiv preprint         A.2       Dataset Construction and Validation
+  arXiv:2308.09975.                                                Details
+Yijia Zhang, Qingyu Chen, Zhihao Yang, Hongfei Lin,      This appendix details the construction pipelines and
+   and Zhiyong Lu. 2019. Biowordvec, improving           validation procedures for all newly created datasets
+   biomedical word embeddings with subword infor-        used in our experiments. Each dataset is carefully
+   mation and mesh. Scientific data, 6(1):52.
+                                                         curated to ensure high quality and appropriate task
+Zhihan Zhou, Liqian Ma, and Han Liu. 2021. Trade         alignment.
+  the event: Corporate events detection for news-based      WikiCompany2Industry (Clustering Task).
+  event-driven trading. In Findings of the Association   The WikiCompany2Industry dataset is constructed
+  for Computational Linguistics: ACL-IJCNLP 2021,
+  pages 2114–2124, Online. Association for Computa-          13
+                                                            https://huggingface.co/sentence-transformers/all-
+  tional Linguistics.                                    MiniLM-L6-v2
+
+                                                     3631
+  Dataset Name                     Language     Description
+  FINAL (Ju et al., 2023)          English      A dataset designed for discovering financial signals in nar-
+                                                rative financial reports.
+  FinSTS (Liu et al., 2024a)       English      A dataset focused on detecting subtle semantic shifts in
+                                                financial narratives.
+  AFQMC 5                          Chinese      A Chinese dataset for customer service question matching
+                                                in the financial domain.
+  BQ-Corpus (Chen et al., 2018)    Chinese      A large-scale Chinese corpus for sentence semantic equiva-
+                                                lence identification (SSEI) in the banking domain.
+
+                                     Table 2: Summary of STS Datasets
+
+
+by extracting 3,820 company descriptions from           the model’s ability to understand financial terminol-
+Wikipedia’s company pages and cross-referencing         ogy and provide accurate, contextually appropriate
+them with Standard Industrial Classification (SIC)      definitions.
+codes from the SEC EDGAR database. To ensure
+data quality, we apply a three-stage filtering pro-     B Training Details For Fin-E5
+cess that removes companies with multiple primary       The training dataset size is 19,467. The model is
+SIC codes, excludes descriptions shorter than 50        trained for 100 steps using the augmented dataset
+words, and verifies SIC code consistency across         with a batch size of 128. For optimization, we use
+multiple data sources. The dataset uses official SIC    the AdamW optimizer with a learning rate of 1e-5
+4-digit codes as clustering labels, resulting in 87     and implement a linear warmup schedule. For a
+unique industry categories that provide comprehen-      given data (q, d+ , D− ), we adopt an instruction-
+sive coverage of the business landscape.                based methodology for embedding training. The
+   FinanceArxiv-s2s/p2p (Clustering Task). The          instruction template is as follows:
+FinanceArxiv dataset is created by collecting all
+finance papers (titles and abstracts) from ArXiv            qinst = Instruct: {task_def inition}\n{q} (1)
+spanning 2015-2024 using the official ArXiv API.
+The dataset includes two variants: s2s (sentence-to-       where {task_def inition} represents a concise
+sentence) for title-based clustering and p2p (paper-    single-sentence description of the embedding task.
+to-paper) for abstract-based clustering. The clus-
+                                                        C     Chinese Dataset Evaluation in
+tering is based on ArXiv’s 9 official finance sub-
+                                                              FinMTEB
+categories: q-fin.CP (Computational Finance), q-
+fin.EC (Economics), q-fin.GN (General Finance),         Table 10 presents the different performances of the
+q-fin.MF (Mathematical Finance), q-fin.PM (Port-        model in Chinese evaluation datasets.
+folio Management), q-fin.PR (Pricing of Securi-
+ties), q-fin.RM (Risk Management), q-fin.ST (Sta-       D     Benchmarking Time Reporting.
+tistical Finance), and q-fin.TR (Trading and Market     The benchmarking was conducted on the NVIDIA
+Microstructure).                                        H800 GPU using a batch size of 512. Echo Embed-
+   TheGoldman (Retrieval Task). TheGoldman              ding (Springer et al., 2024) required the longest pro-
+dataset was constructed by transforming 1,500           cessing time at 12 hours, followed by BeLLM (Li
+term-definition pairs from the Goldman Sachs Fi-        and Li, 2023) at 11.98 hours. AnglE-BERT (Li
+nancial Dictionary into a query-retrieval format.       and Li, 2023) completed the evaluation in 8 hours,
+Each query follows the standardized format "What        while NV-Embed v2 (Lee et al., 2024) demon-
+is [term]?" with the corresponding definition serv-     strated the highest efficiency, completing all tasks
+ing as the target retrieval result. For example, the    in just 5.6 hours.
+query "What is IPO Lock-up?" maps to the target
+                                                        E Domain-specific Embedding
+"A legally binding contract between underwriters
+                                                          Benchmark is needed
+and insiders that prohibits the sale of shares for a
+specified period after an initial public offering..."   This section addresses another research question.
+This format ensures that the retrieval task evaluates   To what extent do general-purpose embedding eval-
+                                                    3632
+Dataset Name                      Language Description
+FiQA2018 (FiQA, 2018)             English      Financial opinion mining and question answering
+                                               dataset.
+FinanceBench (Islam et al., English            Open book financial question answering dataset.
+2023)
+HC3(Finance) (Guo et al., 2023) English        A human-ChatGPT comparison corpus in the finance
+                                               domain.
+Apple-10K-2022 6                  English      A retrieval-augmented generation (RAG) benchmark
+                                               for finance applications.
+FinQA (Chen et al., 2021)         English      Financial numerical reasoning dataset with structured
+                                               and unstructured evidence.
+TAT-QA (Zhu et al., 2021)         English      Question answering benchmark combining tabular
+                                               and textual content in finance.
+US Financial News 7               English      Finance news articles paired with headlines and stock
+                                               ticker symbols.
+TradeTheEvent (Trading Bench- English          Finance news articles paired with headlines and stock
+mark) (Zhou et al., 2021)                      ticker symbols.
+TradeTheEvent (Domain Adap- English            Financial terms and explanations dataset.
+tion) (Zhou et al., 2021)
+TheGoldman-en                 English          English version of the Goldman Sachs Financial Dic-
+                                               tionary.
+FinTruthQA (Xu et al., 2024)      Chinese      Dataset for evaluating the quality of financial infor-
+                                               mation disclosure.
+Fin-Eva (Retrieval task) 8        Chinese      Financial scenario QA dataset focusing on retrieval
+                                               tasks.
+AlphaFin (Li et al., 2024)        Chinese      Comprehensive financial dataset including NLI, QA,
+                                               and stock trend predictions.
+DISC-FinLLM (Retrieval Part       Chinese      Financial scenario QA dataset.
+Data) (Chen et al., 2023)
+FinQA (from DuEE-fin) (Lu         Chinese      Financial news bulletin event quiz dataset.
+et al., 2023)
+DISC-FinLLM         (Computing)   Chinese      Financial scenario QA dataset focusing on numerical
+(Chen et al., 2023)                            tasks.
+SmoothNLP 9                       Chinese      Chinese finance news dataset.
+THUCNews (Sun et al., 2016)       Chinese      Chinese finance news dataset.
+Fin-Eva (Terminology) 10          Chinese      Financial terminology dataset used in the industry.
+TheGoldman-cn                     Chinese      Chinese version of the Goldman Sachs Financial Dic-
+                                               tionary.
+
+                               Table 3: Summary of Retrieval Datasets
+
+
+
+
+                                               3633
+Dataset Name                                    Language     Description
+FinancialPhrasebank (Malo et al., 2014)         English      Polar sentiment dataset of sentences from financial news,
+                                                             categorized by sentiment into positive, negative, or neutral.
+FinSent (Yang et al., 2023b)                    English      Polar sentiment dataset of sentences from the financial do-
+                                                             main, categorized by sentiment into positive, negative, or
+                                                             neutral.
+FiQA_ABSA (FiQA, 2018)                          English      Polar sentiment dataset of sentences from the financial do-
+                                                             main, categorized by sentiment into positive, negative, or
+                                                             neutral.
+SemEva2017_Headline (Cortis et al., 2017)       English      Polar sentiment dataset of sentences from the financial do-
+                                                             main, categorized by sentiment into positive, negative, or
+                                                             neutral.
+FLS (Yang et al., 2023b)                        English      A finance dataset detects whether the sentence is a forward-
+                                                             looking statement.
+ESG (Yang et al., 2023b)                        English      A finance dataset performs sentence classification under
+                                                             the environmental, social, and corporate governance (ESG)
+                                                             framework.
+FOMC (Shah et al., 2023)                        English      A task of hawkish-dovish classification in finance domain.
+Financial-Fraud 11                              English      This dataset was used for research in detecting financial
+                                                             fraud.
+FinNSP (Lu et al., 2023)                        Chinese      Financial negative news and its subject determination
+                                                             dataset.
+FinChina (Lan et al., 2023)                     Chinese      Polar sentiment dataset of sentences from the financial do-
+                                                             main, categorized by sentiment into positive, negative, or
+                                                             neutral.
+FinFE (Lu et al., 2023)                         Chinese      Financial social media text sentiment categorization dataset.
+OpenFinData 12                                  Chinese      Financial scenario QA dataset including sentiment task.
+MDFEND-Weibo2 (finance) (Nan et al., 2021)      Chinese      Fake news detection in the finance domain.
+
+                                   Table 4: Summary of Classification Datasets
+
+
+
+
+Dataset Name                                  Language     Description
+MInDS-14-en (Gerz et al., 2021b)              English      MINDS-14 is a dataset for intent detection in e-banking,
+                                                           covering 14 intents across 14 languages.
+Consumer Complaints (CFPB, 2024)              English      The Consumer Complaint Database is a collection of com-
+                                                           plaints about consumer financial products and services that
+                                                           sent to companies for response.
+Synthetic PII finance (Watson et al., 2024)   English      Synthetic financial documents containing Personally Identi-
+                                                           fiable Information (PII).
+FinanceArxiv-s2s                              English      Clustering of titles from arxiv (q-fin).
+FinanceArxiv-p2p                              English      Clustering of abstract from arxiv (q-fin).
+WikiCompany2Industry-en                       English      Clustering the related industry domain according to the
+                                                           company description.
+MInDS-14-zh (Gerz et al., 2021b)              Chinese      MINDS-14 is a dataset for intent detection in e-banking,
+                                                           covering 14 intents across 14 languages.
+FinNL (Lu et al., 2023)                       Chinese      Financial news categorization dataset.
+CCKS2022 (CCKS, 2022)                         Chinese      Clustering of financial events.
+CCKS2020 (CCKS, 2022)                         Chinese      Clustering of financial events.
+CCKS2019 (CCKS, 2022)                         Chinese      Clustering of financial events.
+
+                                    Table 5: Summary of Clustering Datasets
+
+
+
+                                                          3634
+ Dataset Name                                  Language      Description
+ Ectsum (Mukherjee et al., 2022)               English       A Dataset For Bullet Point Summarization of Long Earnings
+                                                             Call Transcripts.
+ FINDSum (Liu et al., 2022)                    English       A Large-Scale Dataset for Long Text and Multi-Table Sum-
+                                                             marization.
+ FNS-2022 (El-Haj et al., 2022)                English       Financial Narrative Summarisation for 10K.
+ FiNNA (Lu et al., 2023)                       Chinese       A financial news summarization dataset.
+ Fin-Eva (Headline) (Zhang et al., 2023)       Chinese       A financial summarization dataset.
+ Fin-Eva (Abstract) (Zhang et al., 2023)       Chinese       A financial summarization dataset.
+
+                                    Table 6: Summary of Summarization Datasets
+
+ Dataset Name                                            Language      Description
+ Fin-Fact (Rangapur et al., 2023)                        English       A Benchmark Dataset for Financial Fact Checking and
+                                                                       Explanation Generation.
+ FiQA2018 (FiQA, 2018)                                   English       Financial opinion mining and question answering.
+ HC3(Finance) (Guo et al., 2023)                         English       A human-ChatGPT comparison finance corpus.
+ Fin-Eva (Retrieval task) (Zhang et al., 2023)           Chinese       Financial scenario QA dataset including retrieval task.
+ DISC-FinLLM (Retrieval Part Data) (Chen et al., 2023)   Chinese       Financial scenario QA dataset.
+
+                                       Table 7: Summary of Reranking Datasets
+
+
+uations appropriately capture domain-specific per-                 scores.
+formance? To solve this question, we run a quanti-                    Analysis of Variance. We conduct an Analysis
+tative comparison between MTEB (Muennighoff                        of Variance (ANOVA) that examines the effects
+et al., 2022) and FinMTEB.                                         of both the model and the domain. The results
+   Models. We evaluate seven state-of-the-art                      reveal that the Domain Factor demonstrates sta-
+general-purpose embedding model. Specifically,                     tistical significance across all tasks (p < 0.001),
+we consider the following models: bge-en-icl (Xiao                 with notably large F statistics in classification (F =
+et al., 2023) and e5-mistral-7b-instruct (Wang et al.,             2086.30), clustering (F = 32161.37), and STS (F =
+2023), which are developed from Mistral-7B-v0.1                    25761.71). Furthermore, the Domain Factor gen-
+(Jiang et al., 2023); gte-Qwen2-1.5B-instruct (Li                  erally accounts for a greater share of the variance
+et al., 2023), developed from Qwen2 (Yang et al.,                  than the Model Factor, as indicated by the Sum of
+2024); bge-large-en-v1.5 (Xiao et al., 2023) and all-              Squares (e.g., in Classification: Domain = 56.82 vs.
+MiniLM-L12-v2 (Reimers and Gurevych, 2019),                        Model = 4.17). These findings suggest that domain-
+both developed from BERT (Devlin et al., 2019);                    specific characteristics significantly impact model
+instructor-base (Su et al., 2022) from T5Encoder                   performance, reinforcing the importance of special-
+(Raffel et al., 2020); and OpenAI’s text-embedding-                ized evaluation frameworks such as FinMTEB for
+3-small (OpenAI, 2024). The overall score for                      financial applications.
+these models in MTEB (Muennighoff et al., 2022)
+and FinMTEB is shown in Table 11.                                  F    Spearman’s Correlation of Embedding
+                                                                        Models’ Performance
+   Method. To ensure robust statistical analysis,
+we use bootstrapping methods to generate a large                   We evaluate the performance ranking of embedding
+sample dataset. For each task in both MTEB and                     models on both the general MTEB and FinMTEB
+FinMTEB, we aggregate the datasets associated                      datasets, calculating Spearman’s rank correlation
+with the task into a task pool. From each task                     between the two. The results, shown in Table 12,
+pool, we randomly select 50 examples to create                     indicate that the ranking correlation is not statisti-
+a bootstrap sample and evaluate the embedding                      cally significant (p-values all greater than 0.05). In
+model’s performance on this bootstrap. We repeat                   other words, a general-purpose embedding model
+this process 500 times, resulting in 500 bootstraps                performing well on MTEB does not necessarily
+for each combination. Thus, we have 14 unique                      perform well on domain-specific tasks.
+combinations (model and domain), each with 500
+bootstraps and their corresponding performance
+                                                            3635
+ Dataset Name                                                 Language   Description
+ HeadlineAC-PairClassification (Sinha and Khandait, 2021)     English    Financial text sentiment categorization dataset.
+ HeadlinePDD-PairClassification (Sinha and Khandait, 2021)    English    Financial text sentiment categorization dataset.
+ HeadlinePDU-PairClassification (Sinha and Khandait, 2021)    English    Financial text sentiment categorization dataset.
+ AFQMC                                                        Chinese    Ant Financial Question Matching Corpus.
+
+                                    Table 8: Summary of PairClassification Datasets
+
+             Benchmark       Sentence Length     Token Length       Syllables Per Token      Dependency Distance
+               MTEB                18.20               4.89                 1.49                       2.49
+              FinMTEB              26.37               5.12                 1.52                       2.85
+
+Table 9: Comparison of Text Characteristics Between FinMTEB and MTEB. The numbers represent the average
+scores across all samples from all datasets.
+
+
+G    Analysis of Variance (ANOVA)
+Table 13 illustrates the full results of ANOVA anal-
+ysis.
+
+H    Generic vs. Finance-specific Model
+     Comparison
+Table 14 presents paired t-test results compar-
+ing finance-adapted models with their generic
+baselines. Both comparisons show clear perfor-
+mance gains from domain-specific training. Fin-E5
+achieves statistically significant gains in Retrieval
+(p = 0.0489) and Classification (p = 0.0206) tasks.
+FinBERT shows significant improvements in Re-
+trieval (p = 0.0472), Classification (p = 0.0009),
+and Reranking (p = 0.0093) tasks. These improve-
+ments are particularly valuable since retrieval and
+classification underpin core financial workflows
+such as document search and risk assessment.
+
+
+
+
+                                                              3636
+                   Figure 2: Semantic similarity across all the datasets in FinMTEB benchmark.
+
+
+
+Model                                      STS     Retrieval   Class.   Cluster.   Rerank.   Pair-Class.   Summ.    Avg.
+BOW                                       0.2030    0.3000     0.4694   0.4204     0.9089      0.3376      0.3433   0.4260
+all-MiniLM-L12-v2                         0.1454    0.1777     0.4398   0.2243     0.7943      0.3375      0.4731   0.3703
+paraphrase-multilingual-MiniLM-L12-v2     0.2775    0.3795     0.5587   0.4612     0.9673      0.3882      0.3442   0.4824
+bge-large-zh-v1.5                         0.5806    0.6073     0.5996   0.6672     0.9931      0.5506      0.4413   0.6342
+bge-m3                                    0.5083    0.6243     0.6209   0.7109     0.9902      0.5331      0.3582   0.6208
+multilingual-e5-large-instruct            0.4799    0.6303     0.5908   0.6540     0.9876      0.4651      0.4456   0.6076
+gte-Qwen1.5-7B-instruct                   0.5714    0.6420     0.6200   0.6172     0.9921      0.5968      0.4934   0.6475
+text-embedding-3-large                    0.3848    0.6778     0.6041   0.7054     1.0000      0.4547      0.4203   0.6067
+Fin-E5                                    0.4799    0.6893     0.6681   0.6737     0.9931      0.5303      0.4207   0.6364
+
+Table 10: Performance comparison across Chinese datasets. This evaluation contains some multilingual models and
+Fin-E5. The evaluation metrics include semantic textual similarity (STS), retrieval, classification (Class.), clustering
+(Cluster.), reranking (Rerank.), pair classification (PairClass.), and summarization (Summ.). Best results are in bold.
+
+
+
+        Embedding Model                 Base Model       Dimensions        MTEB Score         FinMTEB Score
+        bge-en-icl                      Mistral                  4096               71.67                   63.09
+        gte-Qwen2-1.5B-instruct         Qwen2                    1536               67.16                   59.98
+        e5-mistral-7b-instruct          Mistral                  4096               66.63                   64.75
+        bge-large-en-v1.5               Bert                     1024               64.23                   58.95
+        text-embedding-3-small          —                        1536               62.26                   61.36
+        instructor-base                 T5Encoder                 768               59.54                   54.79
+        all-MiniLM-L12-v2               Bert                      384               56.53                   54.31
+
+   Table 11: Comparison of Various Embedding Models: Performance on MTEB and FinMTEB Benchmarks
+
+
+                                                         3637
+                                    STS     Class.     Ret.    Rerank.     Clust.    PairClass.    Summ.
+                    Correlation     0.30      -0.80    0.30     -0.10       -0.70      -0.30         0.60
+                    p-value         0.62      0.10     0.62     0.87        0.18       0.62          0.28
+
+Table 12: Spearman’s correlation of embedding models’ performance on MTEB and FinMTEB across different
+tasks. The p-value indicates that all correlations are statistically insignificant, suggesting a lack of evidence for a
+relationship between embedding model performance on the two benchmarks.
+
+
+       Task                      Factor         Sum of Squares        Degrees of Freedom   F-Statistic        p-value
+                              Model Factor              4.17                6.00                25.55       3.41 × 10−30
+       Classification         Domain Factor            56.82                 1.00              2086.30           ≈0
+                                Residual              190.42               6992.00               NA              NA
+                              Model Factor            104.25                6.00               9052.57          ≈0
+       Retrieval              Domain Factor            6.16                  1.00              3207.72          ≈0
+                                Residual              13.42                6992.00               NA             NA
+                              Model Factor             10.55                6.00             149.00         1.64 × 10−178
+       STS                    Domain Factor           304.09                 1.00           25761.71             ≈0
+                                Residual              82.53                6992.00            NA                 NA
+                              Model Factor             0.29                 6.00              47.60         1.59 × 10−57
+       Clustering             Domain Factor           32.25                  1.00           32161.37             ≈0
+                                Residual              7.01                 6992.00             NA                NA
+                              Model Factor             12.98                6.00               145.31       2.90 × 10−174
+       Summarization          Domain Factor            14.49                 1.00              973.32       3.60 × 10−200
+                                Residual              104.07               6992.00              NA               NA
+                              Model Factor             5.38                 6.00               489.05            ≈0
+       Reranking              Domain Factor            0.64                  1.00              346.78       1.39 × 10−75
+                                Residual              12.84                7002.00              NA               NA
+                              Model Factor             0.25                 6.00              1.97              0.07
+       Pair Classification    Domain Factor           249.19                 1.00           11989.92            ≈0
+                                Residual              145.31               6992.00            NA                NA
+       Average                Model Factor             0.00                  6.00               1.34            0.37
+                              Domain Factor            0.08                  1.00              253.87           ≈0
+                                Residual               0.00                  6.00               NA              NA
+
+Table 13: Analysis of Variance (ANOVA) Results Across Tasks and Factors. Factor represents the independent
+variables analyzed: Model Factor pertains to variations attributed to different models, and Domain Factor pertains
+to variations due to different domains (MTEB or FinMTEB). Residual refers to the unexplained variance. The
+Sum of Squares, Degrees of Freedom, F-Statistic, and p-value are presented for each factor within each task.
+Asterisks denote significance levels, with lower p-values indicating higher statistical significance. The Domain
+Factor consistently shows high significance across all tasks.
+
+
+                                                Fin-E5 vs. E5-mistral                       FinBERT vs. BERT
+   Task                      Datasets
+                                           Fin-E5       E5-mistral        p-value     FinBERT            BERT        p-value
+   STS                         2           0.4342         0.3800          0.1252        0.4198           0.3790       0.4681
+   Retrieval                   10          0.7105         0.6749          0.0489*       0.1102           0.0207      0.0472*
+   Classification               8          0.7565         0.6449          0.0206*       0.5923           0.5496      0.0009*
+   Clustering                  6           0.5650         0.5783          0.1864        0.2833           0.1744       0.0732
+   Reranking                    3          0.9896         0.9875           0.1623       0.6404           0.3930      0.0093*
+   PairClassification           3          0.8014         0.7394           0.2066       0.6967           0.7111       0.2431
+   Summarization               3           0.4797         0.5275          0.3607        0.2010           0.1686       0.2138
+
+Table 14: Performance comparison between finance-adapted models and their generic baselines. * indicates
+statistical significance at α = 0.05.
+
+                                                               3638
+

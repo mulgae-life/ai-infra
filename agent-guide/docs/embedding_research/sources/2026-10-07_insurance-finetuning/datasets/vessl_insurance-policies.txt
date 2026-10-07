@@ -1,0 +1,181 @@
+수집: Exa 본문 추출, 기준일 2026-10-07. 직접 HTTP 경로에서 403/401 후 본문 확보를 시도한 자료. URL별 본문은 아래 구분.
+
+# vessl/insurance-policies · Datasets at Hugging Face
+URL: https://huggingface.co/datasets/vessl/insurance-policies
+
+vessl/insurance-policies · Datasets at Hugging Face
+
+README.md exists but content is empty.
+
+Copy to bucket new
+
+Downloads last month
+
+20
+
+Number of rows:
+
+51
+
+Total file size:
+
+1.09 MB
+
+vessl/insurance-policies · Datasets at Hugging Face
+[![Hugging Face's logo](https://huggingface.co/front/assets/huggingface_logo-noborder.svg) Hugging Face](https://huggingface.co/)
+# [ Datasets:](https://huggingface.co/datasets)
+[
+![](https://cdn-avatars.huggingface.co/v1/production/uploads/621712eb4b4e3a84d49d8afb/RJ7xzFbjbxuRysPtYH_6N.png)
+](https://huggingface.co/vessl)
+[vessl](https://huggingface.co/vessl)
+/
+[insurance-policies](https://huggingface.co/datasets/vessl/insurance-policies)
+like 0
+Follow
+![](https://cdn-avatars.huggingface.co/v1/production/uploads/621712eb4b4e3a84d49d8afb/RJ7xzFbjbxuRysPtYH_6N.png) VESSL AI 23
+Modalities: [
+Text
+](https://huggingface.co/datasets?modality=modality:text)
+Formats: [
+parquet
+](https://huggingface.co/datasets?format=format:parquet)
+Size: [
+< 1K
+](https://huggingface.co/datasets?size_categories=size_categories:n%3C1K)
+Libraries: [
+Datasets
+](https://huggingface.co/datasets?library=library:datasets)[
+pandas
+](https://huggingface.co/datasets?library=library:pandas)
+Croissant
++ 1
+License:
+mit
+[ Dataset card ](https://huggingface.co/datasets/vessl/insurance-policies)[ Data Studio ](https://huggingface.co/datasets/vessl/insurance-policies/viewer/)[ Files Files and versions
+xet
+](https://huggingface.co/datasets/vessl/insurance-policies/tree/main)[ Community
+1
+](https://huggingface.co/datasets/vessl/insurance-policies/discussions)
+Dataset Viewer
+[ Auto-converted to Parquet](https://huggingface.co/datasets/vessl/insurance-policies/tree/refs/convert/parquet/default) API Embed [ Duplicate](https://huggingface.co/datasets/vessl/insurance-policies?duplicate=true) Data Studio
+Subset (1)
+default · 51 rows
+default (51 rows)
+Split (1)
+train · 51 rows
+train (51 rows)
+SQL
+Console
+|
+filename
+stringlengths
+8
+37
+|
+insurance\_name
+stringlengths
+4
+33
+|
+text
+stringlengths
+1.18k
+122k
+|
+|
+KB 4세대 건강보험(무배당)(24.01).pdf
+|
+KB 4세대 건강보험(무배당)(24.01)
+|
+KB 4세대 건강보험(무배당)(24.01) 상품요약서
+가. 가입자격제한 등 상품별 특이사항
+1) 가입 자격제한
+- 가입가능나이
+- 보험료 납입기간: 전기납
+<기본계약\>
+-일반상해후유장해(20\~100%) [갱신계약]
+-일반상해사망 [갱신계약]
+최초
+- 10년: 만15세\~75세
+- 20년: 만15세\~75세
+- 30년: 만15세\~70세
+갱신
+- 10년: (15 + 보험기간)세\~(100 - 보험기간)세
+- 20년: (15 + 보험기간)세\~(100 - 보험기간)세
+- 30년: (15 + 보험기간)세\~(100 - 보험기간)세
+- 1\~29년: (100 - 보험기간)세
+<의무부...
+|
+|
+KB 5.10.10 플러스 건강보험(무배당)(24.03).pdf
+|
+KB 5.10.10 플러스 건강보험(무배당)(24.03)
+|
+"KB 5.10.10세대 플러스 건강보험(무배당)(24.03) 상품요약서\\n가. 가입자격제한 (...TRUNCATED)
+|
+|
+KB The좋은닥터플러스 건강보험Ⅱ(무배당)(24.03).pdf
+|
+KB The좋은닥터플러스 건강보험Ⅱ(무배당)(24.03)
+|
+"좋은닥터플러스 건강보험 무배당KB The Ⅱ(24.03) 상품요약서\\n가. 가입자격제(...TRUNCATED)
+|
+|
+KB VIP상해보험(무배당)(24.01).pdf
+|
+KB VIP상해보험(무배당)(24.01)
+|
+"상해보험 무배당KB VIP(24.01) 상품요약서\\n가. 가입자격제한 등 상품별 특이(...TRUNCATED)
+|
+|
+KB Yes!365 건강보험(세만기)(무배당)(24.03).pdf
+|
+KB Yes!365 건강보험(세만기)(무배당)(24.03)
+|
+"KB Yes!365 건강보험(세만기)(무배당)(24.03) 상품요약서\\n가. 가입자격제한 등 (...TRUNCATED)
+|
+|
+KB Yes!365 건강보험(연만기)(무배당)(24.03).pdf
+|
+KB Yes!365 건강보험(연만기)(무배당)(24.03)
+|
+"KB Yes!365 건강보험(연만기 무배당)(24.03) 상품요약서\\n가. 가입자격제한 등 (...TRUNCATED)
+|
+|
+KB 금쪽같은 자녀보험Plus(무배당)(24.01)\_1종.pdf
+|
+KB 금쪽같은 자녀보험Plus(무배당)(24.01)\_1종
+|
+"금쪽같은 자녀보험 무배당KB Plus(24.01) 상품요약서\\n가. 종구성 및 설명\\n1) 1(...TRUNCATED)
+|
+|
+KB 금쪽같은 펫보험(강아지)(무배당)(23.07).pdf
+|
+KB 금쪽같은 펫보험(강아지)(무배당)(23.07)
+|
+"강아지 무배당KB 펫보험(23.07) 상품요약서\\n\\n가. 가입자격제한 등 상품별 특(...TRUNCATED)
+|
+|
+KB 금쪽같은 펫보험(고양이)(무배당)(23.07).pdf
+|
+KB 금쪽같은 펫보험(고양이)(무배당)(23.07)
+|
+"고양이 무배당KB 펫보험 (23.07) 상품요약서\\n가. 가입자격제한 등 상품별 특(...TRUNCATED)
+|
+|
+KB 금쪽같은 희망플러스 건강보험(무배당)(24.01)\_1종.pdf
+|
+KB 금쪽같은 희망플러스 건강보험(무배당)(24.01)\_1종
+|
+"금쪽같은 희망플러스 건강보험(무배당)KB(24.01) 상품요약서\\n가. 종구성 및 (...TRUNCATED)
+|
+End of preview. [Expand in Data Studio](https://huggingface.co/datasets/vessl/insurance-policies/viewer/default/train)
+README.md exists but content is empty.
+Copy to bucket new
+Use this dataset
+Downloads last month
+20
+Number of rows:
+51
+Total file size:
+1.09 MB

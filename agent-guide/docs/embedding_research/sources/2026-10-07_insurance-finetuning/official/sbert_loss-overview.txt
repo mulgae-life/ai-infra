@@ -1,0 +1,1597 @@
+Loss Overview — Sentence Transformers documentation
+
+Getting Started
+
+Installation
+Install with uv
+
+Install with pip
+
+Install with Conda
+
+Install from Source
+
+Editable Install
+
+Install PyTorch with CUDA support
+
+Quickstart
+Sentence Transformer
+
+Cross Encoder
+
+Sparse Encoder
+
+Multi-Vector Encoder
+
+Next Steps
+
+Migration Guide
+Migrating from v5.x to v6.x
+Breaking changes
+
+Migrating from PyLate
+
+Migrating from colpali-engine
+
+Smaller changes
+
+Migrating from v5.x to v5.4+
+Updated import paths
+
+Renamed methods and parameters
+
+CrossEncoder.max_length property renamed to max_seq_length
+
+Trainer tokenizer parameter renamed to processing_class
+
+tokenizer_kwargs renamed to processor_kwargs
+
+CrossEncoder API changes
+
+Removed tags parameter from push_to_hub
+
+Default pooling for CausalLM models
+
+Changes for custom module and loss authors
+
+Migrating from v4.x to v5.x
+Migration for model.encode
+
+Migration for Asym to Router
+
+Migration of advanced usage
+
+Migrating from v3.x to v4.x
+Migration for parameters on CrossEncoder initialization and methods
+
+Migration for specific parameters from CrossEncoder.fit
+
+Migration for CrossEncoder evaluators
+
+Migrating from v2.x to v3.x
+Migration for specific parameters from SentenceTransformer.fit
+
+Migration for custom Datasets and DataLoaders used in SentenceTransformer.fit
+
+Sentence Transformer
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Computing Embeddings
+Initializing a Sentence Transformer Model
+
+Calculating Embeddings
+
+Prompt Templates
+
+Input Sequence Length
+
+Multi-Process / Multi-GPU Encoding
+
+Semantic Textual Similarity
+Similarity Calculation
+
+Semantic Search
+Background
+
+Symmetric vs. Asymmetric Semantic Search
+
+Manual Implementation
+
+Optimized Implementation
+
+Speed Optimization
+
+Elasticsearch
+
+OpenSearch
+
+Approximate Nearest Neighbor
+
+Retrieve & Re-Rank
+
+Examples
+
+Retrieve & Re-Rank
+Retrieve & Re-Rank Pipeline
+
+Retrieval: Bi-Encoder
+
+Re-Ranker: Cross-Encoder
+
+Example Scripts
+
+Pre-trained Bi-Encoders (Retrieval)
+
+Pre-trained Cross-Encoders (Re-Ranker)
+
+Clustering
+k-Means
+
+Agglomerative Clustering
+
+Fast Clustering
+
+Topic Modeling
+
+Paraphrase Mining
+paraphrase_mining()
+
+Translated Sentence Mining
+Margin Based Mining
+
+Examples
+
+Image Search
+Installation
+
+Usage
+
+Examples
+
+Embedding Quantization
+Binary Quantization
+
+Scalar (int8) Quantization
+
+Additional extensions
+
+Demo
+
+Try it yourself
+
+Creating Custom Models
+Modular Architecture
+
+Sentence Transformer Model from a Transformers Model
+
+Advanced: Custom Modules
+
+Evaluation with MTEB
+Installation
+
+Evaluation
+
+Additional Arguments
+
+Results Handling
+
+Leaderboard Submission
+
+Pretrained Models
+Original Models
+
+Semantic Search Models
+Multi-QA Models
+
+MSMARCO Passage Models
+
+Multilingual Models
+Semantic Similarity Models
+
+Bitext Mining
+
+Multimodal Models
+Image & Text Models
+
+Audio & Video Models
+
+INSTRUCTOR models
+
+Scientific Similarity Models
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Multimodal Datasets
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Deprecated Training
+
+Best Base Embedding Models
+
+Comparisons with CrossEncoder Training
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Loss Table
+
+Loss modifiers
+
+Regularization
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+Semantic Textual Similarity
+Training data
+
+Loss Function
+
+Natural Language Inference
+Data
+
+SoftmaxLoss
+
+MultipleNegativesRankingLoss
+
+Paraphrase Data
+Pre-Trained Models
+
+Quora Duplicate Questions
+Training
+
+MultipleNegativesRankingLoss
+
+Pretrained Models
+
+MS MARCO
+Bi-Encoder
+
+Matryoshka Embeddings
+Use Cases
+
+Results
+
+Training
+
+Inference
+
+Code Examples
+
+Adaptive Layers
+Use Cases
+
+Results
+
+Training
+
+Inference
+
+Code Examples
+
+Multilingual Models
+Extend your own models
+
+Training
+
+Datasets
+
+Sources for Training Data
+
+Evaluation
+
+Available Pre-trained Models
+
+Usage
+
+Performance
+
+Citation
+
+Model Distillation
+Knowledge Distillation
+
+Speed - Performance Trade-Off
+
+Dimensionality Reduction
+
+Quantization
+
+Augmented SBERT
+Motivation
+
+Extend to your own datasets
+
+Methodology
+
+Scenario 1: Limited or small annotated datasets (few labeled sentence-pairs)
+
+Scenario 2: No annotated datasets (Only unlabeled sentence-pairs)
+
+Training
+
+Citation
+
+Training with Prompts
+What are Prompts?
+
+Why would we train with Prompts?
+
+How do we train with Prompts?
+
+Training with PEFT Adapters
+Compatibility Methods
+
+Adding a New Adapter
+
+Loading a Pretrained Adapter
+
+Training Script
+
+Training with Unsloth
+Examples in this repository
+
+Unsloth Colab notebooks
+
+Fine-tuning via FastSentenceTransformer
+
+Inference and deployment
+
+Benchmarks
+
+Multimodal Training
+Supported Input Types
+
+Training
+
+References
+
+Unsupervised Learning
+TSDAE
+
+SimCSE
+
+CT
+
+CT (In-Batch Negative Sampling)
+
+Masked Language Model (MLM)
+
+GenQ
+
+GPL
+
+Performance Comparison
+
+Domain Adaptation
+Domain Adaptation vs. Unsupervised Learning
+
+Adaptive Pre-Training
+
+GPL: Generative Pseudo-Labeling
+
+Hyperparameter Optimization
+HPO Components
+
+Putting It All Together
+
+Example Scripts
+
+Distributed Training
+Comparison
+
+FSDP
+
+Cross Encoder
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Cross-Encoder vs Bi-Encoder
+Cross-Encoder vs. Bi-Encoder
+
+When to use Cross- / Bi-Encoders?
+
+Cross-Encoders Usage
+
+Combining Bi- and Cross-Encoders
+
+Training Cross-Encoders
+
+Retrieve & Re-Rank
+Retrieve & Re-Rank Pipeline
+
+Retrieval: Bi-Encoder
+
+Re-Ranker: Cross-Encoder
+
+Example Scripts
+
+Pre-trained Bi-Encoders (Retrieval)
+
+Pre-trained Cross-Encoders (Re-Ranker)
+
+Creating Custom Models
+Modular Architecture
+
+Advanced: Custom Modules
+
+Pretrained Models
+MS MARCO
+
+SQuAD (QNLI)
+
+STSbenchmark
+
+Quora Duplicate Questions
+
+NLI
+
+Multimodal Rerankers
+
+Community Models
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Multimodal Datasets
+
+Hard Negatives Mining
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Training Tips
+
+Deprecated Training
+
+Comparisons with SentenceTransformer Training
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Loss Table
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+Semantic Textual Similarity
+Training data
+
+Loss Function
+
+Inference
+
+Natural Language Inference
+Data
+
+CrossEntropyLoss
+
+Inference
+
+Quora Duplicate Questions
+Training
+
+Inference
+
+MS MARCO
+Cross Encoder
+
+Training Scripts
+
+Inference
+
+Rerankers
+BinaryCrossEntropyLoss
+
+CachedMultipleNegativesRankingLoss
+
+Inference
+
+Model Distillation
+Cross Encoder Knowledge Distillation
+
+Inference
+
+Multimodal Training
+Transformer (Any-to-Any) + LogitScore
+
+Transformer (Feature Extraction) + Pooling + Dense
+
+Comparing the Two Approaches
+
+Other Module Chains
+
+References
+
+Distributed Training
+Comparison
+
+FSDP
+
+Sparse Encoder
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Computing Sparse Embeddings
+Initializing a Sparse Encoder Model
+
+Calculating Embeddings
+
+Input Sequence Length
+
+Controlling Sparsity
+
+Interpretability with SPLADE Models
+
+Multi-Process / Multi-GPU Encoding
+
+Semantic Textual Similarity
+Similarity Calculation
+
+Semantic Search
+Manual Search
+
+Vector Database Search
+
+Qdrant Integration
+
+OpenSearch Integration
+
+Elasticsearch Integration
+
+Seismic Integration
+
+SPLADE-index Integration
+
+Retrieve & Re-Rank
+Overview
+
+Interactive Demo: Simple Wikipedia Search
+
+Comprehensive Evaluation: Hybrid Search Pipeline
+
+Pre-trained Models
+
+Sparse Encoder Evaluation
+Example with Retrieval Evaluation:
+
+Pretrained Models
+Core SPLADE Models
+
+Inference-Free SPLADE Models
+
+Model Collections
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Training Tips
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Sparse specific Loss Functions
+SPLADE Loss
+
+CSR Loss
+
+Loss Table
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+Model Distillation
+MarginMSE
+
+MS MARCO
+SparseMultipleNegativesRankingLoss
+
+Semantic Textual Similarity
+Training data
+
+Loss Function
+
+Natural Language Inference
+Data
+
+SpladeLoss
+
+Quora Duplicate Questions
+Training
+
+Information Retrieval
+SparseMultipleNegativesRankingLoss (MNRL)
+
+Inference & Evaluation
+
+Distributed Training
+Comparison
+
+FSDP
+
+Multi-Vector Encoder
+
+Usage
+Input Formats
+Input representations
+
+Text
+
+Images
+
+Audio
+
+Video
+
+Chat messages
+
+Combining modalities
+
+Processing options
+
+Single inputs, batches, and pairs
+
+Applications
+Semantic Search
+
+Retrieve & Rerank
+
+Interpretability
+
+Compression
+
+Multi-Vector Encoder Evaluation
+Example with NanoBEIR Evaluation:
+
+Other Evaluators
+
+Creating Custom Models
+Modular Architecture
+
+What Released Checkpoints Configure
+
+Saving Multi-Vector Encoder Models
+
+Loading Multi-Vector Encoder Models
+
+Extra Per-Token Features
+
+Pretrained Models
+Text Retrieval Models
+
+Visual Document Retrieval Models
+
+Speeding up Inference
+PyTorch
+
+ONNX
+Optimizing ONNX Models
+
+Quantizing ONNX Models
+
+OpenVINO
+Quantizing OpenVINO Models
+
+Benchmarks
+Recommendations
+
+User Interface
+
+Training Overview
+Why Finetune?
+
+Training Components
+
+Model
+
+Dataset
+Dataset Format
+
+Multimodal Datasets
+
+Loss Function
+
+Training Arguments
+
+Evaluator
+
+Trainer
+Callbacks
+
+Multi-Dataset Training
+
+Training Tips
+
+Comparisons with SentenceTransformer Training
+
+End-to-End Example
+
+Dataset Overview
+Multimodal Datasets
+Accepted column types
+
+Cross-modal dataset example
+
+Automatic preprocessing
+
+Datasets on the Hugging Face Hub
+
+Pre-existing Datasets
+
+Loss Overview
+Loss Table
+
+Distillation
+
+Commonly used Loss Functions
+
+Custom Loss Functions
+
+Training Examples
+MS MARCO
+MultiVectorMultipleNegativesRankingLoss
+
+MultiVectorDistillKLDivLoss
+
+Domain-specific MultiVectorEncoder training on MIRIAD
+
+XTR
+
+Visual Document Retrieval
+Training from a multimodal embedding backbone
+
+Finetuning a pretrained ColVLM
+
+Training with PEFT Adapters
+Compatibility Methods
+
+Adding a New Adapter
+
+Training Script
+
+Distributed Training
+Comparison
+
+FSDP
+
+Package Reference
+
+Sentence Transformer
+SentenceTransformer
+SentenceTransformer
+
+SentenceTransformerModelCardData
+
+Trainer
+SentenceTransformerTrainer
+
+Training Arguments
+SentenceTransformerTrainingArguments
+
+Losses
+BatchAllTripletLoss
+
+BatchHardSoftMarginTripletLoss
+
+BatchHardTripletLoss
+
+BatchSemiHardTripletLoss
+
+ContrastiveLoss
+
+OnlineContrastiveLoss
+
+ContrastiveTensionLoss
+
+ContrastiveTensionLossInBatchNegatives
+
+CoSENTLoss
+
+AnglELoss
+
+CosineSimilarityLoss
+
+DenoisingAutoEncoderLoss
+
+GISTEmbedLoss
+
+CachedGISTEmbedLoss
+
+GlobalOrthogonalRegularizationLoss
+
+EmbedDistillLoss
+
+MSELoss
+
+MarginMSELoss
+
+MatryoshkaLoss
+
+Matryoshka2dLoss
+
+AdaptiveLayerLoss
+
+MegaBatchMarginLoss
+
+MultipleNegativesRankingLoss
+
+CachedMultipleNegativesRankingLoss
+
+MultipleNegativesSymmetricRankingLoss
+
+CachedMultipleNegativesSymmetricRankingLoss
+
+SoftmaxLoss
+
+TripletLoss
+
+DistillKLDivLoss
+
+Evaluation
+BinaryClassificationEvaluator
+
+EmbeddingSimilarityEvaluator
+
+InformationRetrievalEvaluator
+
+NanoBEIREvaluator
+
+MSEEvaluator
+
+ParaphraseMiningEvaluator
+
+RerankingEvaluator
+
+TranslationEvaluator
+
+TripletEvaluator
+
+Datasets
+ParallelSentencesDataset
+
+SentenceLabelDataset
+
+DenoisingAutoEncoderDataset
+
+NoDuplicatesDataLoader
+
+Modules
+Main Modules
+
+Further Modules
+
+Cross Encoder
+CrossEncoder
+CrossEncoder
+
+CrossEncoderModelCardData
+
+Trainer
+CrossEncoderTrainer
+
+Training Arguments
+CrossEncoderTrainingArguments
+
+Losses
+ADRMSELoss
+
+BinaryCrossEntropyLoss
+
+CrossEntropyLoss
+
+LambdaLoss
+
+ListMLELoss
+
+PListMLELoss
+
+ListNetLoss
+
+MultipleNegativesRankingLoss
+
+CachedMultipleNegativesRankingLoss
+
+MSELoss
+
+MarginMSELoss
+
+RankNetLoss
+
+Evaluation
+CrossEncoderRerankingEvaluator
+
+CrossEncoderNanoBEIREvaluator
+
+CrossEncoderClassificationEvaluator
+
+CrossEncoderCorrelationEvaluator
+
+Modules
+LogitScore
+
+Sparse Encoder
+SparseEncoder
+SparseEncoder
+
+SparseEncoderModelCardData
+
+Trainer
+SparseEncoderTrainer
+
+Training Arguments
+SparseEncoderTrainingArguments
+
+Losses
+SpladeLoss
+
+CachedSpladeLoss
+
+FlopsLoss
+
+CSRLoss
+
+CSRReconstructionLoss
+
+SparseMultipleNegativesRankingLoss
+
+SparseMarginMSELoss
+
+SparseDistillKLDivLoss
+
+SparseTripletLoss
+
+SparseCosineSimilarityLoss
+
+SparseCoSENTLoss
+
+SparseAnglELoss
+
+SparseMSELoss
+
+Samplers
+BatchSamplers
+
+MultiDatasetBatchSamplers
+
+Evaluation
+SparseInformationRetrievalEvaluator
+
+SparseNanoBEIREvaluator
+
+SparseEmbeddingSimilarityEvaluator
+
+SparseBinaryClassificationEvaluator
+
+SparseTripletEvaluator
+
+SparseRerankingEvaluator
+
+SparseTranslationEvaluator
+
+SparseMSEEvaluator
+
+ReciprocalRankFusionEvaluator
+
+Modules
+SPLADE Pooling
+
+SparseAutoEncoder
+
+SparseStaticEmbedding
+
+Callbacks
+SpladeRegularizerWeightSchedulerCallback
+
+Search Engines
+semantic_search_elasticsearch()
+
+semantic_search_opensearch()
+
+semantic_search_qdrant()
+
+semantic_search_seismic()
+
+Multi-Vector Encoder
+MultiVectorEncoder
+MultiVectorEncoder
+
+MultiVectorEncoderModelCardData
+
+Trainer
+MultiVectorEncoderTrainer
+
+Training Arguments
+MultiVectorEncoderTrainingArguments
+
+Losses
+MultiVectorMultipleNegativesRankingLoss
+
+CachedMultiVectorMultipleNegativesRankingLoss
+
+MultiVectorDistillKLDivLoss
+
+MultiVectorMarginMSELoss
+
+Samplers
+BatchSamplers
+
+MultiDatasetBatchSamplers
+
+Evaluation
+MultiVectorInformationRetrievalEvaluator
+
+MultiVectorNanoBEIREvaluator
+
+MultiVectorTripletEvaluator
+
+MultiVectorRerankingEvaluator
+
+MultiVectorDistillationEvaluator
+
+Modules
+MultiVectorMask
+
+BaseTokenPooling
+
+HierarchicalTokenPooling
+
+LambdaTokenPooling
+
+Scoring
+ColBERT scoring
+
+MeanMaxSim scoring
+
+XTRScores
+
+XTRKDScores
+
+Interpretability
+Heatmaps
+
+Building blocks
+
+Base
+Model
+BaseModel
+
+BaseModelCardData
+
+Trainer
+BaseTrainer
+
+Training Arguments
+BaseTrainingArguments
+
+Samplers
+BatchSamplers
+
+MultiDatasetBatchSamplers
+
+Modules
+Common Modules
+
+Base Modules
+
+Evaluation
+BaseEvaluator
+
+SequentialEvaluator
+
+Utility Functions
+dataset
+resolve_ids()
+
+distributed
+all_gather()
+
+all_gather_padded()
+
+all_gather_with_grad()
+
+get_rank()
+
+get_world_size()
+
+environment
+check_package_availability()
+
+check_version_requirements()
+
+get_device_name()
+
+get_installed_version()
+
+is_accelerate_available()
+
+is_datasets_available()
+
+is_dist_initialized()
+
+is_training_available()
+
+suggest_extra_on_exception()
+
+file_io
+disabled_tqdm
+
+http_get()
+
+is_sentence_transformer_model()
+
+load_dir_path()
+
+load_file_path()
+
+hard_negatives
+mine_hard_negatives()
+
+misc
+check_teacher_targets()
+
+disable_datasets_caching()
+
+disable_logging()
+
+fullname()
+
+import_from_string()
+
+import_module_class()
+
+similarity_fct_name()
+
+quantization
+quantize_embeddings()
+
+semantic_search_faiss()
+
+semantic_search_usearch()
+
+retrieval
+community_detection()
+
+information_retrieval()
+
+paraphrase_mining()
+
+paraphrase_mining_embeddings()
+
+semantic_search()
+
+similarity
+SimilarityFunction
+
+cos_sim()
+
+dot_score()
+
+euclidean_sim()
+
+manhattan_sim()
+
+maxsim()
+
+maxsim_pairwise()
+
+mean_maxsim()
+
+mean_maxsim_pairwise()
+
+pairwise_angle_sim()
+
+pairwise_cos_sim()
+
+pairwise_dot_score()
+
+pairwise_euclidean_sim()
+
+pairwise_manhattan_sim()
+
+pytorch_cos_sim()
+
+tensor
+batch_to_device()
+
+cat_padded_token_embeddings()
+
+compute_count_vector()
+
+normalize_embeddings()
+
+repad_flattened_features()
+
+select_max_active_dims()
+
+stack_padded_token_embeddings()
+
+to_scipy_coo()
+
+truncate_embeddings()
+
+Sentence Transformers
+
+Loss Overview
+
+Edit on GitHub
+
+Loss Overview
+
+Loss Table
+
+Loss functions play a critical role in the performance of your fine-tuned model. Sadly, there is no “one size fits all” loss function. Ideally, this table should help narrow down your choice of loss function(s) by matching them to your data formats.
+
+Note
+
+You can often convert one training data format into another, allowing more loss functions to be viable for your scenario. For example, (input_A, input_B) pairs with class labels can be converted into (anchor, positive, negative) triplets by sampling inputs with the same or different classes.
+
+Legend: Loss functions marked with ★ are commonly recommended default choices.
+
+Inputs |
+Labels |
+Appropriate Loss Functions |
+
+single inputs |
+class |
+BatchAllTripletLoss
+BatchHardSoftMarginTripletLoss
+BatchHardTripletLoss
+BatchSemiHardTripletLoss |
+
+single inputs |
+none |
+ContrastiveTensionLoss
+DenoisingAutoEncoderLoss |
+
+(anchor, anchor) pairs |
+none |
+ContrastiveTensionLossInBatchNegatives |
+
+(damaged_input, original_input) pairs |
+none |
+DenoisingAutoEncoderLoss |
+
+(input_A, input_B) pairs |
+class |
+SoftmaxLoss |
+
+(anchor, positive) pairs |
+none |
+MultipleNegativesRankingLoss ★
+CachedMultipleNegativesRankingLoss ★
+MegaBatchMarginLoss
+GISTEmbedLoss
+CachedGISTEmbedLoss |
+
+(anchor, positive/negative) pairs |
+1 if positive, 0 if negative |
+ContrastiveLoss
+OnlineContrastiveLoss |
+
+(input_A, input_B) pairs |
+float similarity score between 0 and 1 |
+CoSENTLoss
+AnglELoss
+CosineSimilarityLoss |
+
+(anchor, positive, negative) triplets |
+none |
+MultipleNegativesRankingLoss ★
+CachedMultipleNegativesRankingLoss ★
+TripletLoss
+CachedGISTEmbedLoss
+GISTEmbedLoss |
+
+(anchor, positive, negative_1, ..., negative_n) |
+none |
+MultipleNegativesRankingLoss ★
+CachedMultipleNegativesRankingLoss ★
+CachedGISTEmbedLoss |
+
+Loss modifiers
+
+These loss functions can be seen as loss modifiers: they work on top of standard loss functions, but apply those loss functions in different ways to try and instil useful properties into the trained embedding model.
+
+For example, models trained with MatryoshkaLoss produce embeddings whose size can be truncated without notable losses in performance (see the 🪆 Introduction to Matryoshka Embedding Models blogpost for a full walkthrough), and models trained with AdaptiveLayerLoss still perform well when you remove model layers for faster inference.
+
+Inputs |
+Labels |
+Appropriate Loss Functions |
+
+any |
+any |
+MatryoshkaLoss
+AdaptiveLayerLoss
+Matryoshka2dLoss |
+
+Regularization
+
+These losses are designed to regularize the embedding space during training, encouraging certain properties in the learned embeddings. They can often be applied to any dataset configuration.
+
+Inputs |
+Labels |
+Appropriate Loss Functions |
+
+any |
+none |
+GlobalOrthogonalRegularizationLoss |
+
+Distillation
+
+These loss functions are specifically designed to be used when distilling the knowledge from one model into another.
+For example, when finetuning a small model to behave more like a larger & stronger one, or when finetuning a model to become multi-lingual.
+
+Inputs |
+Labels |
+Appropriate Loss Functions |
+
+input |
+teacher embeddings |
+EmbedDistillLoss
+MSELoss |
+
+(input_1, input_2, ..., input_N) |
+teacher embeddings (broadcast across columns) |
+EmbedDistillLoss
+MSELoss |
+
+(input_1, input_2, ..., input_N) |
+per-column teacher embeddings (one per input column) |
+EmbedDistillLoss
+MSELoss |
+
+(query, document_one, document_two) |
+gold_sim(query, document_one) - gold_sim(query, document_two) |
+MarginMSELoss |
+
+(query, positive, negative_1, ..., negative_n) |
+[gold_sim(query, positive) - gold_sim(query, negative_i) for i in 1..n] |
+MarginMSELoss |
+
+(query, positive, negative) |
+[gold_sim(query, positive), gold_sim(query, negative)] |
+DistillKLDivLoss
+MarginMSELoss |
+
+(query, positive, negative_1, ..., negative_n) |
+[gold_sim(query, positive), gold_sim(query, negative_i)...] |
+DistillKLDivLoss
+MarginMSELoss |
+
+Commonly used Loss Functions
+
+In practice, not all loss functions get used equally often. The most common scenarios are:
+
+(anchor, positive) pairs without any labels: MultipleNegativesRankingLoss (a.k.a. InfoNCE or in-batch negatives loss) is commonly used to train the top performing embedding models. This data is often relatively cheap to obtain, and the models are generally very performant. CachedMultipleNegativesRankingLoss is often used to increase the batch size, resulting in superior performance.
+
+(input_A, input_B) pairs with a float similarity score: CosineSimilarityLoss is traditionally used a lot, though more recently CoSENTLoss and AnglELoss are used as drop-in replacements with superior performance.
+
+Custom Loss Functions
+
+Advanced users can create and train with their own loss functions. Custom loss functions only have a few requirements:
+
+They must be a subclass of torch.nn.Module.
+
+They must have model as the first argument in the constructor.
+
+They must implement a forward method that accepts sentence_features and labels. The former is a list of tokenized batches, one element for each column. These tokenized batches can be fed directly to the model being trained to produce embeddings. The latter is an optional tensor of labels. The method must return a single loss value or a dictionary of loss components (component names to loss values) that will be summed to produce the final loss value. When returning a dictionary, the individual components will be logged separately in addition to the summed loss, allowing you to monitor the individual components of the loss.
+
+To get full support with the automatic model card generation, you may also wish to implement:
+
+a get_config_dict method that returns a dictionary of loss parameters.
+
+a citation property so your work gets cited in all models that train with the loss.
+
+Consider inspecting existing loss functions to get a feel for how loss functions are commonly implemented.
+
+Previous
+Next
+
+© Copyright 2026.
+
+Built with Sphinx using a
+theme
+provided by Read the Docs.

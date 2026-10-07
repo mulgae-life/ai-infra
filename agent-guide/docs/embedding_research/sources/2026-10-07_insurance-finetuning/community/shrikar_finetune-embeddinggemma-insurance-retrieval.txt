@@ -1,0 +1,262 @@
+원문 URL: https://shrikar.com/writing/finetune-embeddinggemma-insurance-retrieval
+수집 기준일: 2026-10-07
+
+Fine-tuning EmbeddingGemma for insurance retrieval in 10 minutes for $0.65 | Shrikar Archak
+Skip to content shrikar.com AI Native Development Fine-Tuning Agents Evals Claude Code Tools About RSS X in
+
+AI Native DevelopmentFine-TuningAgentsEvalsClaude Code About Writing Reports Snippets Case Studies GPU Calculator X / Twitter LinkedIn
+
+Essay August 24, 2026 14 min read
+Fine-tuning EmbeddingGemma for insurance retrieval in 10 minutes for $0.65
+One epoch of contrastive fine-tuning lifts EmbeddingGemma from 0.73 to 0.82 NDCG@10 on insurance retrieval: a ten-minute, $0.65 GPU run. The full eval methodology, from raw HuggingFace pairs to trusted numbers.
+Fine-Tuning Rag Evals
+
+When retrieval quality is the bottleneck in a RAG system, the reflex is to reach outward: a bigger embedding model, a reranker, hybrid search. The move almost nobody defaults to is the cheapest one: fine-tune a small open embedding model on your own question-answer pairs. Google published a recipe for exactly this with EmbeddingGemma, a 308M-parameter embedding model, and I wanted to know what it actually buys on a domain where general-purpose embeddings genuinely struggle, measured properly.
+
+The headline: one epoch of contrastive fine-tuning on 21,325 insurance Q&A pairs, 605 seconds of training on a rented L40S through Modal, roughly $0.65 all-in, took top-10 retrieval misses from 8.8% to 2.9% and first-hit accuracy from 64.2% to 72.0%. And the more useful lesson is that the eval harness, not the training loop, is where all the trust lives. Training was ten minutes. Believing the numbers took design decisions I’ll walk through in detail.
+
+Same model, same data, same eval. One epoch of contrastive fine-tuning on an L40S: ten minutes, about $0.65.
+Why insurance Q&A is the right stress test
+
+The dataset is deccan-ai/insuranceQA-v2: about 28,000 real questions from insurance customers paired with answers written by licensed insurance professionals, split 21,325 train / 3,354 validation / 3,308 test.
+
+What makes it a good test is the vocabulary. Insurance jargon is full of phrases where surface similarity and semantic similarity diverge: split limits versus combined single limit in auto coverage, indirect medical education reimbursement under Medicare, irrevocable versus revocable beneficiaries, evidence of insurability. A general-purpose embedding model has seen these words, but it has not seen enough contrastive signal to know which distinctions decide relevance. That is precisely the gap fine-tuning on in-domain pairs is supposed to close, so if it works anywhere, it should be visible here.
+
+How the eval was built
+
+Everything in this post rests on one benchmark, so here is exactly how it works, starting with what you download versus what you have to construct, and then the two decisions that would have silently corrupted the numbers if I had gotten them wrong.
+
+The eval set is constructed, not downloaded
+
+What deccan-ai/insuranceQA-v2 actually ships is three splits of flat (question, answer) rows and nothing else. No corpus definition, no relevance judgments, no candidate pools, no mined negatives, no evaluation protocol. The card traces its provenance to the original InsuranceQA corpus released by Feng et al. (2015) at IBM; that release shipped text as token-id sequences plus a vocabulary file, and the HuggingFace version’s contribution is reconstructing readable text and keeping the original train/validation/test question split.
+
+The 2015 paper did define an eval protocol, but a different one: answer selection, where each test question is scored against a pool of 500 candidates (its gold answers plus random negatives) and the metric is whether the top pick is gold. That protocol did not survive the flattening into pairs, and I did not want to resurrect it, because ranking against 500 mostly random candidates is both easier and less realistic than what a production RAG system does, which is retrieve from every document in the corpus. It also means a practical warning: any two write-ups “evaluating on InsuranceQA” can be running very different protocols on the same rows, so absolute numbers do not transfer between them. Compare deltas measured inside one harness, never headline numbers across harnesses.
+
+So the benchmark here is built from the raw pairs, and the whole construction is ~80 auditable lines: the corpus is all 3,308 test-split answers, the queries are the unique test questions, and relevance comes from the pairing itself, since an answer is relevant to exactly the question it was written for. No labeling pass, no LLM judge, no human annotation. The dataset’s own structure is the ground truth, which is the property that makes this kind of Q&A dataset such a cheap, trustworthy eval source: if you have historical support tickets, forum threads, or answered customer emails, you already own the raw material for both the training pairs and the benchmark.
+
+The task
+
+Take the 3,308 answers in the test split and make them the retrieval corpus. Take the test questions and make them the queries. For each question, the model embeds the query, embeds all 3,308 answers, ranks the corpus by cosine similarity, and gets scored on whether the answer(s) actually written for that exact question rank near the top. This is the “RAG over a company knowledge base” shape: a bounded corpus of professional content, queried in customer language.
+
+The benchmark: customer-language queries against a corpus of professional answers, scored with graded relevance.
+Decision one: duplicate questions become one query with multiple golds
+
+The raw test split is 3,308 (question, answer) rows, but multiple professionals often answer the same question, so those rows contain only 2,000 unique questions, and 760 of them have two or more gold answers. If you naively treat every row as its own query, the same question appears repeatedly and each copy counts the other correct answers as wrong. Your eval punishes the model for retrieving a right answer.
+
+The fix is standard qrels grouping: one query per unique question text, with every answer written for it in the relevance set.
+
+corpus = {f"d{i}": row["output"] for i, row in enumerate(ds)}
+
+queries, relevant, qid_by_text = {}, {}, {}
+for i, row in enumerate(ds):
+q = row["input"].strip()
+qid = qid_by_text.get(q)
+if qid is None:
+qid = f"q{len(qid_by_text)}"
+qid_by_text[q] = qid
+queries[qid] = q
+relevant[qid] = set()
+relevant[qid].add(f"d{i}")
+
+With 760 multi-gold questions, this is not a nicety. Skipping it would deflate every metric and add noise exactly where the model is doing well.
+
+Decision two: embed with the model’s own prompts
+
+EmbeddingGemma is prompt-conditioned: queries are supposed to be embedded as task: search result | query: ... and documents as title: none | text: .... Skip the prompts and you are evaluating a model nobody ships. Sentence-transformers carries them in the model config, so the evaluator just needs to be told which one applies to which side:
+
+from sentence_transformers.evaluation import InformationRetrievalEvaluator
+
+evaluator = InformationRetrievalEvaluator(
+queries=queries, # 2,000 unique questions
+corpus=corpus, # 3,308 professional answers
+relevant_docs=relevant, # 760 questions have 2+ golds
+query_prompt_name="query", # "task: search result | query: "
+corpus_prompt_name="document", # "title: none | text: "
+)
+results = evaluator(model)
+
+The same prompts are applied during training (per column, shown below), so train and eval see the model the same way.
+
+The metrics, in plain terms
+
+NDCG@10 is the headline number: it rewards putting a gold answer high in the top 10, with graded credit for position and for finding multiple golds. It is the single best summary when some queries have several right answers.
+
+Accuracy@k asks: was at least one gold in the top k? Accuracy@1 is “did the best hit come first,” and accuracy@10 is “would a RAG context window of 10 chunks contain a right answer at all.” Its complement is the miss rate I quote.
+
+MRR@10 is the average of 1/rank of the first gold: 0.81 means the first right answer typically shows up at rank 1 or 2.
+
+Recall@10 differs from accuracy@10 only on multi-gold queries: it measures what fraction of a question’s gold answers made the top 10, not just whether one did.
+
+What the eval deliberately avoids
+
+Leakage. The corpus is test-split answers only. Training uses train-split pairs only, and the dataset authors split by question, so the model never sees a test question or a corpus document during training. Nothing about the benchmark is optimized against.
+
+Toy-corpus flattery. My first smoke run used a 200-answer corpus, and the base model scored 92% accuracy@1. Against the full 3,308 answers, the same model scores 64.2%. Retrieval difficulty scales with corpus size, because every added document is another chance for a near-miss to outrank the gold. If someone shows you retrieval numbers, the first question to ask is how big the corpus was. And since production corpora are usually larger than 3,308 documents, the deltas in this post are, if anything, conservative.
+
+Environment drift. The benchmark runs identically anywhere, from the same code: before training anything, I evaluated the base model twice, once locally on my laptop and once on the rented GPU box, and it scored NDCG@10 = 0.7316 and 0.7317. That third-decimal agreement is the receipt that the delta below comes from training, not from the environment.
+
+The whole harness is ~80 lines (insqa_data.py builds the benchmark, insqa_eval.py runs it) and evaluates any checkpoint in about two minutes, even on a laptop:
+
+uv run python insqa_eval.py --model google/embeddinggemma-300m --name base
+
+The baseline: good, with real headroom
+
+NDCG@10
+0.732
+
+accuracy@1
+0.642
+
+accuracy@10
+0.913
+
+MRR@10
+0.736
+
+Base EmbeddingGemma is already respectable: for 91% of questions, a right answer is somewhere in the top 10. But it puts the right answer first only 64% of the time, and 8.8% of questions get nothing useful in the top 10 at all. Those misses are concentrated exactly where you would expect: questions whose answers hinge on jargon distinctions the model has never been forced to separate.
+
+The training recipe
+
+The recipe is Google’s, and the core of it is MultipleNegativesRankingLoss (MNRL), which is beautifully simple: in every batch, each question’s own answer is its positive, and every other question’s answer in the batch is a negative. No negative mining, no labeling beyond the pairs you already have. The batch size is the difficulty knob: at batch 128 the model must pick the right answer out of 128 candidates every step, and that discrimination pressure is the entire training signal. This is why I ran it at batch 128 rather than something timid, and why the loss is the Cached variant: GradCache computes the same exact gradients as full-batch MNRL while only holding mini-batches of 16 in activation memory, so the negative pool is a free choice instead of a hardware negotiation.
+
+loss = CachedMultipleNegativesRankingLoss(model, mini_batch_size=16)
+
+args = SentenceTransformerTrainingArguments(
+per_device_train_batch_size=128, # the negative pool: 127 per example
+learning_rate=2e-5,
+num_train_epochs=1,
+bf16=True,
+batch_sampler=BatchSamplers.NO_DUPLICATES,
+prompts={
+"question": model.prompts["query"], # same prompts as eval
+"answer": model.prompts["document"],
+},
+)
+
+Two details worth noting. The prompts mapping applies EmbeddingGemma’s query/document prompts per column during training, matching the eval exactly. And NO_DUPLICATES matters specifically because of the duplicate questions found while building the eval: if the same question lands twice in one batch, its two correct answers become false negatives for each other, and you train the model to push right answers apart.
+
+The run itself is one Modal function on an L40S (48GB), reusing the standard pattern: an image with sentence-transformers, an hf-token secret for the gated model download, and volumes for the model cache and checkpoints. It evaluates the base model, trains, evaluates again, and returns both result sets, so a single command produces the entire before/after comparison:
+
+@app.function(image=image, gpu="L40S", timeout=60 * 60,
+volumes={"/model_cache": cache, "/checkpoints": ckpt},
+secrets=[modal.Secret.from_name("hf-token")])
+def finetune_and_eval(batch_size: int = 128, max_seq: int = 512, ...):
+model = SentenceTransformer("google/embeddinggemma-300m", device="cuda")
+run_eval(model, "gpu_base") # before
+trainer.train() # 605 seconds
+run_eval(model, "gpu_finetuned") # after
+
+Training took 605 seconds: one epoch, all 308M parameters, sequence length 512 so full professional answers fit, 167 optimizer steps at batch 128. The whole function, including both evals and the first-time model download, was about 20 minutes of GPU time, roughly $0.65 at Modal’s L40S rate.
+
+The results
+
+Metric | Base | Fine-tuned | Change |
+NDCG@10 | 0.732 | 0.818 | +8.6 pts |
+accuracy@1 | 0.642 | 0.720 | +7.8 pts |
+accuracy@3 | 0.811 | 0.888 | +7.7 pts |
+accuracy@10 | 0.913 | 0.971 | +5.8 pts |
+MRR@10 | 0.736 | 0.811 | +7.5 pts |
+recall@10 | 0.850 | 0.936 | +8.6 pts |
+
+Reading those numbers as a RAG engineer: a top-10 retrieval that missed 1 question in 11 now misses 1 in 34, and MRR@10 of 0.81 means the first right answer usually sits at rank 1 or 2. Feeding a generator top-5 contexts, a gold answer is present 93% of the time, up from 86%. Every metric moved together, which is what you want to see; a lift concentrated in one metric usually means the eval is measuring an artifact.
+
+The batch is the curriculum
+The single most important knob in this recipe is not the learning rate or the epoch count, it is the negative pool. MNRL with 127 in-batch negatives forces the model to separate an answer about split limits from 127 others, some of which are about nearly the same thing, every single step. Hard negatives appear by luck, and the bigger the batch, the luckier you get. If you take one training decision away from this post: do not shrink the batch to fit memory, use GradCache and keep the pool large. Shrinking the batch quietly makes every training step easier, and the difficulty is the product.
+
+The same queries, before and after
+
+Aggregate metrics say the model got better; watching the same query succeed and fail says how. I mined the test set for queries where the base model’s gold answer sat outside the top 10 and the fine-tuned model retrieves it at rank 1 (insqa_examples.py; there are 12 such queries, and these three have the most legible failure modes). Descriptions summarize the actual retrieved answers, lightly detokenized from the corpus text.
+
+Query | Gold rank, base → tuned | Base model’s top hit (wrong) | Fine-tuned model’s top hit (the gold) |
+“Is home warranty insurance worth it?” | #112 → #1 | Whether homeowners and life insurance are worth carrying: same word, different product | The home-warranty answer: hidden problems that surface after you move in |
+”Does home insurance cover electrical surges?” | #73 → #1 | Flood coverage (“rising water is always excluded”): right product, wrong peril | The surge answer: lightning strikes, damage to electrical systems and appliances |
+”Does renters insurance cover identity theft?” | #39 → #1 | A stolen bicycle under renters insurance: physical theft, not identity theft | The rider answer: identity-theft protection for an additional premium |
+
+The pattern across all three is the same, and it is exactly the jargon-blur hypothesis from the top of the post: the base model gets the product category right and the concept within the category wrong. Contrastive fine-tuning forces those within-category distinctions apart, because with a 128-negative pool the batch keeps containing same-category answers that must be pushed away from each other.
+
+The failure cases
+
+Movement happened in both directions: fine-tuning brought 135 queries into the top 10 and pushed 17 out, an 8-to-1 win ratio. I read all 17 regressions rather than just counting them, and they split into two kinds worth distinguishing:
+
+Query | Gold rank, base → tuned | What the fine-tuned model retrieves instead | Real failure? |
+”Is Lifeline covered by Medicare?” | #5 → #33 | A confident “yes, that falls under Part B” answer about ER coverage. The gold says Medicare does not cover medical alert systems | Yes. The retrieved answer invites exactly the wrong conclusion |
+”Can life insurance be a tax deduction?” | #1 → #13 | A different professional’s answer saying nearly the same thing as the gold: not deductible, same qualified-plan percentages (49.5% whole life, 25% universal) | No. The retrieval is fine; the eval counts it wrong |
+”How long do annuities last?” | #1 → #16 | An on-topic answer about annuity contract maturity periods, rather than the specific gold about lifetime income options | Mostly no. A defensible answer to a broad question |
+
+That split is the honest read of the regression column. Pairing-derived golds mean “wrong” sometimes just means “retrieved a different professional’s equally valid answer,” so a chunk of the 17 are eval artifacts rather than model failures. But not all of them: the Lifeline case is a genuine regression, the kind that would mislead a customer, and it is invisible inside the aggregate +5.8 points of accuracy@10. Two practices follow. Keep the eval around and rerun it on every checkpoint, and when a checkpoint regresses on specific queries, read them before deciding whether they are real.
+
+What I’d caveat
+
+The corpus is 3,308 documents. Real product corpora are often 10 to 1000 times larger, which makes retrieval harder for base and fine-tuned models alike. I would expect the relative gap to hold or widen at scale, but I measured this corpus, not that one.
+
+This is one epoch at the recipe’s default learning rate. No sweep, no early stopping; the 3,354-pair validation split went unused. These numbers are the floor of what tuning buys, not the ceiling.
+
+The fine-tune is on in-domain pairs and evaluated in-domain. That is the honest frame for “fine-tune your embeddings for your corpus”; it says nothing about whether the model got worse at other domains (it almost certainly did, and for a dedicated retrieval index that is irrelevant).
+
+When this is the right move
+
+Fine-tuning your embedding model earns its keep when three things line up: your queries use domain vocabulary where general embeddings blur the decisive distinctions, you have (or can mine from logs) thousands of real query-document pairs, and retrieval quality is measurably your bottleneck. When they do line up, this is one of the best effort-to-impact ratios in applied ML right now: a 308M model, pairs you already have, ten minutes of rented GPU, and a benchmark you can rerun on every future checkpoint in two minutes.
+
+Everything is reproducible from this gist: insqa_data.py (benchmark construction), insqa_eval.py (the evaluator), modal_insqa_gemma.py (the GPU run, both evals included), and insqa_examples.py (the before/after query miner). There is also insqa_finetune.py, a memory-constrained local variant that trains on a 16GB MacBook in about two hours if you want the zero-cloud path; it captures most of the lift but not all of it, because 16GB cannot hold the 128-negative pool that does the heavy lifting here.
+
+uv run python insqa_eval.py --model google/embeddinggemma-300m --name base
+uv run modal run modal_insqa_gemma.py # ~20 min, ~$0.65, both evals included
+
+Share X LinkedIn HN
+Related
+Essay Jun 14, 2026
+RAG vs fine-tuning for ICD-10 medical coding
+A tested answer to RAG vs fine-tuning on ICD-10 medical coding: retrieval, an off-the-shelf reranker, and a zero-shot LLM selector beat every fine-tuned model on accuracy and cost. Real numbers and the failures.
+RagFine-TuningEvals
+Essay Jun 13, 2026
+Post-training a model from scratch: SFT, DPO, and RLHF on your laptop
+SFT, DPO, RLHF, PPO, GRPO get talked about more than they get run. Here is a tiny working pipeline that does all three on an 82M model on CPU, with real numbers and a reward-hacking gotcha.
+Fine-TuningEvalsAI Native Development
+Essay May 12, 2026
+Prompting, context engineering, RAG, fine-tuning, CPT — when to use which
+A decision guide for the five layers of LLM adaptation in 2026, the diagnostic question that actually picks the right one, and the production mistakes that send teams down the wrong path.
+AI Native DevelopmentFine-TuningEvals
+
+On this page
+Why insurance Q&A is the right stress test
+How the eval was built
+The eval set is constructed, not downloaded
+The task
+Decision one: duplicate questions become one query with multiple golds
+Decision two: embed with the model’s own prompts
+The metrics, in plain terms
+What the eval deliberately avoids
+The baseline: good, with real headroom
+The training recipe
+The results
+The same queries, before and after
+The failure cases
+What I’d caveat
+When this is the right move
+
+Topics
+AI Native Development
+Fine-Tuning
+Agents
+Evals
+Claude Code
+
+Browse by format
+Tools
+Writing
+Reports
+Snippets
+Case Studies
+
+Elsewhere
+LinkedIn
+GitHub
+X / Twitter
+RSS
+
+Get in touch
+Email
+X / Twitter
+LinkedIn
+
+© 2026 Shrikar Archak Built with Astro on Cloudflare

@@ -1,0 +1,10 @@
+원문 URL: https://www.data.go.kr/robots.txt
+수집 기준일: 2026-10-07
+
+User-agent: Googlebot
+Disallow: /tcs/dss/selectDataSetList.do
+Disallow: /tcs/vas/
+Disallow: /tcs/lms/mpm/
+Disallow: /bbs/dnb/
+Disallow: /bbs/dsb/
+Disallow: /bbs/qna/selectQna.do

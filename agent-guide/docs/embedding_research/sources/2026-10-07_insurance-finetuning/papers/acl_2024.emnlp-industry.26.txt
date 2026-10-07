@@ -1,0 +1,527 @@
+원문 URL: https://aclanthology.org/2024.emnlp-industry.26.pdf
+수집 기준일: 2026-10-07
+
+                             Greenback Bears and Fiscal Hawks:
+                    Finance is a Jungle and Text Embeddings Must Adapt
+
+ Peter Anderson Mano Vikash Janardhanan Jason He Wei Cheng Charlie Flanagan
+                           Balyasny Asset Management
+                          {peanderson, mjanardhanan, jhe, wcheng, cflanagan}@bamfunds.com
+
+
+
+
+                          Abstract                                 similar to a CFO? And what is a Greenback bear2 ?
+                                                                      Despite their importance, few text embeddings
+        Financial documents are filled with special-               specialized for finance have been reported in the
+        ized terminology, arcane jargon, and curious
+                                                                   literature. To address this gap, we present and pub-
+        acronyms that pose challenges for general-
+        purpose text embeddings. Yet, few text em-
+                                                                   licly release BAM embeddings, a set of text embed-
+        beddings specialized for finance have been re-             dings optimized for financial document retrieval.
+        ported in the literature, perhaps in part due to           BAM embeddings are based on Multilingual-E5
+        a lack of public datasets and benchmarks. We               (Wang et al., 2024b), further finetuned on a care-
+        present BAM embeddings, a set of text em-                  fully filtered, clean dataset of 14.3M query-passage
+        beddings finetuned on a carefully constructed              pairs (6B tokens) constructed from 2.8M public
+        dataset of 14.3M query-passage pairs includ-               and proprietary financial documents. While we
+        ing both public and proprietary financial docu-
+                                                                   cannot release our dataset, we describe in detail
+        ments. Demonstrating the benefits of domain-
+        specific training, BAM embeddings achieve Re-              our data curation and query generation strategy,
+        call@1 of 62.8% on a held-out test set, vs. only           finetuning process, and approach to deployment in
+        39.2% for the best general-purpose text embed-             a high-priority application.
+        ding from OpenAI. Further, BAM embeddings                     On a held-out set of 447K query-passage pairs,
+        increase question answering accuracy by 8%                 BAM embeddings achieve Recall@1 of 62.8%,
+        on FinanceBench and show increased sensi-                  far surpassing the Multilingual-E5 base model
+        tivity to the finance-specific elements that are
+                                                                   (34.3%) as well as large closed-source models (e.g.,
+        found in detailed, forward-looking and com-
+        pany and date-specific queries. To support fur-
+                                                                   OpenAI’s 3072-dim text-embedding-3-large model,
+        ther research we describe our approach in de-              39.2%). Quantitatively, we show that hard nega-
+        tail, quantify the importance of hard negative             tive mining (+5.3%) and data scale (+4.5%) are
+        mining and dataset scale, and publicly release             critical to achieving this performance. Deploying
+        our embeddings1 .                                          BAM embeddings in an application alongside tra-
+                                                                   ditional lexical search (Okapi BM25), we find that
+1       Introduction                                               BAM embeddings outperform lexical search over
+                                                                   all query lengths. Notably, vector search with BAM
+Portfolio managers and analysts have access to mil-
+                                                                   embeddings improves as queries become longer
+lions of financial documents. Text embeddings
+                                                                   and more detailed, while lexical search degrades.
+are a key component of the information retrieval
+                                                                      Finally, we evaluate BAM embeddings in a pub-
+and retrieval-augmented generation (RAG) systems
+                                                                   lic RAG benchmark using FinanceBench (Islam
+(Lewis et al., 2020) that can help extract insights
+                                                                   et al., 2023). Replacing OpenAI’s ada-002 em-
+from this mass of information. However, the finan-
+                                                                   beddings with ours increases question answering
+cial domain poses unique challenges for text em-
+                                                                   correctness by 8%. Qualitatively, we observe that
+beddings. Financial documents are filled with spe-
+                                                                   after finetuning, embeddings are more sensitive
+cialized terminology (‘par value’, ‘stagflation’), jar-
+                                                                   to company names, tickers and financial metrics,
+gon (‘Chinese wall’), curious acronyms (‘CAGR’,
+                                                                   leading to improved performance detailed, forward-
+‘DCF’, ‘VIX’), and technical terms and company
+                                                                   looking, and company or date-specific queries.
+names that collide with ordinary words (‘short’,
+‘forward’, ‘spread’, ‘Apple’, ‘Stripe’). Is a CDO                      2
+                                                                         A Greenback bear is an investor who believes the US dol-
+                                                                   lar will decline in value. A fiscal hawk argues for a reduction
+    1
+        https://huggingface.co/BalyasnyAI/multilingual-e5-base     in government spending.
+
+                                                                 362
+ Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: Industry Track, pages 362–370
+                         November 12-16, 2024 ©2024 Association for Computational Linguistics
+2   Related Work                                                 3     Dataset
+
+Financial LLMs Much of the previous work in                      To finetune and evaluate BAM embeddings, we con-
+Financial NLP has focused on adapting large lan-                 struct a dataset of 15.2M query-passage pairs. Text
+guage models (LLMs) to finance. FinBERT (Yang                    passages are drawn from public and proprietary
+et al., 2020) was the first LLM to demonstrate the               documents (refer Section 3.1). For each passage,
+benefits of pretraining on company reports, broker               a matching query is generated using a few-shot
+research and earnings transcripts. When finetuned                prompted LLM (refer Section 3.2).
+for financial sentiment classification, FinBERT out-
+                                                                 3.1    Sampling Text Passages
+performed the standard BERT model pretrained on
+generic text (Devlin et al., 2019). FLANG (Shah                  Raw Documents Text passages are sourced from
+et al., 2022) demonstrated that the gains from pre-              2.8M documents published in the two-year period
+training on financial documents extended to other                ending 31 March 2024, comprising:
+downstream tasks, including news headline classi-                   • Equity Research: 1.7M broker reports
+fication, named entity recognition (NER), structure                 • Macro Research: 430K broker reports
+boundary detection, and question answering in the                   • Sales Commentary: 94K emails from broker
+finance domain. Compared to these 100M param-                         sales desks to buy-side clients
+eter models, the 50B parameter BloombergGPT                         • Company Transcripts: 102K public transcripts
+model (Wu et al., 2023) facilitated evaluation via                    from earnings calls and investor days
+few-shot prompting rather than finetuning, again                    • EDGAR Filings: 32K public Form 10-K and
+outperforming general-purpose LLMs. Continuing                        Form 10-Q company filings
+the trend towards chat-based approaches, PIXIU                      • Interview Transcripts: 102K interviews be-
+(Xie et al., 2023) developed a financial instruc-                     tween investors and industry experts
+tion dataset and benchmark generalizing 9 finan-                    • Notes and Previews: 377K proprietary notes
+cial NLP tasks, and used it to finetune LLaMA                         and earnings previews written by buy-side an-
+(Touvron et al., 2023).                                               alysts and portfolio managers
+
+Domain-Specific Text Embeddings Even with                        Parsing and Splitting Most documents are
+pretraining or finetuning for finance, LLMs re-                  stored in PDF format. We convert them to text
+quire up-to-date information, which is typically                 using an internal PDF-to-text conversion tool, then
+retrieved using text embeddings (Lewis et al.,                   split the text into passages. Our splitting strategy
+2020). Domain-specific embeddings have been                      recursively splits text based on a generic list of typ-
+well-studied in healthcare (Alsentzer et al., 2019;              ical paragraph separators (‘\n\n’, ‘\n’, etc), while
+Lee et al., 2019) and law (Chalkidis et al., 2020).              attempting to avoiding splitting questions and re-
+Surprisingly, no text embeddings specialized for                 lated answers (which are common in Company
+financial document retrieval have been reported                  Transcripts and Interview Transcripts, and clearly
+in the literature, perhaps in part due to a lack                 labelled). We choose a maximum passage length
+of public datasets and benchmarks on which to                    of 512 tokens (350–400 words). This typically pro-
+train and evaluate. Standard benchmarks such                     vides sufficient context to understand the text while
+as MTEB (Muennighoff et al., 2022) contain no                    shorter passages can be difficult to interpret. We
+company reports, broker research or earnings tran-               use regular expressions and heuristics to remove
+scripts3 , while finance-oriented benchmarks such                legal disclosures and most tables from the dataset
+as FinanceBench (Islam et al., 2023) and PIXIU                   (we focus on text passage retrieval and leave infor-
+(Xie et al., 2023) are designed to evaluate LLMs not             mation extraction from tables to future work).
+text embeddings. We address the lack of finance                  Document Context After splitting, text passages
+text embeddings by releasing BAM embeddings.                     are frequently missing crucial information such as
+Similar to Ma et al. (2021); Cho et al. (2022) and               the name and stock ticker of the company refer-
+others, our approach relies on synthetic query gen-              enced in the text, and the date. We augment each
+eration for training data.                                       text passage by prepending one line of document
+    3
+                                                                 context. The content of this context line differs
+      The most relevant MTEB datasets – FIQA 2018 (Maia
+et al., 2018) and Financial PhraseBank (Malo et al., 2014) –     by document type — for Company Transcripts it
+are based on financial news and blog posts.                      contains the company name, ticker, and the event
+                                                               363
+ cotton corn production cost trends                                                        Document Type                  Query-Passage Pairs
+ wet wipes new products
+ sector rotation this week                                                                 Equity Research                            4,512K
+ Reliance CapEx                                                                            Macro Research                               954K
+ artificial intelligence at medtronicas                                                    Sales Commentary                             596K
+ How has brexit affected supply chain operations and companies?
+                                                                                           Company Transcripts                        2,603K
+ Chinese real estate new residential sales                                                 EDGAR Filings                              2,640K
+ beazley price                                                                             Interview Transcripts                      2,408K
+ What is going on with pulpwood costs?                                                     Notes & Previews                           1,447K
+ How is Teck Resources generating shareholder value through structured separation?         Total                                    15,159K
+
+Table 1: Examples of the human-written queries used to                                      Table 2: Dataset composition by document type.
+seed synthetic queries via few-shot prompting.
+
+                                                                                       lenge, but found this refinement was less effective
+(e.g., ‘FY23 earnings call’); for Interview Tran-                                      than simply generating more queries.
+scripts it contains the interviewee’s name and job
+title and the title of the interview. We use the same                                  Filtering Passages for which the LLM failed to
+approach when finetuning the embeddings and in                                         generate a valid query are identified by the pres-
+deployment.                                                                            ence of the special ‘SKIP’ token provided in the
+                                                                                       prompt, or by responses that begin with identified
+3.2 Query Generation                                                                   phrases that indicate failure such as ‘no query’, ‘no
+Rather than finetuning on user-generated queries,                                      question’ or ‘understood’. These are removed from
+we choose to synthetically generate all queries in                                     the dataset, along with all duplicate queries, which
+the dataset. Synthetic generation is highly scalable,                                  arise when multiple text passages generate the same
+eliminates privacy concerns, ensures complete cov-                                     query, e.g., ‘Apple 2024 EPS’. As illustrated in Ta-
+erage of all text passages in the corpus, and enables                                  ble 2, after filtering (including filtering performed
+finetuning and evaluating on queries that are longer                                   during hard negative mining, refer Section 4) the
+and more complex than user queries.                                                    final dataset consists of 15.2M query-passage pairs,
+                                                                                       which are separated into train-val-test splits con-
+Few-Shot Examples To seed our query genera-                                            taining 14.3M, 444K, and 447K examples, respec-
+tion strategy, we randomly sample text passages                                        tively. All passages from the same document are
+and ask a group of quantitative researchers, en-                                       assigned to the same split. This avoids contaminat-
+gineers and product managers to write a query                                          ing the val or test splits if documents are repetitive.
+for each passage. Annotators are instructed that
+the passage should be a top result for that query                                      Query Realism We do not aim to replicate the
+in a world-class document retrieval system (refer                                      query distribution from our legacy document re-
+Appendix). Using this approach, we collect 231                                         trieval system, which are typically short, simple
+passage-query pairs to use for few-shot prompting                                      keyword queries. These are shaped by user interac-
+(see Table 1 for randomly selected examples).                                          tions with a weaker BM25-based system. Instead,
+                                                                                       we aim to support longer, more complex queries,
+LLM Query Generation We prompt an LLM to
+                                                                                       which we now encourage (refer Section 5.3).
+generate a single matching query for every text pas-
+sage in the corpus, or output ‘SKIP’ if a query can’t                                  4      BAM Embeddings
+be generated. To encourage quality and diversity,
+two passages with human-written queries are ran-                                       Baseline Model We finetune the Multilingual-E5
+domly selected and included as few-shot examples                                       model (Wang et al., 2024b), which is pretrained on
+(refer to the Appendix for the complete prompt).                                       1B multilingual text pairs and pre-finetuned on a
+Trading off computational cost and query quality,                                      combination of general-purpose labeled datasets.
+we use the Mistral 7B Instruct model (Jiang et al.,                                    Multilingual-E5 embeddings are based on the
+2023) for query generation. Even using vLLM                                            XLM-RoBERTa architecture (Conneau et al., 2019)
+(Kwon et al., 2023) for high throughput, several                                       which has three sizes: small (118M model params,
+weeks of A100 gpu time are required to generate                                        384-dim embeddings), base (278M model params,
+queries for the entire dataset. In initial experiments                                 768-dim embeddings), and large (560M model
+we also used a second LLM call to paraphrase the                                       params, 1024-dim embeddings). We finetune small
+generated queries for increased diversity and chal-                                    and base models; in preliminary experiments we
+                                                                                     364
+Figure 1: Passage retrieval results: Recall@1 on a held-out test split of 447K query-passage pairs. BAM embeddings
+finetuned for financial document retrieval significantly outperform general-purpose embeddings.
+
+
+found that the large model performed no better than             Hard Negative Mining Hard negative mining
+the base model so we discontinued finetuning.                   improves the quality of learned embeddings by
+   We select Multilingual-E5 because the model                  introducing negative examples that are more chal-
+achieved competitive baseline retrieval perfor-                 lenging to detect than randomly-sampled negatives
+mance on our dataset, and because the embedding                 (Gao et al., 2021; Karpukhin et al., 2020). For each
+is mean-pooled4 . This enables us to calculate a con-           query, we identify 3 hard negative passages using
+textualized embedding for any sentence within a                 an early version of our model finetuned with 37%
+passage by simply mean-pooling over the relevant                of the full dataset and no hard negatives. Specif-
+subset of tokens. In our application, we exploit this           ically, we embed all 15.2M queries and passages
+affordance to highlight the sentences in a document             in the dataset, retrieve the top 1K passages for
+that are most relevant to a user’s query, based on              each query, and label the passages ranked 200–202
+the similarity between each sentence and the query.             places lower than the positive passage as hard neg-
+Embedding models based on the output of the CLS                 atives. This hyperparameter was set after testing
+token, such as BGE (Xiao et al., 2023), do not offer            several different options in initial experiments. If
+this capability.                                                the positive passage is not in the retrieved passages,
+                                                                the query-passage pair is removed from the dataset,
+Finetuning We use the standard InfoNCE con-                     as manual inspection indicates that these are typi-
+trastive loss (van den Oord et al., 2019) that re-              cally low-quality pairs.
+quires the model to identify the positive passage
+for each query from a set of negative passages. Neg-            5     Results and Analysis
+ative passages are comprised of in-batch negatives              5.1    Retrieval
+(the other passages in the same minibatch) plus 3
+hard negatives per query (see below).                           We evaluate the retrieval performance of BAM em-
+   We finetune for 3 epochs using a batchsize of                beddings using the held-out test set of 447K query-
+512 and initial learning rate {3, 2, 1} × 10−5 for              passage pairs. We benchmark against 12 other mod-
+the {small, base, large} models. Following Wang                 els, including the E5 (Wang et al., 2024a) and BGE
+et al. (2024a), during finetuning, evaluation and               (Xiao et al., 2023) families of models, and text em-
+in deployment, we add the prefixes ‘query: ’ and                beddings from OpenAI. Since each query has only
+‘passage: ’ to queries and passages respectively,               a single correct passage, we report Recall@K with
+allowing the model to better represent short queries            K = 1, 10, 50 rather than NDCG. Since the users
+and long passages in the same embedding space.                  of our system (both human and LLM agent) have
+                                                                limited attention, we focus on Recall@1 although
+   4
+    Mean-pooling is applied to the output of the final trans-   the same trends hold across other values of K.
+former layer across all tokens in the query or passage.            As illustrated in Figure 1, finetuning the 768-dim
+                                                            365
+                                                               Passage Retrieval        Document Retrieval
+ Embedding                                      Dim          R@1      R@10    R@50     R@1    R@10    R@50
+ text-embedding-3-small                         1536         34.1      68.3   84.4     61.1   85.0     90.1
+ text-embedding-ada-002                         1536         38.4      71.6   85.7     64.3   86.2     91.3
+ text-embedding-3-large                         3072         39.2      73.7   87.8     64.9   87.4     91.8
+ multilingual-e5-small                           384         33.6      67.1   82.1     61.2   84.2     89.7
+ multilingual-e5-base                            768         34.3      68.2   83.1     62.6   85.6     91.1
+ BAM-embedding-small                             384         60.6      89.6   96.6     81.4   95.5     97.9
+ BAM-embedding-base                              768         62.8      91.0   97.3     83.0   96.3     98.4
+ ...1 hard negative, full training data          768         61.8      90.4   97.3     82.2   96.1     98.4
+ ...No hard negatives, full training data        768         57.5      88.8   97.2     79.5   95.8     98.5
+ ...No hard negatives, 37% training data         768         53.0      86.1   96.1     76.4   94.6     97.9
+
+Table 3: Base-sized BAM embeddings outperform the much larger OpenAI embeddings (top panel) and the baseline
+model (middle panel) on all recall metrics. Ablation studies (bottom 3 rows) highlight the importance of hard
+negative mining and scaling the finetuning data.
+
+
+Multilingual-E5 base model improves Recall@1             on individual companies and particular quarters
+from 34.3% to 62.8% – surpassing an array of             or fiscal years), forward-looking (referencing fu-
+open-source and close-source models including            ture projects and growth), searching for specific
+OpenAI’s 3072-dim text-embedding-3-large model,          financial metrics (such as PE ratios or adjusted
+which achieves 39.2% Recall@1 (with a much               net income), and phrased as questions rather than
+larger embedding). We observe similar gains with         statements. Queries about general financial and
+the small model, which achieves 60.6% Recall@1.          economic concepts, such as ‘capital issuance’, im-
+                                                         proved the least.
+Ablation Studies In Table 3 we report Recall@K
+for both passage retrieval and document retrieval        5.2        Results on FinanceBench
+(i.e., retrieving any passage from the document
+containing the correct passage). We compare to           Given the lack of public benchmarks for finan-
+OpenAI embeddings (top panel) and the baseline           cial document retrieval, in this section we report
+models (middle panel). We find that base-sized           results on FinanceBench (Islam et al., 2023), a
+BAM embeddings perform best on every metric,             benchmark for financial question answering. We
+and hard negative mining and data scale are crucial      co-opt FinanceBench’s retrieval-augmented gener-
+to achieving this performance.                           ation (RAG) setting to assess how retrieval with
+                                                         different text embeddings affects answer accuracy.
+   Without hard negative mining, passage Re-
+call@1 for the base-sized model drops from 62.8%            We focus on the Shared Vector Store setting, in
+to 57.5%, although 1 hard negative is sufficient to      which text passages from a collection of 368 10-
+capture most of the benefits (61.8% vs. 62.8% with       K and 10-Q reports are stored in a single vector
+3 hard negatives). Reducing the amount of training       database, which is queried by an LLM to answer
+data to 37% of the full dataset (representing only       150 questions derived from those documents. Islam
+one year of data, and 4 document types instead of        et al. (2023) report that GPT-4 correctly answers
+7) further reduces Recall@1 from 57.5% to 53.0%,         only 19% of questions using OpenAI ada-002 text
+demonstrating the value of scaling the dataset over      embeddings. However, the original RAG pipeline
+a large document corpus.                                 has several weaknesses. We improve it by:
+                                                           1. Using an LLM to rewrite the question before
+Qualitative Analysis In Table 4 we provide an                  querying the vector store. This eliminates
+example of how query similarity changes before                 distracting text containing formatting instruc-
+and after finetuning. For more general insights, we            tions
+randomly select 100 queries with a large improve-          2. Prepending the filename of the parent docu-
+ment in recall under the finetuned model, and 100              ment to the beginning of each text passage,
+queries with no improvement, and ask ChatGPT to                which preserves document context including
+identify qualitative differences between the queries.          the company name and the filing date
+   According to ChatGPT, the queries that im-              3. Prompting the LLM to generate concise an-
+proved the most are company-specific (focused                  swers (which are more in keeping with the
+                                                       366
+ Query: ASMI’s price-to-earnings ratio
+ Nearest Neighbors Before Finetuning:                      Nearest Neighbors After Finetuning:
+ 1. ASMI - earnings report analysis                        1. ASMI - earnings report analysis
+ 2. ASMedia’s share price                                  2. ASMI outlook
+ 3. ASMI revenue goals                                     3. What is the current market outlook for ASMI?
+ 4. Alcoa’s price to earnings ratio                        4. What is the rating and PE ratio of ASMI?
+ 5. Aviva’s cost-to-income ratio                           5. What is ASMI’s revenue growth forecast for 2024?
+ 6. Axis Bank’s cost-to-income ratio                       6. Interesting read on ASMI stock.
+
+Table 4: Nearest neighbor queries before and after finetuning Multilingual-E5. Before finetuning, embeddings
+capture too much lexical similarity, e.g. ASMI is similar to ASMedia; price-to-earnings is similar to cost-to-income.
+After finetuning, embeddings are more sensitive to tickers and stock names.
+
+
+
+
+Figure 2: FinanceBench results under the Shared Vector
+Store setting. Replacing OpenAI ada-002 embeddings
+with BAM embeddings increases accuracy by 8%.
+
+
+     gold answers and easier to evaluate)                   Figure 3: Comparison of vector search using BAM
+  4. Replacing GPT-4 with GPT-4o                            embeddings with lexical search (BM25). Vector search
+                                                            is superior to lexical search, and improves on longer and
+Based on human evaluation, our improved RAG
+                                                            more detailed queries (while lexical search degrades).
+pipeline achieves 47% accuracy vs. 19% reported
+by Islam et al. (2023). As illustrated in Figure 2,
+replacing the 1536-dim ada-002 embeddings with              Weight Averaging Before deploying BAM em-
+768-dim BAM embeddings improves accuracy fur-               beddings, we average the parameters of 5 fine-
+ther to 55% – even though most FinanceBench                 tuned checkpoints (trained for between 2.5 and
+questions are table-based, and BAM embeddings               3 epochs) with the baseline model, with a 50%
+were optimized for text passage retrieval. The re-          weighting on the baseline model and 10% weight-
+maining errors are mostly attributable to the LLM           ing on each checkpoint. We are motivated by
+(extracting numbers from tables and calculating             (Wortsman et al., 2022b,a) who show that averag-
+derived metrics such as operating margin).                  ing the weights of zero-shot and finetuned models
+                                                            improves accuracy and robustness to out of distri-
+5.3 Real-world Deployment                                   bution queries. Robustness is an important consid-
+Application We have deployed BAM embed-                     eration because we expect the distribution of user
+dings in a RAG service that indexes 5.7M finan-             queries to drift over time (and may not perfectly
+cial documents (1.3TB of raw data), providing a             match our generated queries to start with). Weight
+backend API for 3 different frontend applications           averaging sacrifices 1.1% Recall@1 on our dataset,
+(two market intelligence and search platforms and           but improves NDCG@10 on a representative out-
+a chatbot). We use OpenSearch because it supports           of-domain dataset (FiQA 2018) by 2.2% compared
+approximate nearest neighbor vector search in con-          to the final checkpoint.
+junction with traditional filtering operations. Filters
+are used to restrict search results based on docu-          Comparison to Lexical Search Our production
+ment date ranges, company tickers, and tags such            document retrieval service provides an ideal op-
+as document type, event name, data vendor, etc.             portunity to benchmark the performance of vec-
+In addition to OpenSearch, we maintain a NoSQL              tor search (using BAM embeddings) against tradi-
+database to store document fields and metadata that         tional lexical search (using OpenSearch’s Okapi
+would add excessive overhead to OpenSearch.                 BM25 implementation). To quantify the impact of
+                                                         367
+query length, we benchmark queries containing 2–        References
+6 words, in each case using 1K randomly-selected        Emily Alsentzer, John Murphy, William Boag, Wei-
+company transcript queries from our test split. Date      Hung Weng, Di Jindi, Tristan Naumann, and
+ranges are restricted to a one year period that con-      Matthew McDermott. 2019. Publicly available clin-
+tains the positive passage. We evaluate both with         ical BERT embeddings. In Proceedings of the 2nd
+                                                          Clinical Natural Language Processing Workshop,
+and without filtering on the correct stock ticker.        pages 72–78, Minneapolis, Minnesota, USA. Associ-
+   As illustrated in Figure 3, vector search outper-      ation for Computational Linguistics.
+forms lexical search in both settings, regardless
+                                                        Ilias Chalkidis, Manos Fergadiotis, Prodromos Malaka-
+of query length. While two-word queries are of-
+                                                           siotis, Nikolaos Aletras, and Ion Androutsopoulos.
+ten ambiguous, vector search recall improves as            2020. LEGAL-BERT: The muppets straight out of
+queries become longer and more specific. In con-           law school. In Findings of the Association for Com-
+trast, lexical search degrades on longer queries.          putational Linguistics: EMNLP 2020, pages 2898–
+This is consistent with our observation that users         2904, Online. Association for Computational Lin-
+                                                           guistics.
+conditioned to using lexical search tools often limit
+their queries to 2 or 3 words. To encourage users to    Sukmin Cho, Soyeong Jeong, Wonsuk Yang, and Jong
+write longer queries, in our frontend application we      Park. 2022. Query generation with external knowl-
+                                                          edge for dense retrieval. In Proceedings of Deep
+implement query completion/autocomplete using             Learning Inside Out (DeeLIO 2022): The 3rd Work-
+high-quality examples from our dataset.                   shop on Knowledge Extraction and Integration for
+                                                          Deep Learning Architectures, pages 22–32, Dublin,
+6   Conclusion                                            Ireland and Online. Association for Computational
+                                                          Linguistics.
+We release text embeddings specialized for finance,
+trained on a dataset of 14.3M synthetic queries         Alexis Conneau, Kartikay Khandelwal, Naman Goyal,
+                                                          Vishrav Chaudhary, Guillaume Wenzek, Francisco
+constructed from public and proprietary financial         Guzmán, Edouard Grave, Myle Ott, Luke Zettle-
+documents. On a held-out test set, BAM embed-             moyer, and Veselin Stoyanov. 2019. Unsuper-
+dings achieve 62.8% Recall@1 vs. 39.2% for the            vised cross-lingual representation learning at scale.
+best general-purpose text embeddings. On the Fi-          Preprint, arXiv:1911.02116.
+nanceBench benchmark, replacing general-purpose         Jacob Devlin, Ming-Wei Chang, Kenton Lee, and
+embeddings with ours improves question answer-             Kristina Toutanova. 2019. Bert: Pre-training of deep
+ing accuracy by 8%, demonstrating our dataset              bidirectional transformers for language understand-
+and model’s ability to generalize to out-of-domain         ing. Preprint, arXiv:1810.04805.
+settings. Finally, we show that in a production         Tianyu Gao, Xingcheng Yao, and Danqi Chen. 2021.
+document retrieval service, BAM embeddings out-           SimCSE: Simple contrastive learning of sentence em-
+perform BM25 over all query lengths, and (unlike          beddings. In Proceedings of the 2021 Conference
+                                                          on Empirical Methods in Natural Language Process-
+BM25) retrieval improves on longer and more de-           ing, pages 6894–6910, Online and Punta Cana, Do-
+tailed queries.                                           minican Republic. Association for Computational
+                                                          Linguistics.
+                                                        Pranab Islam, Anand Kannappan, Douwe Kiela, Re-
+                                                          becca Qian, Nino Scherrer, and Bertie Vidgen. 2023.
+                                                          FinanceBench: A new benchmark for financial ques-
+                                                          tion answering. Preprint, arXiv:2311.11944.
+                                                        Albert Q. Jiang, Alexandre Sablayrolles, Arthur Men-
+                                                          sch, Chris Bamford, Devendra Singh Chaplot, Diego
+                                                          de las Casas, Florian Bressand, Gianna Lengyel, Guil-
+                                                          laume Lample, Lucile Saulnier, Lélio Renard Lavaud,
+                                                          Marie-Anne Lachaux, Pierre Stock, Teven Le Scao,
+                                                          Thibaut Lavril, Thomas Wang, Timothée Lacroix,
+                                                          and William El Sayed. 2023. Mistral 7b. Preprint,
+                                                          arXiv:2310.06825.
+                                                        Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick
+                                                          Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, and
+                                                          Wen-tau Yih. 2020. Dense passage retrieval for open-
+                                                          domain question answering. In Proceedings of the
+                                                          2020 Conference on Empirical Methods in Natural
+                                                    368
+  Language Processing (EMNLP), pages 6769–6781,            Aaron van den Oord, Yazhe Li, and Oriol Vinyals. 2019.
+  Online. Association for Computational Linguistics.         Representation learning with contrastive predictive
+                                                             coding. Preprint, arXiv:1807.03748.
+Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying
+ Sheng, Lianmin Zheng, Cody Hao Yu, Joseph E.              Liang Wang, Nan Yang, Xiaolong Huang, Binx-
+ Gonzalez, Hao Zhang, and Ion Stoica. 2023. Effi-            ing Jiao, Linjun Yang, Daxin Jiang, Rangan Ma-
+ cient memory management for large language model            jumder, and Furu Wei. 2024a. Text embeddings by
+ serving with pagedattention. In Proceedings of the          weakly-supervised contrastive pre-training. Preprint,
+ ACM SIGOPS 29th Symposium on Operating Systems              arXiv:2212.03533.
+ Principles.
+                                                           Liang Wang, Nan Yang, Xiaolong Huang, Linjun Yang,
+Jinhyuk Lee, Wonjin Yoon, Sungdong Kim, Donghyeon            Rangan Majumder, and Furu Wei. 2024b. Mul-
+   Kim, Sunkyu Kim, Chan Ho So, and Jaewoo Kang.             tilingual e5 text embeddings: A technical report.
+   2019. BioBERT: a pre-trained biomedical language          Preprint, arXiv:2402.05672.
+   representation model for biomedical text mining.
+   Bioinformatics, 36(4):1234–1240.                        Mitchell Wortsman, Gabriel Ilharco, Samir Ya Gadre,
+                                                             Rebecca Roelofs, Raphael Gontijo-Lopes, Ari S Mor-
+Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio         cos, Hongseok Namkoong, Ali Farhadi, Yair Car-
+  Petroni, Vladimir Karpukhin, Naman Goyal, Hein-            mon, Simon Kornblith, and Ludwig Schmidt. 2022a.
+  rich Küttler, Mike Lewis, Wen-tau Yih, Tim Rock-           Model soups: averaging weights of multiple fine-
+  täschel, et al. 2020. Retrieval-augmented generation       tuned models improves accuracy without increasing
+  for knowledge-intensive nlp tasks. NeurIPS.                inference time. In Proceedings of the 39th Interna-
+                                                             tional Conference on Machine Learning, volume 162
+Ji Ma, Ivan Korotkov, Yinfei Yang, Keith Hall, and Ryan      of Proceedings of Machine Learning Research, pages
+   McDonald. 2021. Zero-shot neural passage retrieval        23965–23998. PMLR.
+   via domain-targeted synthetic question generation.
+   In Proceedings of the 16th Conference of the Euro-      Mitchell Wortsman, Gabriel Ilharco, Jong Wook Kim,
+   pean Chapter of the Association for Computational         Mike Li, Simon Kornblith, Rebecca Roelofs, Raphael
+   Linguistics: Main Volume, pages 1075–1088, Online.        Gontijo-Lopes, Hannaneh Hajishirzi, Ali Farhadi,
+   Association for Computational Linguistics.                Hongseok Namkoong, and Ludwig Schmidt. 2022b.
+                                                             Robust fine-tuning of zero-shot models. Preprint,
+Macedo Maia, Siegfried Handschuh, André Freitas,             arXiv:2109.01903.
+ Brian Davis, Ross McDermott, Manel Zarrouk, and
+ Alexandra Balahur. 2018. Www’18 open challenge:           Shijie Wu, Ozan Irsoy, Steven Lu, Vadim Dabravolski,
+ Financial opinion mining and question answering.            Mark Dredze, Sebastian Gehrmann, Prabhanjan Kam-
+ Companion Proceedings of the The Web Conference             badur, David Rosenberg, and Gideon Mann. 2023.
+ 2018.                                                       Bloomberggpt: A large language model for finance.
+                                                             Preprint, arXiv:2303.17564.
+P. Malo, A. Sinha, P. Korhonen, J. Wallenius, and
+   P. Takala. 2014. Good debt or bad debt: Detecting se-   Shitao Xiao, Zheng Liu, Peitian Zhang, and Niklas
+   mantic orientations in economic texts. Journal of the     Muennighoff. 2023. C-pack: Packaged resources
+   Association for Information Science and Technology,       to advance general chinese embedding. Preprint,
+   65.                                                       arXiv:2309.07597.
+Niklas Muennighoff, Nouamane Tazi, Loïc Magne, and         Qianqian Xie, Weiguang Han, Xiao Zhang, Yanzhao
+  Nils Reimers. 2022. Mteb: Massive text embed-              Lai, Min Peng, Alejandro Lopez-Lira, and Jimin
+  ding benchmark. arXiv preprint arXiv:2210.07316,           Huang. 2023. PIXIU: A large language model, in-
+  arXiv:2210.07316.                                          struction data and evaluation benchmark for finance.
+                                                             Preprint, arXiv:2306.05443.
+Raj Shah, Kunal Chawla, Dheeraj Eidnani, Agam Shah,
+  Wendi Du, Sudheer Chava, Natraj Raman, Charese           Yi Yang, Mark Christopher Siy UY, and Allen
+  Smiley, Jiaao Chen, and Diyi Yang. 2022. When              Huang. 2020. Finbert: A pretrained language
+  FLUE meets FLANG: Benchmarks and large pre-                model for financial communications. Preprint,
+  trained language model for financial domain. In Pro-       arXiv:2006.08097.
+  ceedings of the 2022 Conference on Empirical Meth-
+  ods in Natural Language Processing, pages 2322–
+  2335, Abu Dhabi, United Arab Emirates. Association
+  for Computational Linguistics.
+Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier
+  Martinet, Marie-Anne Lachaux, Timothée Lacroix,
+  Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal
+  Azhar, Aurelien Rodriguez, Armand Joulin, Edouard
+  Grave, and Guillaume Lample. 2023. Llama: Open
+  and efficient foundation language models. Preprint,
+  arXiv:2302.13971.
+                                                        369
+A    Appendix                                                 that is relevant to the query.
+                                                           4. You will be penalized if your query contains
+A.1 Instructions to Query Annotators
+                                                              too many words and phrases copied directly
+Your task is to read a text chunk and then write a            from the text snippet. Use paraphrasing, syn-
+query, such that the text chunk should be a top hit           onyms, summarization, and your knowledge
+in a world-class retrieval system. Tips for writing           of appropriate abbreviations, acronyms and
+queries:                                                      specialized terminology to construct queries.
+  1. The query should be closely related to some              For example, if the text snippet contains the
+     part of the text (but not necessarily the entire         phrase "earnings per share", the query could
+     passage).                                                instead include the acronym "EPS". If the
+  2. Queries can be from 1 to 15 words.                       text snippet mentions "earnings guidance for
+  3. Queries can be a list of keywords, a full sen-           2020-2024", the query could be for "long-term
+     tence, a question - whatever an analyst might            profit outlook".
+     search. Anything goes as long as the text             5. Do not include 10k or 10q references in your
+     chunk would be a very good search result for             queries.
+     that query.                                         Formatting Instructions:
+  4. Diversity is important, don’t make your               1. Always reply with the query only, on a single
+     queries all the same.                                    line. Do not provide any additional context,
+  5. Broad queries about entire industries, sectors,          note, or explanation of any kind. Do not put
+     regions, or macro trends are fine, as long as            the query in quotation marks (",’). Do not
+     the text snippet contains specific information           include html tags in the query.
+     that is highly relevant to the query.                 2. Queries can contain a maximum of 10 words.
+  6. The query can mention a stock name or ticker.         3. If the text snippet is very short, difficult to
+     It doesn’t have to.                                      understand, not written in English, or if it
+  7. Don’t copy too many words and phrases                    contains only boilerplate investment risk dis-
+     directly from the text passage. Use para-                closures or disclaimers, you must begin your
+     phrasing, synonyms, summarization, and                   response with the special output "SKIP".
+     your knowledge of appropriate abbreviations,        Text Snippet: <EXAMPLE_PASSAGE_1>
+     acronyms and specialized terminology to con-        Query: <EXAMPLE_QUERY_1>
+     struct queries. E.g., if the text mentions ’SBC’,   Text Snippet: <EXAMPLE_PASSAGE_2>
+     the query might mention ‘stock based comp’.         Query: <EXAMPLE_QUERY_2>
+                                                         Text Snippet: <SAMPLED_PASSAGE>
+A.2 LLM Prompt for Query Generation                      Query:
+You are a highly trained investment analyst, and an
+expert in business and financial markets. You are
+helping construct a dataset to train a world class
+financial search engine. You will be given a text
+snippet from <DOCUMENT_TYPE>. Your task is
+to generate a query derived from the provided text
+snippet.
+Detailed Instructions:
+  1. The query should be a question, or a set of
+     keywords or phrases, such that the text snippet
+     should be returned as a top search result for
+     that query.
+  2. A good query is closely related to at least
+     some, but not necessarily all, of the content
+     in the text snippet. Do not create queries con-
+     taining many unrelated concepts.
+  3. Broad queries about entire industries, sectors,
+     regions, or macro trends are okay, as long as
+     the text snippet contains specific information
+                                                     370
+

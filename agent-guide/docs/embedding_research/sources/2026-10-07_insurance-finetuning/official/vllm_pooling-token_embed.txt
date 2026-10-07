@@ -1,0 +1,1179 @@
+Token Embedding Usages - vLLM
+
+Skip to content
+
+You are viewing the latest developer preview docs. Click here to view docs for the latest stable release.
+
+vLLM
+
+Token Embedding Usages
+
+Initializing search
+
+GitHub
+
+Home
+
+User Guide
+
+Developer Guide
+
+Benchmarking
+
+API Reference
+
+CLI Reference
+
+Community
+
+vLLM
+
+GitHub
+
+Home
+
+User Guide
+
+User Guide
+
+Getting Started
+
+Getting Started
+
+Quickstart
+
+Installation
+
+Installation
+
+GPU
+
+CPU
+
+TPU
+
+Examples
+
+Examples
+
+Applications
+
+Applications
+
+API Server
+
+Chatbot
+
+Rag
+
+Basic
+
+Basic
+
+Offline Inference
+
+Online Serving
+
+Deployment
+
+Deployment
+
+Async LLM Streaming
+
+Helm Charts
+
+LLM Engine Example
+
+Sagemaker-Entrypoint
+
+Disaggregated
+
+Disaggregated
+
+Disaggregated Encoder
+
+Disaggregated Serving
+
+Ec Both Encoder
+
+Disaggregated Prefill V1
+
+Flexkv Connector
+
+KV Load Failure Recovery Test
+
+LMCache Examples
+
+Mooncake Connector
+
+Features
+
+Features
+
+Automatic Prefix Caching
+
+Batch Invariance
+
+Context Extension
+
+Data Parallel
+
+Kv Events
+
+Logging Configuration
+
+Custom Logits Processors
+
+LoRA
+
+Offline Inference with the OpenAI Batch file format
+
+Pause Resume
+
+Profiling
+
+Prompt Embed
+
+Reset Kv
+
+Sharded State
+
+Speculative Decoding
+
+Structured reads on DiffusionGemma
+
+Structured Outputs
+
+Tensorize vLLM Model
+
+Torchrun
+
+Generate
+
+Generate
+
+Batched Chat Completions Online
+
+Multimodal
+
+Qwen 1M Offline
+
+Trace Replay Offline
+
+Observability
+
+Observability
+
+Monitoring Dashboards
+
+Metrics
+
+Setup OpenTelemetry POC
+
+Prometheus and Grafana
+
+Pooling
+
+Pooling
+
+Classify
+
+Embed
+
+Plugin
+
+Reward
+
+Score
+
+Token Classify
+
+Token Embed
+
+Ray Serving
+
+Ray Serving
+
+Batch LLM Inference
+
+Elastic Ep
+
+Multi-Node-Serving
+
+Ray Serve Deepseek
+
+Run Cluster
+
+Reasoning
+
+Reasoning
+
+OpenAI Chat Completion Tool Calls With Reasoning
+
+OpenAI Chat Completion With Reasoning
+
+OpenAI Chat Completion With Reasoning Streaming
+
+OpenAI Responses Client
+
+RL
+
+RL
+
+Rdt vLLM Serve
+
+Rdt Weight Source
+
+RLHF Async New APIs
+
+RLHF Http IPC
+
+RLHF Http NCCL
+
+RLHF IPC Fsdp Ep
+
+RLHF M2N
+
+RLHF NCCL Fsdp Ep
+
+RLHF Sharded Rdt Small Ep
+
+RLHF Sparse NCCL
+
+Routed Experts E2E
+
+Skip Loading Weights In Engine Init
+
+Scale Out
+
+Scale Out
+
+Init
+
+Example Mm Serve
+
+Token Generation Client
+
+Speech To Text
+
+Speech To Text
+
+OpenAI
+
+Realtime
+
+Tool Calling
+
+Tool Calling
+
+Chat With Tools Offline
+
+OpenAI Chat Completion Client With Tools
+
+OpenAI Chat Completion Client With Tools Required
+
+OpenAI Chat Completion Client With Tools Xlam
+
+OpenAI Chat Completion Client With Tools Xlam Streaming
+
+OpenAI Responses Client With Mcp Tools
+
+OpenAI Responses Client With Tools
+
+General
+
+General
+
+vLLM V1
+
+Frequently Asked Questions
+
+Production Metrics
+
+Reproducibility
+
+Security
+
+Troubleshooting
+
+Usage Stats Collection
+
+Inference and Serving
+
+Inference and Serving
+
+Offline Inference
+
+Online Serving
+
+Online Serving
+
+Derenderer APIs
+
+Generative Scoring
+
+OpenAI-Compatible Server
+
+Renderer APIs
+
+Speech to Text APIs
+
+Tokens In <> Tokens Out API
+
+Trace Replay
+
+Context Parallel Deployment
+
+Data Parallel Deployment
+
+Troubleshooting distributed deployments
+
+Expert Parallel Deployment
+
+Parallelism and Scaling
+
+Integrations
+
+Integrations
+
+Claude Code
+
+Codex
+
+LangChain
+
+LlamaIndex
+
+Deployment
+
+Deployment
+
+Using Docker
+
+Using Kubernetes
+
+Using Nginx
+
+Frameworks
+
+Frameworks
+
+Anyscale
+
+AnythingLLM
+
+AutoGen
+
+BentoML
+
+Cerebrium
+
+Chatbox
+
+Crusoe
+
+Dify
+
+dstack
+
+Haystack
+
+Helm
+
+Hugging Face Inference Endpoints
+
+LiteLLM
+
+Lobe Chat
+
+LWS
+
+Modal
+
+Nebius Serverless AI
+
+Open WebUI
+
+Retrieval-Augmented Generation
+
+RunPod
+
+SkyPilot
+
+Streamlit
+
+NVIDIA Triton
+
+Integrations
+
+Integrations
+
+AIBrix
+
+NVIDIA Dynamo
+
+KAITO
+
+KServe
+
+Kthena
+
+KubeAI
+
+KubeRay
+
+Llama Stack
+
+llm-d
+
+llmaz
+
+Production stack
+
+Training
+
+Training
+
+Async Reinforcement Learning
+
+What is Layerwise (Re)loading?
+
+Prompt Token ID Logprobs (Teacher Scoring)
+
+Reinforcement Learning from Human Feedback
+
+Sampling Mask (Distribution Replay)
+
+Transformers Reinforcement Learning
+
+Weight Checker
+
+Weight Transfer
+
+Weight Transfer
+
+Base Classes and Custom Engines
+
+IPC Engine
+
+NCCL M2N Engine
+
+ModelExpress Engine
+
+NCCL Engine
+
+Sharded RDT Engine
+
+Configuration
+
+Configuration
+
+Conserving Memory
+
+Engine Arguments
+
+Environment Variables
+
+Model Resolution
+
+Optimization and Tuning
+
+Server Arguments
+
+TPU
+
+Models
+
+Models
+
+Supported Models
+
+Generative Models
+
+Pooling Models
+
+Pooling Models
+
+Classification Usages
+
+Embedding Usages
+
+Reward Usages
+
+Scoring Usages
+
+Specific Model Examples
+
+Token Classification Usages
+
+Token Embedding Usages
+
+Token Embedding Usages
+
+Table of contents
+
+Summary
+
+Typical Use Cases
+
+Multi-Vector Retrieval
+
+Late interaction
+
+Extract last hidden states
+
+Supported Models
+
+Text-only Models
+
+Multimodal Models
+
+Special models
+
+Offline Inference
+
+Pooling Parameters
+
+LLM.encode
+
+LLM.score
+
+Online Serving
+
+More examples
+
+Supported Features
+
+Extensions
+
+Extensions
+
+Loading model weights with fastsafetensors
+
+Loading Model Weights with InstantTensor
+
+Loading models with Run:ai Model Streamer
+
+Loading models with CoreWeave's Tensorizer
+
+Hardware Supported Models
+
+Hardware Supported Models
+
+CPU - Intel® Xeon®
+
+XPU - Intel® GPUs
+
+TPU
+
+Features
+
+Features
+
+Automatic Prefix Caching
+
+Batch Invariance
+
+Context Extension
+
+Cross-Encoder Output Reuse
+
+Custom Arguments
+
+Custom Logits Processors
+
+Disaggregated Encoder
+
+Disaggregated Prefilling (experimental)
+
+CPU EC Connector Usage Guide
+
+Engram: conditional memory via n-gram lookups
+
+IndexCache
+
+Initialized engine snapshots
+
+Interleaved Thinking
+
+KV Offloading Usage Guide
+
+LoRA Adapters
+
+MooncakeConnector Usage Guide
+
+ECMooncakeConnector Usage Guide
+
+MooncakeStoreConnector Usage Guide
+
+MoRIIOConnector Usage Guide
+
+Multimodal Inputs
+
+NixlConnector Compatibility Matrix
+
+NixlConnector Usage Guide
+
+Per-Request Metrics
+
+Preload
+
+Prompt Embedding Inputs
+
+Reasoning Outputs
+
+Sleep Mode
+
+Structured Outputs
+
+Tool Calling
+
+Text watermarking
+
+Quantization
+
+Quantization
+
+AutoAWQ
+
+b12x Linear and MoE Backends
+
+BitsAndBytes
+
+FP8 ViT Encoder Attention
+
+GGUF
+
+GPTQModel
+
+Intel Quantization Support
+
+NVIDIA Model Optimizer
+
+Online Quantization
+
+Quantized KV Cache
+
+AMD Quark
+
+TorchAO
+
+LLM Compressor
+
+LLM Compressor
+
+FP8 W8A8
+
+INT4 W4A16
+
+INT8 W4A8
+
+INT8 W8A8
+
+Speculative Decoding
+
+Speculative Decoding
+
+Per-Request Acceptance Metrics
+
+Adaptive Verification
+
+Draft Models
+
+Dynamic Speculative Decoding
+
+EAGLE Draft Models
+
+Hidden State Extraction
+
+LiLiCorr
+
+MLP Draft Models
+
+MTP (Multi-Token Prediction)
+
+N-Gram Speculation
+
+Parallel Draft Models
+
+vLLM-Project/Speculators
+
+Suffix Decoding
+
+Developer Guide
+
+Developer Guide
+
+General
+
+General
+
+Deprecation Policy
+
+Dockerfile
+
+Editing Agent Instructions
+
+Incremental Compilation Workflow
+
+JIT Kernel Warmup
+
+Labels
+
+Profiling vLLM
+
+Releasing vLLM
+
+Vulnerability Management
+
+Model Implementation
+
+Model Implementation
+
+Basic Model
+
+Registering a Model
+
+Unit Testing
+
+Multi-Modal Support
+
+Speech-to-Text (Transcription/Translation) Support
+
+CI
+
+CI
+
+CI Failures
+
+Nightly Builds of vLLM Wheels
+
+Update PyTorch version on vLLM OSS CI/CD
+
+Design Documents
+
+Design Documents
+
+Plugins
+
+Plugins
+
+Endpoint Plugins
+
+IO Processor Plugins
+
+LoRA Resolver Plugins
+
+Plugin System
+
+Architecture Overview
+
+Attention Backend Feature Support
+
+CUDA Graphs
+
+Vision Encoder (ViT) CUDA Graphs
+
+CustomOp
+
+Dual Batch Overlap
+
+How to debug the vLLM-torch.compile integration
+
+Fused MoE Modular Kernel
+
+Fusion torch.compile passes
+
+HiSparse local KV offload architecture
+
+Integration with Hugging Face
+
+Hybrid KV Cache Manager
+
+Logits Processors
+
+Metrics
+
+Multi-Modal Data Processing
+
+Model Runner V2 Design Document
+
+Fused MoE Kernel Features
+
+Python Multiprocessing
+
+NIXL KV Cache Lease Renewal
+
+NIXL push-mode KV transfer
+
+Optimization Levels
+
+Paged Attention
+
+Automatic Prefix Caching
+
+torch.compile integration
+
+torch.compile with Multimodal Encoders
+
+vLLM IR: Functional Intermediate Representation
+
+Benchmarking
+
+Benchmarking
+
+Benchmark CLI
+
+Parameter Sweeps
+
+Performance Dashboard
+
+API Reference
+
+CLI Reference
+
+CLI Reference
+
+vllm
+
+vllm
+
+chat
+
+complete
+
+preload
+
+run-batch
+
+serve
+
+bench
+
+bench
+
+latency
+
+mm-processor
+
+serve
+
+startup
+
+throughput
+
+sweep
+
+sweep
+
+plot
+
+plot_pareto
+
+serve
+
+serve_workload
+
+startup
+
+launch
+
+launch
+
+render
+
+Community
+
+Community
+
+Contact Us
+
+Meetups
+
+Reviewers
+
+Sponsors
+
+Governance
+
+Governance
+
+Collaboration Policy
+
+Committers
+
+Governance Process
+
+Blog
+
+Forum
+
+Slack
+
+Table of contents
+
+Summary
+
+Typical Use Cases
+
+Multi-Vector Retrieval
+
+Late interaction
+
+Extract last hidden states
+
+Supported Models
+
+Text-only Models
+
+Multimodal Models
+
+Special models
+
+Offline Inference
+
+Pooling Parameters
+
+LLM.encode
+
+LLM.score
+
+Online Serving
+
+More examples
+
+Supported Features
+
+Home
+
+User Guide
+
+Models
+
+Pooling Models
+
+Token Embedding Usages¶
+
+Summary¶
+
+Model Usage: Token classification models
+
+Pooling Tasks: token_embed
+
+Offline APIs:
+LLM.encode(..., pooling_task="token_embed")
+
+Online APIs:
+Pooling API (/pooling)
+
+The difference between the (sequence) embedding task and the token embedding task is that (sequence) embedding outputs one embedding for each sequence, while token embedding outputs an embedding for each token.
+
+Many embedding models support both (sequence) embedding and token embedding. For further details on (sequence) embedding, please refer to this page.
+
+Note
+
+Pooling multitask support has been removed since v0.21. When the default pooling task (embed) is not
+what you want, you need to manually specify it via PoolerConfig(task="token_embed") offline or
+--pooler-config.task token_embed online.
+
+Typical Use Cases¶
+
+Multi-Vector Retrieval¶
+
+For implementation examples, see:
+
+Offline: examples/pooling/token_embed/multi_vector_retrieval_offline.py
+
+Online: examples/pooling/token_embed/multi_vector_retrieval_online.py
+
+Late interaction¶
+
+Similarity scores can be computed using late interaction between two input prompts via the score API. For more information, see Score API.
+
+Extract last hidden states¶
+
+Models of any architecture can be converted into embedding models using --convert embed. Token embedding can then be used to extract the last hidden states from these models.
+
+Supported Models¶
+
+Text-only Models¶
+
+Architecture |
+Models |
+Example HF Models |
+LoRA |
+PP |
+
+ColBERTLfm2Model |
+LFM2 |
+LiquidAI/LFM2-ColBERT-350M |
+|
+|
+
+ColBERTModernBertModel |
+ModernBERT |
+lightonai/GTE-ModernColBERT-v1 |
+|
+|
+
+ColBERTJinaRobertaModel |
+Jina XLM-RoBERTa |
+jinaai/jina-colbert-v2 |
+|
+|
+
+HF_ColBERT |
+BERT |
+answerdotai/answerai-colbert-small-v1, colbert-ir/colbertv2.0 |
+|
+|
+
+*ModelC, *ForCausalLMC, etc. |
+Generative models |
+N/A |
+* |
+* |
+
+Multimodal Models¶
+
+Note
+
+For more information about multimodal models inputs, see this page.
+
+Architecture |
+Models |
+Inputs |
+Example HF Models |
+LoRA |
+PP |
+
+ColModernVBertForRetrieval |
+ColModernVBERT |
+T / I |
+ModernVBERT/colmodernvbert-merged |
+|
+|
+
+ColPaliForRetrieval |
+ColPali |
+T / I |
+vidore/colpali-v1.3-hf |
+|
+|
+
+ColQwen3 |
+Qwen3-VL |
+T / I |
+TomoroAI/tomoro-colqwen3-embed-4b, TomoroAI/tomoro-colqwen3-embed-8b |
+|
+|
+
+ColQwen3_5 |
+ColQwen3.5 |
+T + I + V |
+athrael-soju/colqwen3.5-4.5B-v3, vultr/VultronRetrieverPrime-Qwen3.5-8B |
+|
+|
+
+OpsColQwen3Model |
+Qwen3-VL |
+T / I |
+OpenSearch-AI/Ops-Colqwen3-4B, OpenSearch-AI/Ops-Colqwen3-8B |
+|
+|
+
+Qwen3VLNemotronEmbedModel |
+Qwen3-VL |
+T / I |
+nvidia/nemotron-colembed-vl-4b-v2, nvidia/nemotron-colembed-vl-8b-v2 |
+✅︎ |
+✅︎ |
+
+*ForConditionalGenerationC, *ForCausalLMC, etc. |
+Generative models |
+* |
+N/A |
+* |
+* |
+
+C Automatically converted into an embedding model via --convert embed. (details)
+
+* Feature support is the same as that of the original model.
+
+If your model is not in the above list, we will try to automatically convert the model using as_embedding_model.
+
+Special models¶
+
+Architecture |
+Models |
+Example HF Models |
+LoRA |
+PP |
+
+JinaForRanking |
+Qwen3-based |
+jinaai/jina-reranker-v3 |
+|
+|
+
+jina-reranker-v3 is a listwise document reranker model with a novel last but not late interaction architecture. More information can be found at: examples/pooling/token_embed/jina_reranker_v3_offline.py
+
+Offline Inference¶
+
+Pooling Parameters¶
+
+The following pooling parameters are supported.
+
+use_activation: bool | None = None
+dimensions: int | None = None
+
+LLM.encode¶
+
+The encode method is available to all pooling models in vLLM.
+
+Set pooling_task="token_embed" when using LLM.encode for token embedding Models:
+
+from vllm import LLM
+
+llm = LLM(model="answerdotai/answerai-colbert-small-v1", runner="pooling")
+(output,) = llm.encode("Hello, my name is", pooling_task="token_embed")
+
+data = output.outputs.data
+print(f"Data: {data!r}")
+
+LLM.score¶
+
+The score method outputs similarity scores between sentence pairs.
+
+All models that support token embedding task also support using the score API to compute similarity scores by calculating the late interaction of two input prompts.
+
+from vllm import LLM
+
+llm = LLM(model="answerdotai/answerai-colbert-small-v1", runner="pooling")
+(output,) = llm.score(
+"What is the capital of France?",
+"The capital of Brazil is Brasilia.",
+)
+
+score = output.outputs.score
+print(f"Score: {score}")
+
+Online Serving¶
+
+Please refer to the Pooling API and use "task":"token_embed".
+
+More examples¶
+
+More examples can be found here: examples/pooling/token_embed
+
+Supported Features¶
+
+Token embedding features should be consistent with (sequence) embedding. For more information, see this page.
+
+June 22, 2026
+
+Back to top
+
+Made with
+
+Material for MkDocs

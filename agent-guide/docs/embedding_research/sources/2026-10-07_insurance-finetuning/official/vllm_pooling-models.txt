@@ -1,0 +1,1459 @@
+Pooling Models - vLLM
+
+Skip to content
+
+You are viewing the latest developer preview docs. Click here to view docs for the latest stable release.
+
+vLLM
+
+Pooling Models
+
+Initializing search
+
+GitHub
+
+Home
+
+User Guide
+
+Developer Guide
+
+Benchmarking
+
+API Reference
+
+CLI Reference
+
+Community
+
+vLLM
+
+GitHub
+
+Home
+
+User Guide
+
+User Guide
+
+Getting Started
+
+Getting Started
+
+Quickstart
+
+Installation
+
+Installation
+
+GPU
+
+CPU
+
+TPU
+
+Examples
+
+Examples
+
+Applications
+
+Applications
+
+API Server
+
+Chatbot
+
+Rag
+
+Basic
+
+Basic
+
+Offline Inference
+
+Online Serving
+
+Deployment
+
+Deployment
+
+Async LLM Streaming
+
+Helm Charts
+
+LLM Engine Example
+
+Sagemaker-Entrypoint
+
+Disaggregated
+
+Disaggregated
+
+Disaggregated Encoder
+
+Disaggregated Serving
+
+Ec Both Encoder
+
+Disaggregated Prefill V1
+
+Flexkv Connector
+
+KV Load Failure Recovery Test
+
+LMCache Examples
+
+Mooncake Connector
+
+Features
+
+Features
+
+Automatic Prefix Caching
+
+Batch Invariance
+
+Context Extension
+
+Data Parallel
+
+Kv Events
+
+Logging Configuration
+
+Custom Logits Processors
+
+LoRA
+
+Offline Inference with the OpenAI Batch file format
+
+Pause Resume
+
+Profiling
+
+Prompt Embed
+
+Reset Kv
+
+Sharded State
+
+Speculative Decoding
+
+Structured reads on DiffusionGemma
+
+Structured Outputs
+
+Tensorize vLLM Model
+
+Torchrun
+
+Generate
+
+Generate
+
+Batched Chat Completions Online
+
+Multimodal
+
+Qwen 1M Offline
+
+Trace Replay Offline
+
+Observability
+
+Observability
+
+Monitoring Dashboards
+
+Metrics
+
+Setup OpenTelemetry POC
+
+Prometheus and Grafana
+
+Pooling
+
+Pooling
+
+Classify
+
+Embed
+
+Plugin
+
+Reward
+
+Score
+
+Token Classify
+
+Token Embed
+
+Ray Serving
+
+Ray Serving
+
+Batch LLM Inference
+
+Elastic Ep
+
+Multi-Node-Serving
+
+Ray Serve Deepseek
+
+Run Cluster
+
+Reasoning
+
+Reasoning
+
+OpenAI Chat Completion Tool Calls With Reasoning
+
+OpenAI Chat Completion With Reasoning
+
+OpenAI Chat Completion With Reasoning Streaming
+
+OpenAI Responses Client
+
+RL
+
+RL
+
+Rdt vLLM Serve
+
+Rdt Weight Source
+
+RLHF Async New APIs
+
+RLHF Http IPC
+
+RLHF Http NCCL
+
+RLHF IPC Fsdp Ep
+
+RLHF M2N
+
+RLHF NCCL Fsdp Ep
+
+RLHF Sharded Rdt Small Ep
+
+RLHF Sparse NCCL
+
+Routed Experts E2E
+
+Skip Loading Weights In Engine Init
+
+Scale Out
+
+Scale Out
+
+Init
+
+Example Mm Serve
+
+Token Generation Client
+
+Speech To Text
+
+Speech To Text
+
+OpenAI
+
+Realtime
+
+Tool Calling
+
+Tool Calling
+
+Chat With Tools Offline
+
+OpenAI Chat Completion Client With Tools
+
+OpenAI Chat Completion Client With Tools Required
+
+OpenAI Chat Completion Client With Tools Xlam
+
+OpenAI Chat Completion Client With Tools Xlam Streaming
+
+OpenAI Responses Client With Mcp Tools
+
+OpenAI Responses Client With Tools
+
+General
+
+General
+
+vLLM V1
+
+Frequently Asked Questions
+
+Production Metrics
+
+Reproducibility
+
+Security
+
+Troubleshooting
+
+Usage Stats Collection
+
+Inference and Serving
+
+Inference and Serving
+
+Offline Inference
+
+Online Serving
+
+Online Serving
+
+Derenderer APIs
+
+Generative Scoring
+
+OpenAI-Compatible Server
+
+Renderer APIs
+
+Speech to Text APIs
+
+Tokens In <> Tokens Out API
+
+Trace Replay
+
+Context Parallel Deployment
+
+Data Parallel Deployment
+
+Troubleshooting distributed deployments
+
+Expert Parallel Deployment
+
+Parallelism and Scaling
+
+Integrations
+
+Integrations
+
+Claude Code
+
+Codex
+
+LangChain
+
+LlamaIndex
+
+Deployment
+
+Deployment
+
+Using Docker
+
+Using Kubernetes
+
+Using Nginx
+
+Frameworks
+
+Frameworks
+
+Anyscale
+
+AnythingLLM
+
+AutoGen
+
+BentoML
+
+Cerebrium
+
+Chatbox
+
+Crusoe
+
+Dify
+
+dstack
+
+Haystack
+
+Helm
+
+Hugging Face Inference Endpoints
+
+LiteLLM
+
+Lobe Chat
+
+LWS
+
+Modal
+
+Nebius Serverless AI
+
+Open WebUI
+
+Retrieval-Augmented Generation
+
+RunPod
+
+SkyPilot
+
+Streamlit
+
+NVIDIA Triton
+
+Integrations
+
+Integrations
+
+AIBrix
+
+NVIDIA Dynamo
+
+KAITO
+
+KServe
+
+Kthena
+
+KubeAI
+
+KubeRay
+
+Llama Stack
+
+llm-d
+
+llmaz
+
+Production stack
+
+Training
+
+Training
+
+Async Reinforcement Learning
+
+What is Layerwise (Re)loading?
+
+Prompt Token ID Logprobs (Teacher Scoring)
+
+Reinforcement Learning from Human Feedback
+
+Sampling Mask (Distribution Replay)
+
+Transformers Reinforcement Learning
+
+Weight Checker
+
+Weight Transfer
+
+Weight Transfer
+
+Base Classes and Custom Engines
+
+IPC Engine
+
+NCCL M2N Engine
+
+ModelExpress Engine
+
+NCCL Engine
+
+Sharded RDT Engine
+
+Configuration
+
+Configuration
+
+Conserving Memory
+
+Engine Arguments
+
+Environment Variables
+
+Model Resolution
+
+Optimization and Tuning
+
+Server Arguments
+
+TPU
+
+Models
+
+Models
+
+Supported Models
+
+Generative Models
+
+Pooling Models
+
+Pooling Models
+
+Classification Usages
+
+Embedding Usages
+
+Reward Usages
+
+Scoring Usages
+
+Specific Model Examples
+
+Token Classification Usages
+
+Token Embedding Usages
+
+Extensions
+
+Extensions
+
+Loading model weights with fastsafetensors
+
+Loading Model Weights with InstantTensor
+
+Loading models with Run:ai Model Streamer
+
+Loading models with CoreWeave's Tensorizer
+
+Hardware Supported Models
+
+Hardware Supported Models
+
+CPU - Intel® Xeon®
+
+XPU - Intel® GPUs
+
+TPU
+
+Features
+
+Features
+
+Automatic Prefix Caching
+
+Batch Invariance
+
+Context Extension
+
+Cross-Encoder Output Reuse
+
+Custom Arguments
+
+Custom Logits Processors
+
+Disaggregated Encoder
+
+Disaggregated Prefilling (experimental)
+
+CPU EC Connector Usage Guide
+
+Engram: conditional memory via n-gram lookups
+
+IndexCache
+
+Initialized engine snapshots
+
+Interleaved Thinking
+
+KV Offloading Usage Guide
+
+LoRA Adapters
+
+MooncakeConnector Usage Guide
+
+ECMooncakeConnector Usage Guide
+
+MooncakeStoreConnector Usage Guide
+
+MoRIIOConnector Usage Guide
+
+Multimodal Inputs
+
+NixlConnector Compatibility Matrix
+
+NixlConnector Usage Guide
+
+Per-Request Metrics
+
+Preload
+
+Prompt Embedding Inputs
+
+Reasoning Outputs
+
+Sleep Mode
+
+Structured Outputs
+
+Tool Calling
+
+Text watermarking
+
+Quantization
+
+Quantization
+
+AutoAWQ
+
+b12x Linear and MoE Backends
+
+BitsAndBytes
+
+FP8 ViT Encoder Attention
+
+GGUF
+
+GPTQModel
+
+Intel Quantization Support
+
+NVIDIA Model Optimizer
+
+Online Quantization
+
+Quantized KV Cache
+
+AMD Quark
+
+TorchAO
+
+LLM Compressor
+
+LLM Compressor
+
+FP8 W8A8
+
+INT4 W4A16
+
+INT8 W4A8
+
+INT8 W8A8
+
+Speculative Decoding
+
+Speculative Decoding
+
+Per-Request Acceptance Metrics
+
+Adaptive Verification
+
+Draft Models
+
+Dynamic Speculative Decoding
+
+EAGLE Draft Models
+
+Hidden State Extraction
+
+LiLiCorr
+
+MLP Draft Models
+
+MTP (Multi-Token Prediction)
+
+N-Gram Speculation
+
+Parallel Draft Models
+
+vLLM-Project/Speculators
+
+Suffix Decoding
+
+Developer Guide
+
+Developer Guide
+
+General
+
+General
+
+Deprecation Policy
+
+Dockerfile
+
+Editing Agent Instructions
+
+Incremental Compilation Workflow
+
+JIT Kernel Warmup
+
+Labels
+
+Profiling vLLM
+
+Releasing vLLM
+
+Vulnerability Management
+
+Model Implementation
+
+Model Implementation
+
+Basic Model
+
+Registering a Model
+
+Unit Testing
+
+Multi-Modal Support
+
+Speech-to-Text (Transcription/Translation) Support
+
+CI
+
+CI
+
+CI Failures
+
+Nightly Builds of vLLM Wheels
+
+Update PyTorch version on vLLM OSS CI/CD
+
+Design Documents
+
+Design Documents
+
+Plugins
+
+Plugins
+
+Endpoint Plugins
+
+IO Processor Plugins
+
+LoRA Resolver Plugins
+
+Plugin System
+
+Architecture Overview
+
+Attention Backend Feature Support
+
+CUDA Graphs
+
+Vision Encoder (ViT) CUDA Graphs
+
+CustomOp
+
+Dual Batch Overlap
+
+How to debug the vLLM-torch.compile integration
+
+Fused MoE Modular Kernel
+
+Fusion torch.compile passes
+
+HiSparse local KV offload architecture
+
+Integration with Hugging Face
+
+Hybrid KV Cache Manager
+
+Logits Processors
+
+Metrics
+
+Multi-Modal Data Processing
+
+Model Runner V2 Design Document
+
+Fused MoE Kernel Features
+
+Python Multiprocessing
+
+NIXL KV Cache Lease Renewal
+
+NIXL push-mode KV transfer
+
+Optimization Levels
+
+Paged Attention
+
+Automatic Prefix Caching
+
+torch.compile integration
+
+torch.compile with Multimodal Encoders
+
+vLLM IR: Functional Intermediate Representation
+
+Benchmarking
+
+Benchmarking
+
+Benchmark CLI
+
+Parameter Sweeps
+
+Performance Dashboard
+
+API Reference
+
+CLI Reference
+
+CLI Reference
+
+vllm
+
+vllm
+
+chat
+
+complete
+
+preload
+
+run-batch
+
+serve
+
+bench
+
+bench
+
+latency
+
+mm-processor
+
+serve
+
+startup
+
+throughput
+
+sweep
+
+sweep
+
+plot
+
+plot_pareto
+
+serve
+
+serve_workload
+
+startup
+
+launch
+
+launch
+
+render
+
+Community
+
+Community
+
+Contact Us
+
+Meetups
+
+Reviewers
+
+Sponsors
+
+Governance
+
+Governance
+
+Collaboration Policy
+
+Committers
+
+Governance Process
+
+Blog
+
+Forum
+
+Slack
+
+Table of contents
+
+What are pooling models?
+
+Cheat Sheet
+
+Sequence-wise Task and Token-wise Task
+
+Pooling Tasks
+
+Pooling Types
+
+Score Types
+
+Pooling Usages
+
+Offline Inference
+
+Offline APIs corresponding to pooling usages
+
+LLM.classify
+
+LLM.embed
+
+LLM.score
+
+LLM.encode
+
+Examples
+
+Online Serving
+
+Pooling API
+
+Examples
+
+Configuration
+
+Model Runner
+
+Model Conversion
+
+Pooler Configuration
+
+Predefined models
+
+Converted models
+
+Resolution precedence
+
+Removed Features
+
+Encode task
+
+Score task
+
+Pooling multitask support
+
+Home
+
+User Guide
+
+Models
+
+Pooling Models
+
+Pooling Models¶
+
+Note
+
+We currently support pooling models primarily for convenience. This is not guaranteed to provide any performance
+improvements over using Hugging Face Transformers or Sentence Transformers directly.
+We plan to optimize pooling models in vLLM. Please comment on Issue #21796 if you have any suggestions!
+
+What are pooling models?¶
+
+Natural Language Processing (NLP) can be primarily divided into the following two types of tasks:
+
+Natural Language Understanding (NLU)
+
+Natural Language Generation (NLG)
+
+The generative models supported by vLLM cover a variety of task types, such as the large language models (LLMs) we are
+familiar with, multimodal models (VLM) that handle multimodal inputs like images, videos, and audio, speech-to-text
+transcription models, and real-time models that support streaming input. Their common feature is the ability to generate
+text. Taking it a step further, vLLM-Omni supports the generation of multimodal content, including images, videos, and audio.
+
+As the capabilities of generative models continue to improve, the boundaries of these models are also constantly expanding.
+However, certain application scenarios still require specialized small language models to efficiently complete specific tasks.
+These models typically have the following characteristics:
+
+They do not require content generation.
+
+They only need to perform very limited functions, without requiring strong generalization, creativity, or high intelligence.
+
+They demand extremely low latency and may operate on cost-constrained hardware.
+
+Text-only models typically have fewer than 1 billion parameters, while multimodal models generally have fewer than 10 billion parameters.
+
+Although these models are relatively small in scale, they are still based on the Transformer architecture, similar or
+even identical to the most advanced large language models today. Many recently released pooling models are also fine-tuned
+from large language models, allowing them to benefit from the continuous improvements in large models. This architecture
+similarity enables them to reuse much of vLLM’s infrastructure. If compatible, we would be happy to help them leverage
+the latest features of vLLM as well.
+
+Cheat Sheet¶
+
+As illustrated in the figure below, we have summarized the relationships among the key elements of pooling models as a takeaway.
+
+Sequence-wise Task and Token-wise Task¶
+
+The key distinction between sequence-wise task and token-wise task lies in their output granularity: sequence-wise task
+produces a single result for an entire input sequence, whereas token-wise task yields a result for each individual token
+within the sequence.
+
+Many Pooling models support both (sequence) task and token task. When the default pooling task (e.g. a sequence-wise task)
+is not what you want, you need to manually specify (e.g. a token-wise task) via PoolerConfig(task=<task>) offline or
+--pooler-config.task <task> online.
+
+Of course, we also have "plugin" tasks that allow users to customize input and output processors. For more information,
+please refer to IO Processor Plugins.
+
+Pooling Tasks¶
+
+Pooling Tasks |
+Granularity |
+Outputs |
+
+classify (see note) |
+Sequence-wise |
+probability vector of classes for each sequence |
+
+embed |
+Sequence-wise |
+vector representations for each sequence |
+
+token_classify |
+Token-wise |
+probability vector of classes for each token |
+
+token_embed |
+Token-wise |
+vector representations for each token |
+
+Note
+
+Within classification tasks, there is a specialized subcategory: Cross-encoder (aka reranker) models. These models
+are a subset of classification models that accept two prompts as input and output num_labels equal to 1.
+
+Pooling Types¶
+
+Pooling Tasks |
+Granularity |
+Description |
+
+CLS pooling |
+Sequence-wise |
+For BERT‑like (bidirectional self‑attention) models, CLS pooling is used by default. This means the last_hidden_states corresponding to the first token (the [CLS] token) is taken as the output. |
+
+LAST pooling |
+Sequence-wise |
+For GPT‑like (causal self‑attention) models, LAST pooling is used by default. This means the last_hidden_states corresponding to the last token is taken as the output. |
+
+MEAN pooling |
+Sequence-wise |
+Many studies have shown that averaging the last_hidden_states over all input tokens performs better on certain downstream tasks. Therefore, more and more models are using MEAN pooling. |
+
+ALL pooling |
+Token-wise |
+Outputs the last_hidden_states for all input tokens. |
+
+STEP pooling |
+Token-wise |
+Filters and outputs the last_hidden_states corresponding to the token IDs returned by returned_token_ids. |
+
+Score Types¶
+
+The scoring models is designed to compute similarity scores between two input prompts. It supports three model types
+(aka score_type): cross-encoder, late-interaction, and bi-encoder.
+
+Pooling Tasks |
+Granularity |
+Outputs |
+Score Types |
+scoring function |
+
+classify (see note) |
+Sequence-wise |
+reranker score for each sequence |
+cross-encoder |
+linear classifier |
+
+embed |
+Sequence-wise |
+vector representations for each sequence |
+bi-encoder |
+cosine similarity |
+
+token_classify |
+Token-wise |
+probability vector of classes for each token |
+N/A |
+N/A |
+
+token_embed |
+Token-wise |
+vector representations for each token |
+late-interaction |
+late interaction(MaxSim) |
+
+Note
+
+Only when a classification model outputs num_labels equal to 1 can it be used as a scoring model and have its scoring API enabled.
+
+Pooling Usages¶
+
+Pooling Usages |
+Description |
+
+Classification Usages |
+Predicting which predefined category, class, or label best corresponds to a given input. |
+
+Embedding Usages |
+Converts unstructured data (text, images, audio, etc.) into structured numerical vectors (embeddings). |
+
+Token Classification Usages |
+Token-wise classification |
+
+Token Embedding Usages |
+Token-wise embedding |
+
+Reward Usages |
+Evaluates the quality of outputs generated by a language model, acting as a proxy for human preferences. |
+
+Scoring Usages |
+Computes similarity scores between two inputs. It supports three model types (aka score_type): cross-encoder, late-interaction, and bi-encoder. |
+
+Plugins Usages |
+Allow users to customize input and output processors. For more information, please refer to IO Processor Plugins. |
+
+We also have some special models that support multiple pooling tasks, or have specific usage scenarios, or support special inputs and outputs.
+
+For more detailed information, please refer to the link below.
+
+Classification Usages
+
+Embedding Usages
+
+Token Classification Usages
+
+Token Embedding Usages
+
+Reward Usages
+
+Scoring Usages
+
+Specific Model Examples
+
+Offline Inference¶
+
+Each pooling model in vLLM supports one or more of these tasks according to
+Pooler.get_supported_tasks,
+enabling the corresponding APIs.
+
+Offline APIs corresponding to pooling usages¶
+
+Pooling Usages |
+Dedicated API |
+Pooling task for LLM.encode API |
+Score Types |
+scoring function |
+
+Classification Usages |
+LLM.classify(...) |
+classify |
+cross-encoder (see note) |
+linear classifier |
+
+Embedding Usages |
+LLM.embed(...) |
+embed |
+bi-encoder |
+cosine similarity |
+
+Token Classification Usages |
+N/A |
+token_classify |
+N/A |
+N/A |
+
+Token Embedding Usages |
+N/A |
+token_embed |
+late-interaction |
+late interaction(MaxSim) |
+
+Reward Usages |
+N/A |
+classify & token_classify |
+N/A |
+N/A |
+
+Scoring Usages |
+LLM.score(...) |
+N/A |
+N/A |
+N/A |
+
+Plugins Usages |
+N/A |
+plugin |
+N/A |
+N/A |
+
+Note
+
+Only when a classification model outputs num_labels equal to 1 can it be used as a scoring model and have its scoring API enabled.
+
+LLM.classify¶
+
+The classify method outputs a probability vector for each prompt.
+It is primarily designed for classification models.
+For more information about LLM.classify, see this page.
+
+LLM.embed¶
+
+The embed method outputs an embedding vector for each prompt.
+It is primarily designed for embedding models.
+For more information about LLM.embed, see this page.
+
+LLM.score¶
+
+The score method outputs similarity scores between sentence pairs.
+It is primarily designed for score models.
+
+LLM.encode¶
+
+The encode method is available to all pooling models in vLLM.
+
+Please use one of the more specific methods or set the task directly when using LLM.encode, refer to the table above.
+
+Examples¶
+
+from vllm import LLM
+
+llm = LLM(model="intfloat/e5-small", runner="pooling")
+(output,) = llm.encode("Hello, my name is", pooling_task="embed")
+
+data = output.outputs.data
+print(f"Data: {data!r}")
+
+Online Serving¶
+
+Our online Server provides endpoints that correspond to the offline APIs:
+
+Corresponding to LLM.embed:
+Cohere Embed API (/v2/embed)
+
+OpenAI-compatible Embeddings API (/v1/embeddings)
+
+Corresponding to LLM.classify:
+Classification API(/classify)
+
+Corresponding to LLM.score:
+Score API (/score, /v1/score)
+
+Cohere Rerank API (/rerank, /v1/rerank, /v2/rerank)
+
+Pooling API (/pooling) is similar to LLM.encode, being applicable to all types of pooling models.
+
+The following introduces the Pooling API. For other APIs, please refer to the link above.
+
+Pooling API¶
+
+Our Pooling API (/pooling) is similar to LLM.encode, being applicable to all types of pooling models.
+
+The input format is the same as Embeddings API, but the output data can contain an arbitrary nested list, not just a 1-D list of floats.
+
+Please use one of the more specific APIs or set the task directly when using the Pooling API, refer to the table above.
+
+Code examples:
+
+Online example
+
+Offline example
+
+Examples¶
+
+# start a supported embeddings model server with `vllm serve`, e.g.
+# vllm serve intfloat/e5-small
+import requests
+
+host = "localhost"
+port = "8000"
+model_name = "intfloat/e5-small"
+
+api_url = f"http://{host}:{port}/pooling"
+
+prompts = [
+"Hello, my name is",
+"The president of the United States is",
+"The capital of France is",
+"The future of AI is",
+]
+prompt = {"model": model_name, "input": prompts, "task": "embed"}
+
+response = requests.post(api_url, json=prompt)
+
+for output in response.json()["data"]:
+data = output["data"]
+print(f"Data: {data!r} (size={len(data)})")
+
+Configuration¶
+
+In vLLM, pooling models implement the VllmModelForPooling interface.
+These models use a Pooler to extract the final hidden states of the input
+before returning them.
+
+Model Runner¶
+
+Run a model in pooling mode via the option --runner pooling.
+
+Tip
+
+There is no need to set this option in the vast majority of cases as vLLM can automatically
+detect the appropriate model runner via --runner auto.
+
+Model Conversion¶
+
+vLLM can adapt models for various pooling tasks via the option --convert <type>.
+
+If --runner pooling has been set (manually or automatically) but the model does not implement the
+VllmModelForPooling interface,
+vLLM will attempt to automatically convert the model according to the architecture names
+shown in the table below.
+
+Architecture |
+--convert |
+Supported pooling tasks |
+
+*ForTextEncoding, *EmbeddingModel, *Model |
+embed |
+token_embed, embed |
+
+*ForRewardModeling, *RewardModel |
+embed |
+token_embed, embed |
+
+*For*Classification, *ClassificationModel |
+classify |
+token_classify, classify |
+
+Tip
+
+You can explicitly set --convert <type> to specify how to convert the model.
+
+Pooler Configuration¶
+
+Predefined models¶
+
+If the Pooler defined by the model accepts pooler_config,
+you can override some of its attributes via the --pooler-config option.
+
+Converted models¶
+
+If the model has been converted via --convert (see above),
+the pooler assigned to each task has the following attributes by default:
+
+Task |
+Pooling Type |
+Normalization |
+Softmax |
+
+embed |
+LAST |
+✅︎ |
+❌ |
+
+classify |
+LAST |
+❌ |
+✅︎ |
+
+Resolution precedence¶
+
+The pooling method and use_activation are resolved per field. An explicitly
+set field in --pooler-config takes precedence over Sentence Transformers
+metadata, which in turn takes precedence over the model architecture or task
+default. Fields left unset continue through the chain independently.
+
+The current PoolerConfig has no normalize or activation field.
+use_activation controls whether the task's constructed normalization or
+classification activation is applied.
+
+Field |
+Source precedence |
+How to override |
+
+Pooling method (pooling_type) |
+--pooler-config > compact pooling_mode or legacy boolean pooling_mode_* fields in the Pooling module referenced by Sentence Transformers modules.json > architecture default (LAST for sequence pooling and ALL for token pooling unless the architecture overrides it) |
+Set {"pooling_type": "CLS"}, or set seq_pooling_type / tok_pooling_type explicitly. |
+
+Embedding normalization (use_activation) |
+--pooler-config > Sentence Transformers modules (true when a Normalize module is present, otherwise false) > pooling-task default (true) when no Sentence Transformers Pooling module is found |
+Set {"use_activation": false} to return unnormalized embeddings. |
+
+Classification activation function |
+Hugging Face problem_type > Sentence Transformers activation metadata > sigmoid or softmax selected from the label count |
+The function cannot be selected through --pooler-config; set {"use_activation": false} to return logits instead. |
+
+Both compact pooling_mode values written by Sentence Transformers 5.4+ and
+legacy boolean pooling_mode_* fields are supported.
+
+For converted models and predefined models using the standard DispatchPooler
+adapters, embed and token_embed construct an L2-normalization head, while
+classify and token_classify construct the selected classification activation.
+In both cases, use_activation controls whether that head is applied. Models with
+custom poolers can implement different behavior.
+
+To inspect the resolved fields without loading model weights:
+
+from vllm.config import ModelConfig, PoolerConfig
+from vllm.model_executor.layers.pooler.activations import get_act_fn
+
+def inspect(requested: PoolerConfig) -> None:
+model_config = ModelConfig(
+"intfloat/e5-small",
+runner="pooling",
+pooler_config=requested,
+)
+resolved = model_config.pooler_config
+assert resolved is not None
+print(
+{
+"seq_pooling_type": resolved.seq_pooling_type,
+"tok_pooling_type": resolved.tok_pooling_type,
+"use_activation": resolved.use_activation,
+"sequence_classification_activation": type(
+get_act_fn(model_config.hf_config)
+).__name__,
+}
+)
+
+inspect(PoolerConfig())
+inspect(PoolerConfig(pooling_type="CLS", use_activation=False))
+
+For intfloat/e5-small, the first result contains MEAN, ALL, and True.
+The second contains CLS, ALL, and False. Both report the classification
+activation that the standard sequence-classification adapter would construct.
+
+Removed Features¶
+
+Encode task¶
+
+We have split the encode task into two more specific token-wise tasks: token_embed and token_classify:
+
+token_embed is the same as embed, using normalization as the activation.
+
+token_classify is the same as classify, by default using softmax as the activation.
+
+Pooling models now support token-wise task.
+
+Extracting hidden states prefers using token_embed task.
+
+Named Entity Recognition (NER) and reward models prefers using token_classify task.
+
+Score task¶
+
+score task has been removed in v0.21, use classify instead. Only when a classification model outputs num_labels
+equal to 1 can it be used as a scoring model and have its scoring API enabled.
+
+Pooling multitask support¶
+
+Pooling multitask support has been removed in v0.21. When the default pooling task is not what you want,
+you need to manually specify it via PoolerConfig(task=<task>) offline or --pooler-config.task <task> online.
+
+September 1, 2026
+
+Back to top
+
+Made with
+
+Material for MkDocs
