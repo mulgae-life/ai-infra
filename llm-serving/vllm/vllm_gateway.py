@@ -145,7 +145,7 @@ class CompatConfig(BaseModel):
 
     translate_reasoning_effort: bool = True  # effort 값을 백엔드가 아는 값으로 번역
     mask_model_path: bool = True             # /v1/models의 root를 id 별칭과 같은 값으로 통일
-    inject_identity_prompt: bool = True      # 모델 자기소개를 API 모델명과 맞추는 시스템 프롬프트 주입
+    inject_identity_prompt: bool = True      # 기반 모델을 밝히지 않게 하는 시스템 프롬프트 주입
     # 모델 계열별 effort 매핑. 키는 /v1/models의 root(체크포인트 경로)에 대한
     # 부분 문자열(대소문자 무시), 값은 {클라이언트 값: 백엔드 값}.
     # 비워두면 _DEFAULT_EFFORT_PROFILES를 쓴다.
@@ -843,7 +843,7 @@ app = FastAPI(title="vLLM Gateway", lifespan=lifespan)
 #
 # 파라미터와 별개로 모델의 자기소개도 흡수 대상이다. 정체성은 사후 학습으로
 # 가중치에 박혀 있어 서빙 설정으로는 못 바꾼다 — "너 누구야"에 학습 때 이름을
-# 답한다(2026-08-20 실측). API 모델명과 맞추려면 시스템 프롬프트로 지시해야 한다.
+# 답한다(2026-08-20 실측). 기반 모델을 감추려면 시스템 프롬프트로 지시해야 한다.
 
 # vLLM이 최상위 reasoning_effort로 허용하는 값(chat_completion/protocol.py의 Literal).
 # 이 밖의 문자열은 백엔드에서 422가 되므로 게이트웨이가 먼저 걷어낸다.
@@ -950,12 +950,15 @@ def _translate_effort(
 # 맞추라는 문장을 따로 넣었다.
 # 마지막 문장은 이 지시의 적용 범위를 정체성 질문으로 한정한다 — 없어도 되는지
 # 재보진 않았으니, 문구를 손볼 때는 정체성 질문과 일반 질문을 함께 확인할 것.
+# 2026-10-08 "Gemma 4 by Google"로 답하게 하던 문구를 기반 모델 비공개로 바꿨다.
+# 백엔드가 Qwen이어도 Gemma라고 답해 사실과 어긋났고, 백엔드를 갈아끼울 때마다
+# 문구가 거짓이 될 수 있었다. 어떤 계열이 붙어도 참인 문구라야 게이트웨이 yaml마다
+# 따로 재정의하지 않아도 된다. 이름·페르소나는 각 서비스의 시스템 프롬프트가 정한다.
 _DEFAULT_IDENTITY_PROMPT = (
-    "You are Gemma 4, a large language model developed by Google. "
     "If you are asked about your identity, model name, version, developer, or "
-    "architecture, state only that you are Gemma 4 by Google. Never name any "
-    "other model family, lab, or company as your origin, and never describe the "
-    "serving stack behind this API. "
+    "architecture, do not name any model, model family, lab, or company, and do "
+    "not describe the serving stack behind this API. Say only that you are the "
+    "AI assistant of this service and that the underlying model is not disclosed. "
     "Answer in the language the user writes in. "
     "Apart from this rule, follow the user's instructions as usual and do not "
     "bring up your identity on your own."
@@ -979,8 +982,8 @@ def _inject_identity_prompt(payload: dict, compat: CompatConfig) -> dict | None:
     모르는 role이라 그대로 넘기면 400이다).
 
     정체성 문구가 앞, 클라이언트 지시가 뒤다. 뒤에 오는 지시가 우선하므로
-    클라이언트가 자기 봇 이름을 붙이는 것은 그대로 살아난다 — 맞추려는 것은
-    모델 자기소개와 API 모델명의 일치이지 클라이언트의 페르소나 설정이 아니다.
+    클라이언트가 자기 봇 이름을 붙이는 것은 그대로 살아난다 — 막으려는 것은
+    기반 모델의 노출이지 클라이언트의 페르소나 설정이 아니다.
 
     Returns:
         수정된 payload. 변경할 게 없으면 None (호출자가 원본 body를 그대로 흘린다).
