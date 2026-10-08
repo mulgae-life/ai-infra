@@ -1,7 +1,7 @@
 ---
 name: session
 description: ai-infra 레포 현재 상태. 세션 시작 시 다음 작업과 최근 변경 파악용.
-last-updated: 2026-10-07 (임베딩 조사 디렉토리 신설, 보험 임베딩 파인튜닝 조사)
+last-updated: 2026-10-08 (ai-research 레이어 신설, 보험 임베딩 실행 계획서)
 ---
 
 # 세션 상태
@@ -32,7 +32,7 @@ last-updated: 2026-10-07 (임베딩 조사 디렉토리 신설, 보험 임베딩
 | P1 | `llm-serving/sglang/` 디렉토리 골격 (운영 가이드 + 런처 + 설정 + 테스트) | Todo |
 | P1 | **STT 한국어 실측**: Whisper-large-v3 1순위(+한국어 fine-tune 트랙) 채택. `test_stt.py`(WER/RTF/정성)로 실측 확정 | 의사결정 ✅, 실측 대기 |
 | P2 | **Jev 방식 후속**: 결과 `agent-guide/docs/slm_research/topics/jev-probe.md`(정확도는 같은 수준, 처리량이 초당 6~9건에서 막힘). ① TP1 A/B(서빙 설정 변경이라 대표님 결정) ② 업무 문항 600개를 Jev API로 풀기(외부 전송이라 대표님 확인) | 실측 ✅, 후속 결정 대기 |
-| P2 | **보험 임베딩 파인튜닝**: 설계 `agent-guide/docs/embedding_research/topics/insurance-finetuning.md`(착수 순서 7.1절, 결정 사항 11절). 착수 전 대표님·현업 결정 ① 자료별 학습·평가 이용 범위(AI Hub 원 데이터는 학습용 한정) ② 사내 약관·상담 기록 제공 범위 ③ 검수 인력(개발셋 200개 주석 + 합성 질의 표본 300개) ④ 운영 연결 방식(게이트웨이에 `/v1/embeddings` 없음) | 설계 ✅, 결정 대기 |
+| P2 | **보험 임베딩 파인튜닝**: 실행 계획서 `agent-guide/plans/work-plan_261008_insurance-embedding/`(P0~P6, 결정 5건은 master "결정 요청" 표), 실행 공간 `ai-research/insurance-embedding/`. 다음은 계획서 확정 → P0 결정 요청서. 라이브러리 최신화 때 학습 환경은 서빙과 분리(vLLM 0.31.0이 torch 2.13.0 고정) | 계획 초안 ✅, 대표님 검토 대기 |
 | P2 | **26B-A4B MTP 튜닝**: acceptance 32~47%(31B 70~85%). 동시성 4+ 실측 후 낮으면 `num_speculative_tokens 4→2` 또는 MTP off A/B | Todo |
 | P2 | **PII NER 고도화 (보류, PII 미사용 중)**: 재사용 전 필수 🚨 512 토큰 초과 청킹(현재 500 → fail-open 무검사/fail-closed 차단) · 마이크로 배칭 · replica 스케일아웃 | 보류 |
 | P2 | **PII 가드 운영 적용 (보류)**: 운영계 :5501 실기동 · 실데이터 recall 게이트 · 스트리밍 progressive buffer · 이미지 OCR PII · `PII_AUDIT_SALT` 확인. 설계 `agent-guide/plans/pii-dlp-gateway.md` | 보류 |
@@ -50,6 +50,7 @@ last-updated: 2026-10-07 (임베딩 조사 디렉토리 신설, 보험 임베딩
 
 | 날짜 | 한 일 |
 |------|------|
+| **10-08** | `ai-research/` 연구·실험 레이어 신설 + 보험 임베딩 골격 `00085cf` · 보험 임베딩 실행 계획서 초안 v2 `efa102c`. 코덱스와 4라운드 합의, 협업 원본은 `.archive/2026-10-08_insurance-ft-plan-collab/`. 하드 네거티브 채굴을 E1 앞에 두려던 안은 설계 7.1절과 어긋나 E2 준비로 옮김 |
 | **10-07** | 레포명 `docker` → `ai-infra`(GitHub, 로컬 경로, 레포 안 표기. Docker 도구명과 `my-docker-server/`는 유지) `c009f48` · 점검 중 찾은 기존 안내 오류 2건 정정 `cef33a0` · 연구계 qwen·:5015를 새 경로에서 재기동. GUIDE의 "서빙은 net/PID 네임스페이스 밖"은 틀려서 정정(이 컨테이너 안에서 돈다). 로컬 PC도 `/workspace/ai-infra`로 옮기고 `ssh-guard.service` 재복사 + `daemon-reload` 완료(설치본 = 레포본) · `agent-guide/docs/embedding_research/` 신설 + 대표님 임베딩 조사 문서를 원문과 대조해 4건 정정 `9352b21` · 보험 임베딩 파인튜닝 조사 `ccb18ed`. 코덱스와 4라운드 교차 검증, 원본 HTML·PDF와 협업 메모는 `.archive/2026-10-07_insurance-ft-collab/` |
 | **10-06** | Jev 조사 + `slm_research/`를 `models/`·`topics/`·`sources/`로 개편 `5557317` · `slm_research/`를 `agent-guide/docs/`로 옮겨 배포 범위 밖에 두고 `start.sh` 제외 규칙 삭제 `11d7420` · Jev 방식 실측(Qwen3.8 FP8 대 Jev) `6f9550b` |
 | **09-15** | 운영 배포분 주석 어조 정리 + `slm_research/` S3 제외 `298b04c`. 보안 검토 범위는 GitHub 공개 여부가 아니라 운영 서버로 가는 것(대표님 확정) · 정체성 프롬프트는 유지 · `on-prem/`은 `aws/`보다 뒤처지지 않음 |
