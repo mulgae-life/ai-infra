@@ -1,0 +1,10 @@
+# 연구 프로젝트의 데이터·실행 결과·모델 가중치는 git에 올리지 않는다.
+# 권리 제한 자료(AI Hub 원 데이터는 승인 없는 제3자 제공 금지)와 사내 문서가 섞이고, 용량이 크다.
+# git에 올린 파일은 GitHub와 온프레미스 서버(`on-prem/start.sh pull`이 git pull)까지 간다.
+#
+# 프로젝트 바로 아래(ai-research/<프로젝트>/)만 겨냥한다. `*`는 한 단계만 매치하므로
+# pipeline/data/ 같은 코드 하위 폴더는 걸리지 않는다.
+# 루트 .gitignore에 data/를 넣지 않은 이유: 이미 추적 중인 문서의 data/·models/ 폴더까지 걸린다.
+/*/data/
+/*/runs/
+/*/models/

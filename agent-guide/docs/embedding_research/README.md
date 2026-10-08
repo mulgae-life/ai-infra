@@ -1,6 +1,6 @@
 # 임베딩 모델 리서치
 
-검색·RAG에 쓸 임베딩 모델을 고를 때 근거로 쓰는 조사 문서다. 연구계 전용 문서라 S3 배포 대상(`llm-serving/`) 밖인 `agent-guide/docs/`에 둔다. 생성 모델 조사는 [slm_research](../slm_research/README.md)에 있고, 디렉토리 구조와 규칙은 그쪽과 같다.
+검색·RAG에 쓸 임베딩 모델을 고를 때 근거로 쓰는 조사 문서다. 연구계 전용 문서라 S3 배포 대상(`llm-serving/`) 밖인 `agent-guide/docs/`에 둔다. 생성 모델 조사는 [slm_research](../slm_research/README.md)에 있고, 디렉토리 구조와 규칙은 그쪽과 같다. 설계를 실제로 돌리는 코드·데이터는 [ai-research/](../../../ai-research/README.md)에 있다.
 
 ## 구조
 
