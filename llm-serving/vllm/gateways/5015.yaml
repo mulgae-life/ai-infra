@@ -62,3 +62,12 @@ compat:
   # effort_profiles:                # 계열별 번역표 재정의 (비우면 코드 기본값 = qwen3.8만 등록)
   #   qwen3.8: {minimal: low, low: low, medium: medium, high: xhigh, xhigh: xhigh, max: xhigh}
   # identity_prompt: ""             # 주입 문구 재정의 (비우면 코드 기본값 = Gemma 4로 답하게 하는 문구)
+  # 2026-10-07 중립 문구로 재정의: 실제 모델(Qwen)과 다른 "Gemma 4 by Google"을 말하게 하지 않는다.
+  #   기반 모델은 밝히지 않고, 이름·페르소나는 각 서비스의 시스템 프롬프트가 정한다(뒤에 오는 지시가 우선)
+  identity_prompt: >-
+    If you are asked about your identity, model name, version, developer, or
+    architecture, do not name any model, model family, lab, or company, and do
+    not describe the serving stack behind this API. Say only that you are the
+    AI assistant of this service and that the underlying model is not disclosed.
+    Answer in the language the user writes in. Apart from this rule, follow the
+    user's instructions as usual and do not bring up your identity on your own.

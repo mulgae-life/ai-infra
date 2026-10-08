@@ -57,12 +57,16 @@ kv_cache_dtype: auto             # KV 캐시 dtype (auto / fp8_e4m3로 2배 용�
 language_model_only: false       # true면 멀티모달 비활성 (메모리 절약)
 
 # Speculative Decoding — 모델별 설정, 상세 ./_SCHEMA.txt
-speculative_config:
-  # model: ${model}-assistant    # 드래프트 모델. ${model}은 런처가 본체 값으로 치환 — Gemma4만 사용
-  method: mtp                    # ⚠️ Qwen: mtp 명시 필수 (qwen3_next_mtp는 0.20.2에서 deprecated)
-                                 #    Gemma4: 자동 감지 — 명시하면 NotImplementedError
-  num_speculative_tokens: 2      # Qwen 2 (⚠️ >1은 acceptance rate 저하 가능 — 모니터링 후 상향)
-                                 #    Gemma4 26B-A4B 4 (MoE — 동시성 4 미만은 이득 제한) / 31B 4~8
+# ⚠️ 2026-10-07 비활성: 접두 캐시(align 모드) + MTP 조합에서 캐시된 선형 어텐션 상태가 오염돼
+#    같은 접두를 쓰는 요청이 한동안 틀린 답(숫자 복사 오류·질문 되풀이)을 낸다. vLLM 이슈 #53912와 같은 구성,
+#    MambaManager.find_longest_cache_hit가 MTP 미검증 블록을 버리지 않는다. 고친 버전 확인 전까지 끈다.
+#    근거: hjjo-ai-hub/.archive/2026-10-07_hw-chatbot-대화품질/FINDING-서빙-접두캐시.md
+# speculative_config:
+#   # model: ${model}-assistant    # 드래프트 모델. ${model}은 런처가 본체 값으로 치환 — Gemma4만 사용
+#   method: mtp                    # ⚠️ Qwen: mtp 명시 필수 (qwen3_next_mtp는 0.20.2에서 deprecated)
+#                                  #    Gemma4: 자동 감지 — 명시하면 NotImplementedError
+#   num_speculative_tokens: 2      # Qwen 2 (⚠️ >1은 acceptance rate 저하 가능 — 모니터링 후 상향)
+#                                  #    Gemma4 26B-A4B 4 (MoE — 동시성 4 미만은 이득 제한) / 31B 4~8
 
 # 멀티모달
 mm_encoder_tp_mode: data         # vision encoder DP 처리 (Qwen 공식 레시피 — 미지원 모델은 weights 자동 폴백)
