@@ -9,7 +9,8 @@ gateway_port: 5501
 # 모델
 model: google/gemma-4-31B-it     # HF 모델 ID (런처가 download_dir과 조합해 경로 해석)
 download_dir: /models/LLM        # 모델 로컬 저장 루트 ({download_dir}/{model})
-quantization: fp8                # 온더플라이 FP8 양자화 (사전 양자화 모델은 주석 유지 — 자동 감지)
+quantization: fp8_per_tensor     # 온더플라이 FP8 양자화 (사전 양자화 모델은 주석 유지 — 자동 감지)
+                                 #    0.31부터 옛 이름 fp8은 사용 중단 경고를 낸 뒤 이 방식으로 처리
 dtype: auto                      # 활성화 dtype (auto=config.json 따름)
 served_model_name: [gemma-4]     # API 모델명. 백엔드 체크포인트와 분리해 고정 — 클라이언트 설정을 바꾸지
                                  #    않고 백엔드를 교체한다 (게이트웨이 compat이 /v1/models의 root도 이 값으로 통일)

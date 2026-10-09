@@ -32,6 +32,7 @@ import glob
 import json
 import logging
 import os
+import shutil
 import signal
 import socket
 import subprocess
@@ -671,7 +672,15 @@ def main():
     os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
     runtime_config = _write_vllm_config(config)  # _LAUNCHER_KEYS(port 포함) 제거됨
 
-    cmd = ["vllm", "serve"]
+    # SERVING_VLLM_BIN: 한 컨테이너에 vLLM이 둘 이상 있을 때 쓸 실행 파일(예: 연구계 컨테이너의 0.31 가상환경).
+    # 지정하지 않으면 PATH의 vllm을 쓴다(서버 이미지는 vLLM이 하나라 지정하지 않는다).
+    # VLLM_ 접두어를 쓰지 않는다: vLLM이 모르는 VLLM_* 환경변수마다 경고를 낸다.
+    vllm_bin = os.environ.get("SERVING_VLLM_BIN", "vllm")
+    if not shutil.which(vllm_bin):
+        logger.error("vLLM 실행 파일을 찾을 수 없습니다: %s (SERVING_VLLM_BIN 확인)", vllm_bin)
+        sys.exit(1)
+    logger.info("vLLM 실행 파일: %s", shutil.which(vllm_bin))
+    cmd = [vllm_bin, "serve"]
     if model:
         cmd.append(model)
     cmd.extend(["--config", runtime_config])

@@ -9,7 +9,8 @@ gateway_port: 5015
 # 모델
 model: google/gemma-4-26B-A4B-it # HF 모델 ID (런처가 download_dir과 조합해 경로 해석)
 download_dir: /models/LLM        # 모델 로컬 저장 루트 ({download_dir}/{model})
-quantization: fp8                # 온더플라이 FP8 양자화 (사전 양자화 모델은 주석 유지 — 자동 감지)
+quantization: fp8_per_tensor     # 온더플라이 FP8 양자화 (사전 양자화 모델은 주석 유지 — 자동 감지)
+                                 #    0.31부터 옛 이름 fp8은 사용 중단 경고를 낸 뒤 이 방식으로 처리
 dtype: auto                      # 활성화 dtype (auto=config.json 따름)
 served_model_name: [gemma-4]     # API 모델명. 백엔드 체크포인트와 분리해 고정 — 클라이언트 설정을 바꾸지
                                  #    않고 백엔드를 교체한다 (게이트웨이 compat이 /v1/models의 root도 이 값으로 통일)
@@ -57,12 +58,17 @@ kv_cache_dtype: auto             # KV 캐시 dtype (auto / fp8_e4m3로 2배 용�
 language_model_only: false       # true면 멀티모달 비활성 (메모리 절약)
 
 # Speculative Decoding — 모델별 설정, 상세 ./_SCHEMA.txt
-speculative_config:
-  model: ${model}-assistant      # 드래프트 모델. ${model}은 런처가 본체 값으로 치환 — Gemma4만 사용
-  # method: mtp                  # ⚠️ Qwen: mtp 명시 필수 (qwen3_next_mtp는 0.20.2에서 deprecated)
-                                 #    Gemma4: 자동 감지 — 명시하면 NotImplementedError
-  num_speculative_tokens: 4      # Qwen 2 (⚠️ >1은 acceptance rate 저하 가능 — 모니터링 후 상향)
-                                 #    Gemma4 26B-A4B 4 (MoE — 동시성 4 미만은 이득 제한) / 31B 4~8
+# ⚠️ 2026-10-09 비활성(대표님 결정): MTP는 품질·캐시 버그가 없을 때만 쓴다.
+#    옛 nightly(dev251) + MTP는 추론 켬 요청의 JSON 스키마·tool_choice=required가 깨진다(실측 KV auto 108/320, 끔 0).
+#    0.31 시험에서는 그 증상이 나오지 않았지만 MTP + KV auto + 긴·짧은 요청 혼합에서 요청 내용이 섞이는 #46088은 수정이 없고,
+#    축소 재현으로는 검출하지 못했다. 켬에서 JSON 값 찌꺼기 모양이 더 잦다는 탐색 신호도 있다.
+#    vLLM 버전업으로 #46088 해결이 확인되면 다시 켠다. 근거: llm-serving/vllm/tests/results/vllm-0.31-ab.md
+# speculative_config:
+#   model: ${model}-assistant    # 드래프트 모델. ${model}은 런처가 본체 값으로 치환 — Gemma4만 사용
+#   # method: mtp                # ⚠️ Qwen: mtp 명시 필수 (qwen3_next_mtp는 0.20.2에서 deprecated)
+#                                #    Gemma4: 자동 감지 — 명시하면 NotImplementedError
+#   num_speculative_tokens: 4    # Qwen 2 (⚠️ >1은 acceptance rate 저하 가능 — 모니터링 후 상향)
+#                                #    Gemma4 26B-A4B 4 (MoE — 동시성 4 미만은 이득 제한) / 31B 4~8
 
 # 멀티모달
 mm_encoder_tp_mode: data         # vision encoder DP 처리 (Qwen 공식 레시피 — 미지원 모델은 weights 자동 폴백)

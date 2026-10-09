@@ -7,9 +7,9 @@
 gateway_port: 6502
 
 # 모델
-model: Qwen/Qwen3.6-27B-FP8      # HF 모델 ID (런처가 download_dir과 조합해 경로 해석)
+model: Qwen/Qwen3.8-27B-FP8      # HF 모델 ID (런처가 download_dir과 조합해 경로 해석)
 download_dir: /models/LLM        # 모델 로컬 저장 루트 ({download_dir}/{model})
-# quantization: fp8              # 온더플라이 FP8 양자화 (사전 양자화 모델은 주석 유지 — 자동 감지)
+# quantization: fp8_per_tensor   # 온더플라이 FP8 양자화 (사전 양자화 모델은 주석 유지 — 자동 감지)
 dtype: auto                      # 활성화 dtype (auto=config.json 따름)
 served_model_name: [gemma-4]     # API 모델명. 백엔드 체크포인트와 분리해 고정 — 클라이언트 설정을 바꾸지
                                  #    않고 백엔드를 교체한다 (게이트웨이 compat이 /v1/models의 root도 이 값으로 통일)
@@ -38,7 +38,7 @@ env:
                                  # ⚠️ KV connector(Nixl/Mooncake) 쓰면 vLLM이 기동 거부
 
 # 추론
-max_model_len: 16384             # 컨텍스트 길이 (프롬프트+출력 합산)
+max_model_len: 65536             # 컨텍스트 길이 (프롬프트+출력 합산)
 max_num_seqs: 20                 # 동시 처리 시퀀스 수
 max_num_batched_tokens: 32768    # 배치 최대 토큰 수 (멀티모달은 encoder_cache로 복제)
 seed: 42                         # 재현용 전역 시드
@@ -46,7 +46,7 @@ seed: 42                         # 재현용 전역 시드
 # Thinking 모드 (reasoning 토큰 생성 제어)
 default_chat_template_kwargs:
   enable_thinking: false         # 챗봇 기본: thinking 비활성 (지연 감소)
-  # reasoning_effort: medium     # 사고 길이. ⚠️ Qwen3.8 전용 — 미지원 모델은 주석 유지
+  reasoning_effort: medium       # 사고 길이. ⚠️ Qwen3.8 전용 — 미지원 모델은 주석 유지
                                  #    thinking 켠 호출에만 실효 (OFF면 값 자체를 무시)
                                  #    xhigh/medium/low만 허용 — 그 외는 템플릿이 raise → HTTP 400
                                  #    기본값 xhigh는 사고 지시문을 최대 주입해 생성량이 는다
@@ -57,12 +57,16 @@ kv_cache_dtype: auto             # KV 캐시 dtype (auto / fp8_e4m3로 2배 용�
 language_model_only: false       # true면 멀티모달 비활성 (메모리 절약)
 
 # Speculative Decoding — 모델별 설정, 상세 ./_SCHEMA.txt
-speculative_config:
-  # model: ${model}-assistant    # 드래프트 모델. ${model}은 런처가 본체 값으로 치환 — Gemma4만 사용
-  method: mtp                    # ⚠️ Qwen: mtp 명시 필수 (qwen3_next_mtp는 0.20.2에서 deprecated)
-                                 #    Gemma4: 자동 감지 — 명시하면 NotImplementedError
-  num_speculative_tokens: 2      # Qwen 2 (⚠️ >1은 acceptance rate 저하 가능 — 모니터링 후 상향)
-                                 #    Gemma4 26B-A4B 4 (MoE — 동시성 4 미만은 이득 제한) / 31B 4~8
+# ⚠️ 2026-10-07 비활성: 접두 캐시(align 모드) + MTP 조합에서 캐시된 선형 어텐션 상태가 오염돼
+#    같은 접두를 쓰는 요청이 한동안 틀린 답(숫자 복사 오류·질문 되풀이)을 낸다. vLLM 이슈 #53912와 같은 구성,
+#    MambaManager.find_longest_cache_hit가 MTP 미검증 블록을 버리지 않는다. 고친 버전 확인 전까지 끈다.
+#    근거: hjjo-ai-hub/.archive/2026-10-07_hw-chatbot-대화품질/FINDING-서빙-접두캐시.md
+# speculative_config:
+#   # model: ${model}-assistant    # 드래프트 모델. ${model}은 런처가 본체 값으로 치환 — Gemma4만 사용
+#   method: mtp                    # ⚠️ Qwen: mtp 명시 필수 (qwen3_next_mtp는 0.20.2에서 deprecated)
+#                                  #    Gemma4: 자동 감지 — 명시하면 NotImplementedError
+#   num_speculative_tokens: 2      # Qwen 2 (⚠️ >1은 acceptance rate 저하 가능 — 모니터링 후 상향)
+#                                  #    Gemma4 26B-A4B 4 (MoE — 동시성 4 미만은 이득 제한) / 31B 4~8
 
 # 멀티모달
 mm_encoder_tp_mode: data         # vision encoder DP 처리 (Qwen 공식 레시피 — 미지원 모델은 weights 자동 폴백)
