@@ -27,6 +27,10 @@ RUN locale-gen ko_KR.UTF-8 \
     && ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
 ENV LANG=ko_KR.UTF-8
 ENV LC_ALL=ko_KR.UTF-8
+# ENV는 docker exec에만 전달되고 sshd가 만드는 SSH 세션에는 넘어가지 않는다.
+# LANG을 안 보내는 클라이언트(Termius 등)는 ASCII 로케일이 되어 tmux가 한글을 '_'로 그리므로
+# sshd PAM이 읽는 /etc/default/locale에도 같은 값을 기록한다 (잘못된 값이면 빌드 실패)
+RUN update-locale LANG="${LANG}"
 
 # ============================================
 # nvm + Node.js LTS
