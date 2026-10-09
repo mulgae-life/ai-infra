@@ -3,7 +3,7 @@
 # 사용법: ./start.sh {push|pull} [추가 aws s3 sync 옵션...]
 #
 # 재빌드/재기동은 이 스크립트 책임이 아니다 (SRP):
-#   - 이미지 재빌드: docker compose build  (SETUP_GUIDE.md §9-1)
+#   - 이미지 재빌드: docker compose build  (SETUP_GUIDE.md §4-1)
 #   - 인스턴스 재생성: ./user.sh rebuild <name>
 # 여기선 코드 동기화만 하고, 완료 후 다음 단계 명령을 안내한다.
 
@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # =====================================================================
-# S3 배포 설정 (SETUP_GUIDE.md §3-1 참조)
+# S3 배포 설정 (SETUP_GUIDE.md §1-3 참조)
 # 경로는 env로 오버라이드 가능 — 하드코딩 대신 안전한 기본값 + 설정 분리.
 # =====================================================================
 S3_URI="${AWS_INFRA_S3_URI:-s3://hgi-ai-res/hjjo/aws/}"

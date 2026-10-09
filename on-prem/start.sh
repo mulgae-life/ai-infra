@@ -7,7 +7,7 @@
 # 점검하는 check가 붙었다.
 #
 # 재빌드/재기동은 이 스크립트 책임이 아니다 (SRP):
-#   - 이미지 재빌드: cd ../aws && docker compose build  (aws/SETUP_GUIDE.md §9-1)
+#   - 이미지 재빌드: cd ../aws && docker compose build  (aws/SETUP_GUIDE.md §4-1)
 #   - 인스턴스 재생성: ../aws/user.sh rebuild <name>
 # 컨테이너 계층은 전부 ../aws/ 에서 실행한다 — 여기는 호스트 계층만 다룬다.
 

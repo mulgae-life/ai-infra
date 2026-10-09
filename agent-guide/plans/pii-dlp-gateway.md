@@ -89,7 +89,7 @@
 | 인증 패스스루만 함 (게이트웨이 자체 인증 없음) | L872-875 |
 | `backend_api_key`는 전 게이트웨이에서 주석 처리(미설정) | `gateways/{5015,5501}.yaml` L78-80 |
 | 런처 `_LAUNCHER_KEYS`에 `host` 없음 → instances yaml `host`가 vLLM 바인딩 | `vllm_server_launcher.py` L70, L144-150 |
-| 연구계 gemma = `user.sh --root --service-port 5015`, 운영계 = 5501 | `SETUP_GUIDE.md` L172 |
+| 연구계 gemma = `user.sh --root --service-port 5015`, 운영계 = 5501 | `aws/SETUP_GUIDE.md` §3-1 |
 | thinking 응답은 `reasoning` 키로 분리(out 검사 대상) | `VLLM_API_GUIDE.md` L216, L591 |
 
 **운영 토폴로지 (대표님 확인)**: 방화벽이 호스트 **5015(연구)/5501(운영)만** 인바운드 오픈. vLLM 백엔드 포트는 컨테이너 내부 + 방화벽 비공개라 외부 직타 불가. → **방화벽이 이미 1차 enforcement**.

@@ -104,7 +104,7 @@ exit
 
 ## 4. `.env` 주요 키
 
-`aws/.env.prd`와 같은 키에 아래가 추가됐습니다. 나머지는 [`../aws/SETUP_GUIDE.md` §4](../aws/SETUP_GUIDE.md#4-env-주요-키) 참조.
+`aws/.env.prd`와 같은 키에 아래가 추가됐습니다. 나머지는 [`../aws/SETUP_GUIDE.md` §5-1](../aws/SETUP_GUIDE.md#5-1-env-주요-키) 참조.
 
 | 키 | 설명 | 기본 |
 |----|------|------|
@@ -200,11 +200,11 @@ rsync -av --delete --exclude .git --exclude .env --exclude .archive --exclude lo
 
 ### 6-2. `.env`만 수정한 경우
 
-[`../aws/SETUP_GUIDE.md` §9-2](../aws/SETUP_GUIDE.md#9-2-env만-수정한-경우-이미지-재빌드-불필요)와 같습니다. `NVIDIA_*`·`VOLUME_DEVICE`·`SSH_PORT`는 호스트 값이라 `setup-host.sh`를 다시 돌려야 반영됩니다(멱등).
+[`../aws/SETUP_GUIDE.md` §4-2](../aws/SETUP_GUIDE.md#4-2-env만-변경)와 같습니다. `NVIDIA_*`·`VOLUME_DEVICE`·`SSH_PORT`는 호스트 값이라 `setup-host.sh`를 다시 돌려야 반영됩니다(멱등).
 
 ### 6-3. 다중 사용자·접속·디렉토리 구조
 
-컨테이너 계층은 AWS와 동일합니다 — [`../aws/SETUP_GUIDE.md`](../aws/SETUP_GUIDE.md) §6(`user.sh`), §7(접속), §10(`/volume` 구조). SSM 대신 호스트 SSH(`SSH_PORT`)로 들어갑니다.
+컨테이너 계층은 AWS와 동일합니다 — [`../aws/SETUP_GUIDE.md`](../aws/SETUP_GUIDE.md) §3(`user.sh`), §3-3(접속), §5-3(`/volume` 구조). SSM 대신 호스트 SSH(`SSH_PORT`)로 들어갑니다.
 
 ---
 

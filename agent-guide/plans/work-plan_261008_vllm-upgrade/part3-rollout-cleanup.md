@@ -29,6 +29,7 @@
   2. env 준비: `.env`의 `VLLM_IMAGE`를 태그+다이제스트로 바꾸고 `EXTRA_REQUIREMENTS`를 비운다(10-09 원본 `.env.prd`·`.env.dev`에 반영 완료 — `aws/start.sh push` 뒤 서버에서 `cp .env.prd .env`). 이 값은 재생성 때 `.env`에서 읽히고 컨테이너 시작마다 설치되므로(`user.sh:49,371`, `entrypoint-llm.sh:41-47`) 재생성 전에 맞춰야 한다
   3. `docker compose build`. 이때 공통 이름 `llm-prd:latest`가 새 이미지로 옮겨 간다. 이미 떠 있는 컨테이너는 그대로지만, 이후 `user.sh`로 만드는 모든 컨테이너는 새 이미지를 쓴다. 대조를 마칠 때까지 다른 재생성을 하지 않는다
   4. 조합 대조 (GPU 불필요, 임시 컨테이너): `docker run --rm --entrypoint python3 llm-prd:latest /opt/gen-core-constraints.py --final`과 이미지 안 `/opt/image-freeze.txt`를 꺼내 `aws/image-freeze-0.31.0.txt`와 비교한다
+     - 10-09: 대표님이 이미지 확인(part2 ④~⑦) 대신 개발 서버 빌드를 먼저 하므로, 그 서버의 `/opt/image-core-final.txt` 출력이 기준이다(`aws/SETUP_GUIDE.md` §4-3)
      - `--final` 항목(핵심·FlashInfer 부속·음성 경로)이 하나라도 다르면 멈춘다. `llm-prd:latest`를 보존 태그로 되돌리고 차이를 알려 준다
      - 그 밖의 패키지 차이는 영향 범위를 판정한다. 게이트웨이·클라이언트·음성 처리에 닿는 패키지(HTTP 클라이언트·서버, 직렬화, 오디오 처리)가 바뀌었으면 시험장에서 관련 시험을 다시 하고 통과한 뒤 진행한다. 닿지 않는 것만 기록으로 넘긴다
      - 하나라도 다르면 "시험 이미지와 같은 이미지"라고 부르지 않는다

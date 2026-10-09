@@ -36,7 +36,7 @@
   - `mistral_common`은 베이스 버전을 유지한다. 생성기 기본 모드의 필수 제약에 넣어 `[audio]` 설치가 버전을 바꾸지 못하게 한다. 충돌하면 조용히 올리지 않고 원인을 기록한다
 - [ ] `aws/docker-compose.yml`: 예시 주석의 이미지 태그
 - [ ] `aws/SETUP_GUIDE.md`, `on-prem/SETUP_GUIDE.md`: nightly 휠 전달 단계 삭제 (Dockerfile과 같은 커밋)
-- [ ] 베이스 고정: `VLLM_IMAGE`를 태그와 다이제스트로 적는다(`vllm/vllm-openai:v0.31.0@sha256:...`). 태그만 쓰면 운영 빌드 때 다른 베이스가 올 수 있다. 운영용 env는 P4 반영 때 바꾸려 했으나, 10-09 밤 대표님 지시(서버에서 빌드·`user.sh up`만으로 0.31이 뜨는 상태까지)로 4개(`aws/.env`·`.env.dev`·`.env.prd`, `on-prem/.env.prd`)를 미리 바꿨다: `VLLM_IMAGE` 다이제스트, `EXTRA_REQUIREMENTS` 비움. 옛 값은 `.archive/2026-10-09_vllm-upgrade-p3/env-before-0.31/`. `Dockerfile.llm` 첫 단계에 베이스 vLLM 버전 확인(`ARG VLLM_VERSION`)을 넣어 env를 바꾸지 않은 빌드는 멈춘다(시험장 0.31 환경에서 0.31.0 통과·0.20.2 기대 시 종료 1 확인). 서버 절차는 `aws/SETUP_GUIDE.md` §9-3
+- [ ] 베이스 고정: `VLLM_IMAGE`를 태그와 다이제스트로 적는다(`vllm/vllm-openai:v0.31.0@sha256:...`). 태그만 쓰면 운영 빌드 때 다른 베이스가 올 수 있다. 운영용 env는 P4 반영 때 바꾸려 했으나, 10-09 밤 대표님 지시(서버에서 빌드·`user.sh up`만으로 0.31이 뜨는 상태까지)로 4개(`aws/.env`·`.env.dev`·`.env.prd`, `on-prem/.env.prd`)를 미리 바꿨다: `VLLM_IMAGE` 다이제스트, `EXTRA_REQUIREMENTS` 비움. 옛 값은 `.archive/2026-10-09_vllm-upgrade-p3/env-before-0.31/`. `Dockerfile.llm` 첫 단계에 베이스 vLLM 버전 확인(`ARG VLLM_VERSION`)을 넣어 env를 바꾸지 않은 빌드는 멈춘다(시험장 0.31 환경에서 0.31.0 통과·0.20.2 기대 시 종료 1 확인). 서버 절차는 `aws/SETUP_GUIDE.md` §4-3
 - [ ] 코덱스 검수 후 커밋 (대표님 지시 시). 운영 반영은 하지 않는다
 - [ ] **(맨 마지막, P3 뒤)** 대표님 요청 사항 (연구계 호스트). 시험장 컨테이너 `llm-hgiai`는 바꾸지 않고, 새 이미지는 GPU 2를 쓰는 임시 컨테이너로 확인한다
   - 시험장 이미지 이름을 `user.sh` 컨테이너와 겹치지 않게 한다. 공통 `.env`의 `LLM_IMAGE_NAME`은 `user.sh`도 읽으므로(`aws/user.sh:38-46`) 바꾸지 말고, 시험장 전용 env 파일이나 그 compose 명령에만 값을 준다
