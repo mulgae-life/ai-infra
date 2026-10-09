@@ -30,7 +30,15 @@ S3_URI="${LLM_SERVING_S3_URI:-s3://hgi-ai-res/hjjo/llm-serving/}"
 # 포트 회피 상태(.runtime/), samples/ 는 런타임 산출물이라 제외 (.gitignore와 동일 기준).
 # 두 캐시는 도구가 디렉토리 안에 자기 .gitignore를 심어 git에서는 저절로 빠지지만,
 # aws s3 sync는 .gitignore를 모르므로 여기 명시하지 않으면 S3를 오간다.
+# 패턴은 원본 폴더 기준 전체 경로로 맞춰진다. '*/X/*'는 하위 폴더의 X/만 걸러서
+# llm-serving/ 바로 아래에 도구가 만든 캐시는 따로 적는다(10-10 .ruff_cache/가 S3에 올라감).
 SYNC_EXCLUDES=(
+    --exclude 'logs/*'
+    --exclude '__pycache__/*'
+    --exclude '.pytest_cache/*'
+    --exclude '.ruff_cache/*'
+    --exclude '.claude/*'         # Claude Code 로컬 설정 — .gitignore와 동일
+    --exclude '.archive/*'
     --exclude '*/logs/*'
     --exclude '*/__pycache__/*'
     --exclude '*.pyc'
