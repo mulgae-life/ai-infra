@@ -36,7 +36,7 @@
   - `mistral_common`은 베이스 버전을 유지한다. 생성기 기본 모드의 필수 제약에 넣어 `[audio]` 설치가 버전을 바꾸지 못하게 한다. 충돌하면 조용히 올리지 않고 원인을 기록한다
 - [ ] `aws/docker-compose.yml`: 예시 주석의 이미지 태그
 - [ ] `aws/SETUP_GUIDE.md`, `on-prem/SETUP_GUIDE.md`: nightly 휠 전달 단계 삭제 (Dockerfile과 같은 커밋)
-- [ ] 베이스 고정: `VLLM_IMAGE`를 태그와 다이제스트로 적는다(`vllm/vllm-openai:v0.31.0@sha256:...`). 태그만 쓰면 운영 빌드 때 다른 베이스가 올 수 있다. 운영용 env 3개(`aws/.env`, `.env.prd`, `on-prem/.env.prd`)는 P4 반영 때 바꾸고, P2에서는 시험장 빌드에 쓰는 값만 정한다
+- [ ] 베이스 고정: `VLLM_IMAGE`를 태그와 다이제스트로 적는다(`vllm/vllm-openai:v0.31.0@sha256:...`). 태그만 쓰면 운영 빌드 때 다른 베이스가 올 수 있다. 운영용 env는 P4 반영 때 바꾸려 했으나, 10-09 밤 대표님 지시(서버에서 빌드·`user.sh up`만으로 0.31이 뜨는 상태까지)로 4개(`aws/.env`·`.env.dev`·`.env.prd`, `on-prem/.env.prd`)를 미리 바꿨다: `VLLM_IMAGE` 다이제스트, `EXTRA_REQUIREMENTS` 비움. 옛 값은 `.archive/2026-10-09_vllm-upgrade-p3/env-before-0.31/`. `Dockerfile.llm` 첫 단계에 베이스 vLLM 버전 확인(`ARG VLLM_VERSION`)을 넣어 env를 바꾸지 않은 빌드는 멈춘다(시험장 0.31 환경에서 0.31.0 통과·0.20.2 기대 시 종료 1 확인). 서버 절차는 `aws/SETUP_GUIDE.md` §9-3
 - [ ] 코덱스 검수 후 커밋 (대표님 지시 시). 운영 반영은 하지 않는다
 - [ ] **(맨 마지막, P3 뒤)** 대표님 요청 사항 (연구계 호스트). 시험장 컨테이너 `llm-hgiai`는 바꾸지 않고, 새 이미지는 GPU 2를 쓰는 임시 컨테이너로 확인한다
   - 시험장 이미지 이름을 `user.sh` 컨테이너와 겹치지 않게 한다. 공통 `.env`의 `LLM_IMAGE_NAME`은 `user.sh`도 읽으므로(`aws/user.sh:38-46`) 바꾸지 말고, 시험장 전용 env 파일이나 그 compose 명령에만 값을 준다
@@ -49,8 +49,8 @@
     - 이미지 안의 실행은 `image_check.sh`(원본 사본 `.archive/2026-10-09_vllm-upgrade-p3/image_check.sh`, 시험장 `~/vllm-upgrade/image_check.sh`로 반영, 임시 컨테이너에서는 `/mnt/vllm-upgrade/image_check.sh`)가 맡는다. 아래 명령 묶음 ④·⑥
   - `python`, `python3`, `python3 -m pip`, `vllm`의 실경로·버전, `pip check`
   - 로딩 위치: `vllm`, `torch`가 시스템 site-packages에서 올라오는지. 사용자 site와 겹치는 패키지 목록
-  - 실행 중 추가 설치: `EXTRA_REQUIREMENTS`가 비어 있는지. 쓰면 같은 제약을 건다
-  - 재생성 뒤 `hgiai` 사용자·홈 소유권·sudo. 0.31 이미지에는 UID 2000 `vllm` 사용자가 있고 Ubuntu 24.04에는 UID 1000 `ubuntu`가 있지만, `entrypoint-llm.sh:50-57`이 같은 UID의 기존 사용자를 지우고 새로 만든다
+  - 실행 중 추가 설치: `EXTRA_REQUIREMENTS`가 비어 있는지. 쓰면 같은 제약을 건다 — 10-09 밤 반영: 빌드가 제약 파일을 `/opt/vllm-core-constraints.txt`에 남기고 진입점이 `-c`로 건다. 시험장에서 `transformers==5.8.0` 요청은 제약이 있으면 `ResolutionImpossible`(종료 1), 없으면 transformers·tokenizers를 내려 까는 것으로 확인했다
+  - 재생성 뒤 `hgiai` 사용자·홈 소유권·sudo. 0.31 이미지에는 UID 2000 `vllm` 사용자가 있고 Ubuntu 24.04에는 UID 1000 `ubuntu`가 있지만, `entrypoint-llm.sh:57-64`이 같은 UID의 기존 사용자를 지우고 새로 만든다
   - 핵심 패키지 대조표: 이미지 값과 P1 예행 기록을 나란히 적고 다른 항목은 이유를 적는다
   - 설정 해석 9/9 재실행, `async_scheduling` 최종값 False
   - 생성기 `--final` 통과(FlashInfer cubin·jit-cache의 존재·버전·CUDA 표시 포함), 음성 모듈 import(soundfile, soxr, av, torchcodec, `mistral_common.audio`), 게이트웨이 의존성 import
@@ -188,7 +188,7 @@ docker ps --filter name=llm-0.31-test --format '{{.Status}}'; docker logs llm-0.
 docker exec -u hgiai llm-0.31-test bash -lc '
   which python python3 vllm ps free nvidia-smi; python --version; python3 -m pip --version   # ps·free·nvidia-smi는 ⑥ 부하 메모리 기록에 쓴다
   python3 -c "import vllm,torch,transformers,flashinfer;print(vllm.__version__,torch.__version__,transformers.__version__,flashinfer.__version__,vllm.__file__)"
-  python3 -m pip check; python3 /opt/gen-core-constraints.py --final; cat /opt/image-core-final.txt'
+  python3 -m pip check; python3 /opt/gen-core-constraints.py --final; cat /opt/image-core-final.txt; ls -l /opt/vllm-core-constraints.txt'
 #   → /opt/image-core-final.txt를 시험장 pip 환경의 ~/vllm-upgrade/rehearsal-final.txt와 대조(차이는 이유를 적는다)
 #   → 전체 목록 /opt/image-freeze.txt를 레포 aws/image-freeze-0.31.0.txt로 저장(베이스 다이제스트·빌드 인자 머리말 포함)
 
