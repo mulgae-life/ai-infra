@@ -7,7 +7,7 @@ AWS와 다른 점은 셋뿐입니다.
 | 항목 | AWS (`aws/`) | 온프레미스 (`on-prem/`) |
 |------|------|------|
 | 호스트 OS | Amazon Linux 2023 | RHEL 10 |
-| 코드 전달 | S3 sync (`start.sh push/pull`) | git clone/pull + `.env`·`wheels/`는 scp |
+| 코드 전달 | S3 sync (`start.sh push/pull`) | git clone/pull + `.env`는 scp |
 | 네트워크 | 상시 | **세팅 시점만 개방, 이후 끊길 수 있음** → 끊기 전 `start.sh check` |
 
 ---
@@ -46,7 +46,7 @@ AWS와 다른 점은 셋뿐입니다.
 | 서버 | RHEL 10, NVIDIA 드라이버 580.178.04 설치(또는 미설치 — 스크립트가 설치), 구독 등록 완료(`dnf repolist`에 BaseOS) |
 | 권한 | `sudo` 가능한 OS 계정 |
 | 네트워크 | 세팅 중 개방 (§1) |
-| 개발 머신에서 가져갈 것 | `on-prem/.env.prd`, `aws/wheels/vllm-*.whl` (둘 다 git 미추적) |
+| 개발 머신에서 가져갈 것 | `on-prem/.env.prd` (git 미추적) |
 
 > 💡 본 인프라는 **내부망 전용**입니다. `.env`의 `HF_TOKEN`/`PASSWORD`는 내부 정책으로 보호되므로 별도 마스킹하지 않습니다.
 
@@ -81,10 +81,7 @@ tail -f /var/log/onprem-setup.log    # 진행 확인 (다른 터미널)
 #     컨테이너 안에서 /workspace/ai-infra 로 보이는 위치라 연구계와 경로가 같다. ~/ai-infra 는 이제 안 쓴다.
 cd /volume/workspace/root/ai-infra/aws
 
-# (5) vLLM nightly wheel 전달 (246MB, git 미추적, Dockerfile.llm 이 COPY)
-#     개발 머신에서: scp /workspace/ai-infra/aws/wheels/vllm-*.whl <server>:/volume/workspace/root/ai-infra/aws/wheels/
-
-# (6) 컨테이너 빌드 + 기동
+# (5) 컨테이너 빌드 + 기동 (vLLM은 베이스 이미지 v0.31.0 정식 빌드를 쓴다 — 따로 전달할 휠 없음)
 docker compose build
 docker compose up -d
 docker compose logs -f llm
@@ -197,7 +194,7 @@ rsync -av --delete --exclude .git --exclude .env --exclude .archive --exclude lo
       /workspace/ai-infra/ <server>:/volume/workspace/root/ai-infra/
 ```
 
-`.env`와 `aws/wheels/`는 git 밖이라 `pull`로 안 따라옵니다. 바뀌었으면 scp로 따로 옮깁니다.
+`.env`는 git 밖이라 `pull`로 안 따라옵니다. 바뀌었으면 scp로 따로 옮깁니다.
 
 ### 6-2. `.env`만 수정한 경우
 

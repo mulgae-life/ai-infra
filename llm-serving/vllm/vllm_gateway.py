@@ -925,7 +925,12 @@ def _translate_effort(
         new_kwargs["enable_thinking"] = False
         applied = _EFFORT_THINKING_OFF
     elif resolved:
-        new_payload["reasoning_effort"] = resolved
+        # 최상위가 아니라 템플릿 인자로 넘긴다. vLLM 0.31부터 최상위 reasoning_effort가
+        # 있으면 enable_thinking을 자동으로 켠다(chat_completion/protocol.py). 그러면
+        # "thinking 스위치는 enable_thinking, effort는 강약"이라는 게이트웨이 계약이 깨진다.
+        # 템플릿 인자는 그 매핑을 타지 않고, thinking 기본값은 인스턴스 설정을 따른다.
+        # 옛 nightly도 최상위가 없으면 템플릿 인자 값을 그대로 쓰므로 두 버전에서 같다.
+        new_kwargs["reasoning_effort"] = resolved
         applied = resolved
     else:
         # 백엔드가 effort를 모르거나(프로파일 없음), 알아도 받지 않는 값이거나,

@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile.llm
       args:
-        BASE_IMAGE: "${VLLM_IMAGE:?VLLM_IMAGE를 .env에 설정해주세요 (예: vllm/vllm-openai:v0.20.2)}"
+        BASE_IMAGE: "${VLLM_IMAGE:?VLLM_IMAGE를 .env에 설정해주세요 (예: vllm/vllm-openai:v0.31.0@sha256:...)}"
         MODE: "${MODE:-dev}"
     image: ${LLM_IMAGE_NAME:-llm-dev}
     container_name: llm-${USERNAME:-user}

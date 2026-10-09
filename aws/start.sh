@@ -19,8 +19,8 @@ cd "$SCRIPT_DIR"
 S3_URI="${AWS_INFRA_S3_URI:-s3://hgi-ai-res/hjjo/aws/}"
 
 # push(로컬→S3) / pull(S3→로컬) 공통 제외 목록.
-# ※ wheels/ 는 제외하지 않는다 — 246MB nightly wheel이지만 Dockerfile.llm이 COPY로
-#    빌드 타임에 쓰므로 S3에는 반드시 올라가야 한다 (git에서만 .gitignore로 제외).
+# ※ wheels/ 는 vLLM 0.31.0 전환으로 Dockerfile.llm이 더는 쓰지 않는다(nightly 휠 덮어쓰기 제거).
+#    폴더는 운영 반영 확인 뒤 .archive/로 옮긴다 — 그 전까지는 있으면 push에 함께 올라간다.
 # ※ .env(각 서버의 런타임 로드본)는 제외한다 — 환경별 .env.dev/.env.prd만 S3에 보관하고
 #    각 서버가 배포 후 알맞은 것을 .env로 복사한다. 제외하지 않으면 pull 한 번에
 #    그 서버의 .env가 다른 환경 값으로 덮어써진다(MODE·USERNAME·GPU 배정까지 뒤바뀜).
@@ -48,7 +48,7 @@ require_aws() {
 # 프리픽스를 비운 뒤 올려 로컬과 정확히 일치시킨다.
 # 제외 목록(.git/·__pycache__/·.archive/·*.log)은 애초에 S3에 있어서는 안 되는 것들이라
 # 삭제 단계에서 함께 지워져도 잃을 것이 없다.
-# ※ wheels/(246MB)는 제외 대상이 아니라, 전체 교체 방식에서는 push마다 다시 올라간다.
+# ※ wheels/(246MB)가 남아 있으면 제외 대상이 아니라 push마다 다시 올라간다(위 주석 참고).
 #    변경분만 올리고 싶으면 --dryrun으로 규모를 먼저 확인할 것.
 cmd_push() {
     require_aws push
@@ -77,7 +77,7 @@ cmd_push() {
         echo "[push] S3 업로드 실패 — 프리픽스가 비워진 상태이니 반드시 push를 재실행할 것"
         exit 1
     fi
-    echo "[push] 업로드 완료 (.env.dev·.env.prd·wheels/ 포함, .env 런타임본은 제외)"
+    echo "[push] 업로드 완료 (.env.dev·.env.prd 포함, .env 런타임본은 제외)"
     echo "[push] 운영계 적용: ./start.sh pull 후 docker compose build && ./user.sh rebuild <name>"
 }
 

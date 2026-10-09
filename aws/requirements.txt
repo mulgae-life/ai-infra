@@ -1,14 +1,11 @@
 # 챗봇 서비스 의존성
-# 베이스: vllm/vllm-openai:v0.20.2 (torch, fastapi, pydantic 등 포함)
+# 베이스: vllm/vllm-openai:v0.31.0 (vLLM, torch, transformers, FlashInfer, fastapi, pydantic 등 포함)
 #
-# 설치: pip install -r requirements.txt && pip install --no-deps "transformers>=5.8.0"
-# ※ transformers는 --no-deps 필수 (vLLM 핀 의존성 보호)
-# ※ vLLM: 베이스(vllm/vllm-openai:v0.20.2)의 정식 빌드엔 Gemma 4 MTP(gemma4_mtp)가 없다.
-#    → Dockerfile.llm이 wheels/의 nightly 빌드(0.20.2rc1.dev251+gef34592a1)로 덮어써서 보강한다.
-#    PR #41745(Gemma 4 MTP)는 v0.22.0 first release — 정식 v0.20.2엔 미포함 (2026-06-01 실측).
-#    누락 시 drafter가 draft_model로 fallback → 멀티모달 Gemma에서 NotImplementedError로 기동 실패.
-# ※ FlashInfer 3종은 vLLM speculative decoding(MTP) 런타임 의존성 — 여기 핀하지 않는다.
-#    vLLM/베이스 이미지가 0.6.8.post1(베이스 CUDA에 맞는 cu variant)로 제공한다 (하단 주석 참조).
+# 설치: Dockerfile.llm이 베이스의 핵심 패키지를 == 제약으로 만들어(gen-core-constraints.py) 이 파일을
+#       그 제약으로 설치한다. 그래서 여기 적은 패키지가 vLLM·torch·transformers 버전을 바꿀 수 없다.
+#       transformers를 따로 다시 까는 단계는 없앴다(0.31의 상한 5.18 미만을 넘을 위험).
+# ※ Gemma 4 MTP(gemma4_mtp, PR #41745)는 v0.21.0부터 정식 포함이라 nightly 휠 덮어쓰기는 없앴다.
+# ※ FlashInfer 3종(python, cubin, jit-cache)은 베이스 이미지가 0.7.0.post1로 제공한다 — 여기 핀하지 않는다.
 
 # FastAPI + 서빙 (vLLM 이미지에 포함되어있으나 최소 버전 명시)
 fastapi>=0.115.0
@@ -55,16 +52,20 @@ datasets>=3.0.0
 
 # STT (Voxtral / Whisper / Qwen-ASR) 오디오 의존성
 # ※ 미설치 시 vLLM 기동 직후 EngineCore 가 ImportError: soundfile / soxr 로 fail.
-# 모델카드 권장: pip install soxr librosa soundfile
-soundfile>=0.13.0
-soxr>=1.1.0
-librosa>=0.11.0
-
-# vLLM Speculative Decoding (MTP) — FlashInfer 3종은 vLLM/베이스 이미지가 제공한다(여기 핀 안 함).
-# ※ vLLM nightly가 flashinfer-python/cubin을 ==0.6.8.post1로 strict 핀하고, jit-cache는 베이스
-#    이미지의 0.6.8.post1(+cu13x)을 그대로 쓴다 → 셋 다 0.6.8.post1·동일 cu variant로 일관된다.
-# ※ 별도로 0.6.11/cu129 등으로 재고정하지 말 것. 베이스 환경의 CUDA와 어긋나면(예: cu129 모듈을
-#    cu13 베이스에 깔면) flashinfer가 libcudart.so.12를 요구하다 EngineCore가 죽는다.
+# ※ vLLM 0.31의 audio 추가 의존성(av, scipy, soundfile, soxr, mistral_common[audio])과 맞춘다.
+#    전사 서버는 입력을 모델 샘플레이트로 읽고, soundfile 경로는 원본이 다르면 PyAV로 리샘플한다
+#    (vllm/multimodal/media/audio.py). av가 없으면 16kHz가 아닌 입력이 이 경로에서 실패한다.
+#    Voxtral은 mistral_common.audio를 직접 쓴다. mistral_common 버전은 베이스 제약이 고정한다.
+# ※ librosa는 vLLM 목록에 없지만 transformers 오디오 유틸 경로가 있어 유지한다.
+# ※ 버전은 == 고정: 하한만 두면 빌드마다 다른 조합이 골라진다. 2026-10-08 시험장 예행 설치에서
+#    해석된 값이 후보이고, 새 이미지에서 시험을 통과한 조합이 정본이다(image-freeze-0.31.0.txt).
+#    librosa는 예행에서 1.0.0(메이저 변경)이 골라져, 연구계에서 쓰던 0.11.0으로 묶었다.
+av==19.0.1
+soundfile==0.14.0
+soxr==1.1.0
+librosa==0.11.0
+scipy==1.17.1
+mistral_common[audio]
 
 # 테스트
 pytest>=8.0

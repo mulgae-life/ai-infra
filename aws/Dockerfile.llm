@@ -23,8 +23,13 @@ RUN apt-get update && apt-get install -y \
     libnspr4 libnss3 \
     libatk1.0-0 libatk-bridge2.0-0 libatspi2.0-0 \
     libxcomposite1 libxdamage1 \
-    && ln -sf /usr/local/bin/python3 /usr/bin/python \
     && rm -rf /var/lib/apt/lists/*
+
+# python → 베이스가 쓰는 python3. v0.20.2 베이스는 /usr/local에 빌드한 Python, 0.31 런타임은
+# apt의 /usr/bin/python3를 쓴다(공식 docker/Dockerfile 런타임 단계). 고정 경로로 링크하면
+# 베이스가 바뀔 때 빈 대상을 가리키므로 실제 경로를 찾아 걸고, 못 찾으면 빌드를 멈춘다.
+RUN PY3="$(command -v python3)" && [ -n "$PY3" ] && [ -x "$PY3" ] \
+    && ln -sf "$PY3" /usr/bin/python && python --version
 
 # ============================================
 # 한글 로케일 + 서울 타임존
@@ -34,6 +39,10 @@ RUN locale-gen ko_KR.UTF-8 \
     && echo "Asia/Seoul" > /etc/timezone
 ENV LANG=ko_KR.UTF-8
 ENV LC_ALL=ko_KR.UTF-8
+# ENV는 docker exec에만 전달되고 sshd가 만드는 SSH 세션에는 넘어가지 않는다.
+# LANG을 안 보내는 클라이언트(Termius 등)는 ASCII 로케일이 되어 tmux가 한글을 '_'로 그리므로
+# sshd PAM이 읽는 /etc/default/locale에도 같은 값을 기록한다 (잘못된 값이면 빌드 실패)
+RUN update-locale LANG="${LANG}"
 
 # ============================================
 # nvm + Node.js LTS + codex (dev 전용)
@@ -67,22 +76,22 @@ RUN mkdir -p /run/sshd \
 # Python 패키지 (빌드 타임)
 # ============================================
 COPY requirements.txt /tmp/requirements.txt
-# vLLM nightly wheel (gemma4_mtp 포함) — 정식 v0.20.2 베이스엔 Gemma 4 MTP가 없어
-# dev 빌드(0.20.2rc1.dev251+gef34592a1)로 덮어써 호스트 운영 환경을 그대로 재현한다.
-# 정본은 /models/wheels/, 빌드 컨텍스트 사본은 aws/wheels/ (.gitignore).
-COPY wheels/ /tmp/wheels/
-# 설치 순서:
-#  ① requirements.txt   : 일반 의존성
-#  ② vLLM nightly wheel : gemma4_mtp 보강. flashinfer-python/cubin을 ==0.6.8.post1로 설치한다
-#                         (베이스 환경 CUDA에 맞는 cu variant). jit-cache는 vLLM 비의존이라
-#                         베이스 이미지의 0.6.8.post1+cu130 그대로 → 셋 다 0.6.8.post1·동일 cu로 일관.
-#  ③ transformers       : --no-deps로 맨 마지막 고정 (vLLM 핀 의존성 보호).
-# ※ 이전엔 ②와 ③ 사이에서 flashinfer 3종을 cu129·0.6.11로 강제 재고정했으나, cu13 베이스에선
-#    cu129 모듈이 libcudart.so.12를 요구해 EngineCore가 죽었다(개발계 환경과 불일치). vLLM이
-#    환경에 맞는 cu variant로 깔도록 두는 게 맞아 제거했다. (연구계는 cu12.9라 cu129가 맞았던 것.)
-RUN pip install --no-cache-dir -r /tmp/requirements.txt \
-    && pip install --no-cache-dir /tmp/wheels/vllm-*.whl \
-    && pip install --no-cache-dir --no-deps "transformers>=5.8.0"
+COPY gen-core-constraints.py /opt/gen-core-constraints.py
+# 베이스(vllm/vllm-openai v0.31.0)가 검증한 vLLM·torch·transformers·FlashInfer 조합을 그대로 쓰고
+# 챗봇 의존성만 얹는다. Gemma 4 MTP는 0.21.0부터 정식 포함이라 nightly 휠 덮어쓰기는 없앴다.
+#  ① 생성기 기본 모드: 베이스의 핵심 패키지를 배포 메타데이터 기준 == 제약으로 낸다(필수 누락 시 실패)
+#  ② requirements.txt를 그 제약으로 설치 → 챗봇 의존성이 베이스 조합을 바꾸려 하면 빌드가 실패한다
+#     (예전처럼 transformers를 하한만 두고 다시 깔면 0.31의 상한 5.18 미만을 넘을 수 있었다)
+#  ③ pip check → ④ --final: FlashInfer 부속·음성 경로까지 최종 서빙 조합 확인(하나라도 없으면 실패)
+#  ⑤ 최종 조합과 전체 목록을 이미지 안에 남긴다. 운영 빌드는 이 두 파일을 aws/image-freeze-0.31.0.txt와 대조
+# pip는 python3 -m pip로 부른다: 0.31 런타임은 apt Python에 get-pip로 pip를 따로 깔아, 셸의 pip가
+# 다른 인터프리터를 가리킬 여지를 없앤다
+RUN python3 /opt/gen-core-constraints.py > /tmp/vllm-core-constraints.txt \
+    && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt -c /tmp/vllm-core-constraints.txt \
+    && python3 -m pip check \
+    && python3 /opt/gen-core-constraints.py --final > /opt/image-core-final.txt \
+    && cat /opt/image-core-final.txt \
+    && python3 -m pip freeze > /opt/image-freeze.txt
 
 # ============================================
 # CUDA 런타임 라이브러리 ldconfig 등록 (flashinfer JIT 대응)

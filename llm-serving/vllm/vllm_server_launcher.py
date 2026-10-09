@@ -692,7 +692,10 @@ def main():
     # True로 덮어쓴다(멀티모달 encoder cache race 유발).
     # → YAML에서 false로 명시한 의도를 관철시키려면 --no-async-scheduling
     #   플래그를 직접 추가해야 한다(argparse BooleanOptionalAction 덕분에 유효).
-    # vLLM이 bool false 전달 버그를 고치면 이 블록은 제거 가능.
+    # 2026-10-08 vLLM 0.31.0 확인: false를 --no-<키>로 바꾸는 코드가 생겼지만 키 이름을
+    # 하이픈으로 바꾸기 전에 조회해 밑줄 키(async_scheduling)는 여전히 버린다
+    # (utils/argparse_utils.py:615). 0.20 nightly·0.31 모두 이 블록이 있어야 최종값이 False다
+    # (시험장 설정 해석 실측: 주입 시 False, 미주입 시 None). 그래서 블록을 유지한다.
     if config.get("async_scheduling") is False:
         cmd.append("--no-async-scheduling")
         logger.info("async_scheduling: false → --no-async-scheduling 플래그 추가")

@@ -30,7 +30,7 @@ LLM_IMAGE_NAME="${LLM_IMAGE_NAME:-llm-prd}"
 EXTRA_REQUIREMENTS="${EXTRA_REQUIREMENTS:-}"
 NVIDIA_DRIVER_VERSION="${NVIDIA_DRIVER_VERSION:-580.178.04}"
 
-# git pull (네트워크 개방 시에만 동작). S3와 달리 .env·wheels/는 git 밖이라 안 따라온다.
+# git pull (네트워크 개방 시에만 동작). S3와 달리 .env는 git 밖이라 안 따라온다.
 cmd_pull() {
     if ! git -C "$SCRIPT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         echo "[pull] git 저장소가 아닙니다: $SCRIPT_DIR"
@@ -42,7 +42,7 @@ cmd_pull() {
         exit 1
     fi
     chmod +x "$SCRIPT_DIR"/*.sh "$AWS_DIR"/*.sh 2>/dev/null || true
-    echo "[pull] 완료 (.env·aws/wheels/ 는 git 밖 — 바뀌었으면 별도 scp)"
+    echo "[pull] 완료 (.env는 git 밖 — 바뀌었으면 별도 scp)"
     echo "[pull] 다음 단계: cd $AWS_DIR && docker compose build && ../aws/user.sh rebuild <name>"
 }
 
@@ -120,11 +120,7 @@ cmd_check() {
     echo
 
     echo "빌드 재료 (git 미추적 — scp로 가져와야 함)"
-    if ls "$AWS_DIR"/wheels/vllm-*.whl &>/dev/null; then
-        ok "aws/wheels/ vLLM nightly: $(basename "$(ls "$AWS_DIR"/wheels/vllm-*.whl | head -1)")"
-    else
-        fail "aws/wheels/ 에 vllm-*.whl 없음 → 개발 머신에서 scp (Dockerfile.llm COPY 대상)"
-    fi
+    # vLLM 0.31.0 전환으로 nightly 휠(aws/wheels/)은 빌드 재료가 아니다 — 베이스 이미지의 정식 빌드를 쓴다
     [ -f "$ENV_FILE" ] && ok "aws/.env" || fail "aws/.env 없음 → cp on-prem/.env.prd aws/.env"
     echo
 
@@ -183,7 +179,7 @@ case "${1:-}" in
     *)
         echo "사용법: $0 {pull|check}"
         echo ""
-        echo "  pull   git pull (네트워크 개방 시). .env·aws/wheels/ 는 별도 scp"
+        echo "  pull   git pull (네트워크 개방 시). .env는 별도 scp"
         echo "  check  폐쇄망 준비 점검 — 이미지·휠·모델·pip 오프라인 설정이 로컬에 있는지"
         exit 1
         ;;

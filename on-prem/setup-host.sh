@@ -228,7 +228,7 @@ place_working_copy() {
     fi
     chmod +x "$target"/aws/*.sh "$target"/on-prem/*.sh 2>/dev/null || true
     log "  작업 사본 배치 완료. 이후 명령은 ${target}/aws 에서 실행"
-    log "  ⚠️ aws/wheels/(vLLM nightly, git 미추적)는 별도로 scp해야 docker compose build가 됩니다 (SETUP_GUIDE.md §3-2 (5))"
+    log "  vLLM은 베이스 이미지(v0.31.0) 정식 빌드를 쓴다 — 따로 전달할 휠 없음 (SETUP_GUIDE.md §3-2 (5))"
 }
 
 # ============================================
@@ -653,7 +653,6 @@ phase2() {
     log ""
     log "  다음 단계:"
     log "    cd $(realpath "$work_dir")"
-    log "    (aws/wheels/ 가 비어 있으면 개발 머신에서 scp — SETUP_GUIDE.md §3-2 (5))"
     log "    docker compose build && docker compose up -d"
     log "    네트워크 끊기 전: ../on-prem/start.sh check"
     log ""
