@@ -1,7 +1,7 @@
 ---
 name: session
 description: ai-infra 레포 현재 상태. 세션 시작 시 다음 작업과 최근 변경 파악용.
-last-updated: 2026-10-08 (ai-research 레이어 신설, 보험 임베딩 실행 계획서)
+last-updated: 2026-10-09 (vLLM 0.31 버전업 P2·P3, 운영 Gemma MTP 끔)
 ---
 
 # 세션 상태
@@ -24,10 +24,11 @@ last-updated: 2026-10-08 (ai-research 레이어 신설, 보험 임베딩 실행 
 
 | 우선순위 | 작업 | 상태 |
 |---------|------|------|
+| P1 | **vLLM 0.31 버전업**: 계획서 `agent-guide/plans/work-plan_261008_vllm-upgrade/`(P0~P1 ✅, P2~P3 🟡). 시험장 pip 0.31 A/B·MTP 끔 2시간 부하 통과(판정표 `llm-serving/vllm/tests/results/vllm-0.31-ab.md`). 다음은 대표님 이미지 빌드 → part2 "마지막 단계 명령 묶음" ④~⑦ → P4 운영 반영·P5 문서. 잔존: 연쇄 4판 자동 판정 두 경로, 재사용 전 실패 주입 모의 | P3 이미지 확인 대기 |
 | P1 | **온프레미스 H200 셋업 (`on-prem/`)**: 골격 `f9c1012`. 잔존 ① 설치팀 회신(HGX/PCIe, `VOLUME_DEVICE`, RAM) ② 실서버 `setup-host.sh` 첫 실행 ③ RHEL Docker가 `apparmor=unconfined`를 무시하는지 ④ §5-3 pip 오프라인 실측 ⑤ `start.sh check`가 들여쓰인 drafter 경로를 검사하지 못함(수정 여부 대표님 결정) | 골격 ✅, 실서버 대기 |
-| P1 | **운영계 반영 (`gemma-4` 별칭·정체성 프롬프트 + 31B 전환)**: 31B 본체와 `-assistant` drafter를 S3로 먼저 반입 → `push` → 운영계 `pull` → 인스턴스·게이트웨이 **둘 다** 재기동(별칭·fingerprint는 인스턴스 재기동이 있어야 반영). 기동 로그 `Maximum concurrency`와 preempt 경고로 `max_num_seqs: 20`을 판정. 옛 `vllm/slm_research/`는 이 `pull --delete`가 지운다 | 연구계 ✅, 운영계 대기 |
+| P1 | **운영계 반영 (`gemma-4` 별칭·정체성 프롬프트 + 31B 전환)**: 31B 본체(10-09 MTP 끔 결정으로 `-assistant` drafter는 지금 불필요)를 S3로 먼저 반입 → `push` → 운영계 `pull` → 인스턴스·게이트웨이 **둘 다** 재기동(별칭·fingerprint는 인스턴스 재기동이 있어야 반영). 기동 로그 `Maximum concurrency`와 preempt 경고로 `max_num_seqs: 20`을 판정. 옛 `vllm/slm_research/`는 이 `pull --delete`가 지운다 | 연구계 ✅, 운영계 대기 |
 | P1 | **:5015 게이트웨이 프로파일 (26B 기준)**: gemma-26b fp8·TP2·gmu 0.9·max_len 65536, overload 20/40. 잔존: 장문 트래픽 latency·429 비율 측정. :5015 뒤에는 `gateway_port: 5015`인 인스턴스가 붙는다(10-07 현재 qwen) | 장문 검증 잔존 |
-| P1 | **MTP 벤치**: 31B·Qwen 27B·26B-A4B 실기동 확인(Qwen은 08-18부터 :5015 경로, 10-07 기동 확인). 잔존: acceptance/TPOT 사내 벤치(`agent-guide/docs/slm_research/topics/mtp.md` §5) | 벤치 잔존 |
+| P1 | **MTP 벤치**: 운영 Gemma·Qwen 모두 MTP 끔(10-09·10-08). 다시 켜는 조건은 #46088 수정 확인. 31B·Qwen 27B·26B-A4B 실기동 확인(Qwen은 08-18부터 :5015 경로, 10-07 기동 확인). 잔존: acceptance/TPOT 사내 벤치(`agent-guide/docs/slm_research/topics/mtp.md` §5) | 벤치 잔존 |
 | P1 | **모델 간 속도 매트릭스**: `./start.sh speed [name\|all]`. 26B-A4B 6행 확보. 잔존: 31B·Qwen 풀 매트릭스로 3모델 비교 | 부분 완료 |
 | P1 | `llm-serving/sglang/` 디렉토리 골격 (운영 가이드 + 런처 + 설정 + 테스트) | Todo |
 | P1 | **STT 한국어 실측**: Whisper-large-v3 1순위(+한국어 fine-tune 트랙) 채택. `test_stt.py`(WER/RTF/정성)로 실측 확정 | 의사결정 ✅, 실측 대기 |
@@ -50,7 +51,8 @@ last-updated: 2026-10-08 (ai-research 레이어 신설, 보험 임베딩 실행 
 
 | 날짜 | 한 일 |
 |------|------|
-| **10-08** | `ai-research/` 연구·실험 레이어 신설 + 보험 임베딩 골격 `00085cf` · 보험 임베딩 실행 계획서 초안 v2 `efa102c`. 코덱스와 4라운드 합의, 협업 원본은 `.archive/2026-10-08_insurance-ft-plan-collab/`. 하드 네거티브 채굴을 E1 앞에 두려던 안은 설계 7.1절과 어긋나 E2 준비로 옮김 |
+| **10-09** | vLLM 0.31 P2·P3 — `aws/` 정식 이미지 전환(nightly 휠 제거, 베이스 조합 제약)과 게이트웨이 effort를 템플릿 인자로 `bbaae21` · A/B 시험 도구 5종·판정표 `f40fdfc` · 운영 Gemma MTP 끔(결정 ⑨) `89d4899` · 이미지 확인 스크립트로 계획서 ④·⑥ 결함 3건 수정 · SSH 세션 한글 로케일 `44722eb`. 협업·도구 원본 `.archive/2026-10-09_vllm-upgrade-p3/`. 공백 반복을 "모델 습관"이라 한 것은 원인 미분리라 "공통 출력 이상"으로 정정 |
+| **10-08** | vLLM 0.31 계획서 `db11b7e` · Qwen MTP 끔 `1d097b7` · 정체성 문구 기본값 비공개 `de23caf` · 시험장 0.31 예행 설치(P1) · `ai-research/` 연구·실험 레이어 신설 + 보험 임베딩 골격 `00085cf` · 보험 임베딩 실행 계획서 초안 v2 `efa102c`. 코덱스와 4라운드 합의, 협업 원본은 `.archive/2026-10-08_insurance-ft-plan-collab/`. 하드 네거티브 채굴을 E1 앞에 두려던 안은 설계 7.1절과 어긋나 E2 준비로 옮김 |
 | **10-07** | 레포명 `docker` → `ai-infra`(GitHub, 로컬 경로, 레포 안 표기. Docker 도구명과 `my-docker-server/`는 유지) `c009f48` · 점검 중 찾은 기존 안내 오류 2건 정정 `cef33a0` · 연구계 qwen·:5015를 새 경로에서 재기동. GUIDE의 "서빙은 net/PID 네임스페이스 밖"은 틀려서 정정(이 컨테이너 안에서 돈다). 로컬 PC도 `/workspace/ai-infra`로 옮기고 `ssh-guard.service` 재복사 + `daemon-reload` 완료(설치본 = 레포본) · `agent-guide/docs/embedding_research/` 신설 + 대표님 임베딩 조사 문서를 원문과 대조해 4건 정정 `9352b21` · 보험 임베딩 파인튜닝 조사 `ccb18ed`. 코덱스와 4라운드 교차 검증, 원본 HTML·PDF와 협업 메모는 `.archive/2026-10-07_insurance-ft-collab/` |
 | **10-06** | Jev 조사 + `slm_research/`를 `models/`·`topics/`·`sources/`로 개편 `5557317` · `slm_research/`를 `agent-guide/docs/`로 옮겨 배포 범위 밖에 두고 `start.sh` 제외 규칙 삭제 `11d7420` · Jev 방식 실측(Qwen3.8 FP8 대 Jev) `6f9550b` |
 | **09-15** | 운영 배포분 주석 어조 정리 + `slm_research/` S3 제외 `298b04c`. 보안 검토 범위는 GitHub 공개 여부가 아니라 운영 서버로 가는 것(대표님 확정) · 정체성 프롬프트는 유지 · `on-prem/`은 `aws/`보다 뒤처지지 않음 |

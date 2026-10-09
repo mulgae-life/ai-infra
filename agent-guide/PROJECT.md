@@ -100,8 +100,13 @@ ai-infra/
     │   │   ├── test_vllm_server.py  # 서버 헬스/추론 9 카테고리 QA
     │   │   ├── traffic_test_vllm.py # 보수적 트래픽/과부하 테스트
     │   │   ├── speed_test.py        # 모델 간 속도 매트릭스 누적 (진입점 ./start.sh speed)
+    │   │   ├── ab_regression_probe.py   # vLLM 버전 A/B 회귀·품질 탐침 (--compare로 두 결과 대조)
+    │   │   ├── effort_thinking_matrix.py # reasoning_effort × enable_thinking 계약 확인
+    │   │   ├── gateway_compat_probe.py  # 게이트웨이 호환 계층(정체성 문구·developer 역할·root 가림)
+    │   │   ├── mtp_known_bug_probe.py   # 상류 MTP 결함(문법·요청 혼합) 재현 탐침
+    │   │   ├── mtp_prefix_cache_probe.py # MTP + 접두 캐시 손상 재현 + 수락률
     │   │   ├── image.png            # 멀티모달 fixture
-    │   │   └── results/             # speed_results.md 등 누적 리포트
+    │   │   └── results/             # speed_results.md, vllm-0.31-ab.md(버전업 판정표) 등 누적 리포트
     │   └── bugfix/                   # 운영 중 발견 이슈 기록
     ├── pii/                          # PII/DLP 가드 운영 중 (외부 포트 인수 → 게이트웨이 포워딩, enforcement)
     │   ├── start.sh                  # NER(GPU3)+프록시 기동 (up/down/status [5015|5016|5501|5502|all])
@@ -152,13 +157,17 @@ ai-infra/
 | `llm-serving/start.sh` | S3 코드 배포 (`push`/`pull`). 구 `sync.sh` — 하위 `vllm/`·`stt/`·`pii/`의 `start.sh`는 서비스 제어라 역할이 다름 |
 | `aws/setup-ec2.sh` | Amazon Linux 2023 호스트 1회 셋업 (사용자/SSH/EBS/Docker/NVIDIA, Phase 1↔2 자동 전환) |
 | `aws/user.sh` | 사용자별 독립 컨테이너 + 포트 자동 할당(`up`/`down`/`list`/`rebuild`) |
-| `aws/Dockerfile.llm` | vLLM 베이스 + SSH. dev/prd 모드 분기 |
+| `aws/Dockerfile.llm` | vLLM 베이스(v0.31.0 정식 이미지) + SSH. dev/prd 모드 분기. 베이스의 핵심 패키지 조합을 제약으로 고정해 requirements를 설치 |
+| `aws/gen-core-constraints.py` | 베이스 이미지의 vLLM·torch·transformers·FlashInfer 등을 `==` 제약으로 출력(기본) / 최종 서빙 조합 확인(`--final`, 누락 시 빌드 실패) |
 | `aws/docker-compose.yml` | 메인 컨테이너 정의 (`.env`로 GPU/메모리/포트 제어) |
 | `llm-serving/vllm/vllm_server_launcher.py` | 다중 vLLM 서버 기동 (GPU 분할, yaml-relative runtime json) — LLM/STT 공용. `--download-only`로 모델+drafter 증분 동기화(서빙 경로는 네트워크 미접근), `speculative_config.model`의 `${model}` 치환 |
 | `llm-serving/vllm/vllm_gateway.py` | OpenAI 호환 게이트웨이 (chat/completions + audio/transcriptions + realtime WebSocket) — LLM/STT 공용. 모델 교체 호환 계층 포함(`reasoning_effort` 번역, `/v1/models`의 `root` 마스킹 — `compat` 설정) |
 | `llm-serving/vllm/tests/test_vllm_server.py` | 서버 헬스/추론 9 카테고리 QA — 진입점 `./start.sh test [name\|all\|URL]` |
 | `llm-serving/vllm/tests/traffic_test_vllm.py` | 운영 서버 보호를 우선한 smoke/overload 트래픽 테스트 — 진입점 `./start.sh traffic <포트>` (게이트웨이 전용, 대상 명시 필수) |
 | `llm-serving/vllm/tests/speed_test.py` | 게이트웨이 단위 속도 매트릭스 측정 (모델명 자동 추출, results/speed_results.md 누적 append) — 진입점 `./start.sh speed [name\|all\|URL]` |
+| `llm-serving/vllm/tests/ab_regression_probe.py` | vLLM 버전업 회귀·품질 탐침(값 복사·도구 인자·JSON 스키마·이미지 반복·긴 입력). 옛·새 결과 파일을 `--compare`로 대조, 실패 시 종료 1 |
+| `llm-serving/vllm/tests/effort_thinking_matrix.py`·`gateway_compat_probe.py` | 게이트웨이 계약 확인 — effort × thinking 조합, 정체성 문구·developer 역할·`/v1/models` root 가림 |
+| `llm-serving/vllm/tests/mtp_known_bug_probe.py`·`mtp_prefix_cache_probe.py` | MTP 결함 재현 탐침 — 상류 문법·요청 혼합 결함(#38106·#46088), 접두 캐시 손상(#53912)과 수락률. 버전업 때 MTP 재활성 판단 근거 |
 | `llm-serving/pii/proxy.py` | PII 가드 프록시 — 외부 5015/5501 인수, in(주민·카드 차단/이름·주소·전화 마스킹)·out 검사 후 게이트웨이 포워딩 |
 | `llm-serving/pii/start.sh` | NER+프록시 기동, 다중 포트 (`up/down/status [5015\|5501\|all]`), salt 자동주입. NER 풀 정의는 `configs/ner.yaml`(gpu/max_concurrency/backends, env `PII_GPU` 우선) |
 | `llm-serving/pii/tests/eval_pii.py` | PII 정확성 평가 (한국어 합성 케이스셋, 타입별 precision/recall + 과탐) |

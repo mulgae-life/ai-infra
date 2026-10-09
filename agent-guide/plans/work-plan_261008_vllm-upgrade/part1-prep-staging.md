@@ -49,7 +49,7 @@
 - [ ] 음성 의존성: soundfile·soxr·av·torchcodec·`mistral_common.audio`를 import해 본다. torchcodec은 시스템 FFmpeg이 없으면 import 단계에서 실패하므로 그 결과도 적는다(`multimodal/media/audio.py:39-44`). 모델 기동은 P3에서만 한다
 - [ ] STT 정답 표본 준비: `Bingsu/zeroth-korean`(CC BY 4.0) test 분할에서 20개와 정답 전사를 시험장 레포 밖(`~/vllm-upgrade/stt-ref/`)에 받는다. 데이터셋 리비전과 고른 20개의 ID를 기록한다. 기존 `zeroth_ko_sample` 1건만으로는 오류율을 비교할 수 없다
 - [ ] 시험 설정 묶음 준비 (`instances/` 밖, 양쪽 동일)
-  - 인스턴스 사본: GPU 0·1 고정(STT 3종 포함, 원래 STT는 GPU 2), Qwen3.8은 MTP 끔·켬 두 벌
+  - 인스턴스 사본: GPU 2 고정·TP1(10-08 대표님이 GPU 2를 비움), Qwen3.8은 MTP 끔·켬 두 벌. 생성 스크립트·결과는 `~/vllm-upgrade/make_bundle.py`, `bundle/`
   - 변형마다 폴더를 따로 둔다(예: `qwen-mtp-off/`, `qwen-mtp-on/`). 게이트웨이 탐색은 실행 여부와 관계없이 폴더 안의 YAML을 모두 읽고, 같은 게이트웨이 포트에 실제 포트가 겹치면 설정 로딩에서 `ValueError`로 멈춘다(`vllm_gateway.py:214-241`). 한 시험에서 탐색 폴더에는 그 시험에서 쓸 변형 하나만 둔다
   - 게이트웨이 사본: `discover_from`이 그 시험의 변형 폴더를 가리키게 한다. 런처가 쓰는 `.runtime` 포트 파일도 그 폴더 기준이다. 시험마다 게이트웨이 기동 로그의 "매칭 N개" 줄로 의도한 백엔드 하나만 잡혔는지 확인한다
   - 시험장 clone에는 다른 세션의 미커밋 변경(Qwen MTP 끔, 5015 정체성 문구)이 없으므로 이 사본에 명시적으로 넣는다
@@ -119,6 +119,26 @@ engine_args = AsyncEngineArgs.from_cli_args(args)
 record(engine_args.async_scheduling, engine_args.quantization, engine_args.speculative_config)
 ```
 
+## 실행 기록 (2026-10-08)
+기록 위치: 연구계 `~/vllm-upgrade/baseline/`, 시험장 `~/vllm-upgrade/`
+- **기준선 (연구계 nightly)**: vLLM 0.20.2rc1.dev251, torch 2.11.0+cu130, transformers 5.8.0, FlashInfer 0.6.11(cubin 0.6.11, jit-cache 0.6.11+cu129), mistral_common 1.11.2. av·torchcodec 없음, soundfile 0.13.1·soxr 1.1.0·librosa 0.11.0·scipy 1.17.1
+- **코드 이관**: 시험장 `/workspace/ai-infra`에 clone(`de23caf`). 접속은 비밀번호 방식을 유지했고 공개키 등록은 하지 않았다
+- **예행 설치**: vLLM 0.31.0 → 제약 생성 → requirements(+av, `mistral_common[audio]`) 설치 모두 종료 코드 0. `pip check`는 시험장 기존 시스템 패키지 1건(pygobject → pycairo)만 걸림. `--final` 누락 없음
+  - 0.31.0 휠이 `torch==2.13.0`과 함께 `torchaudio==2.11.0`을 직접 고정한다(torchaudio 2.11.0은 torch 요구 없음). P2 이미지에서 공식 이미지 값과 대조
+  - librosa가 하한(`>=0.11.0`) 때문에 1.0.0(메이저 변경)으로 해석됐다 → P2에서 연구계 값 0.11.0으로 고정(audioread 3.1.0이 함께 들어옴, 가상 설치로 해석 확인)
+  - 음성 후보: av 19.0.1, soundfile 0.14.0, soxr 1.1.0, scipy 1.17.1, torchcodec 0.17.0, mistral_common 1.12.0
+  - FlashInfer 부속은 0.19 환경의 cubin 0.6.6·jit-cache 0.6.6+cu129가 남았다(진단 기록만, 예상대로)
+- **음성 import**: soundfile·soxr·av·torchcodec·`mistral_common.audio`·librosa·scipy 모두 성공. 시험장에는 `/usr/bin/ffmpeg`가 있다
+- **설정 해석 9/9**: 옛 nightly·0.31 모두 해석 통과. 런처 주입(`--no-async-scheduling`)이 있으면 최종 `async_scheduling`=False, 없으면 None — 0.31도 밑줄 키 `false`를 버리므로 런처 우회는 계속 필요. 엔진 설정 단계(TP1 강제)는 LLM 5개 통과, `prd-pii-qwen`(체크포인트 없음)과 STT 3종(모델 없음)은 모델 경로 단계에서 멈춤
+- **확인된 공백**: `/models/STT`가 비어 있다(08-26 이후, HF 캐시도 빈 항목). Qwen3.6-27B-FP8도 없다
+  - 19:30 추가 발견: Gemma 4 26B-A4B 체크포인트(`/models/LLM/google/gemma-4-26B-A4B-it`)와 드래프트(`-assistant`)도 없었다(P1 점검 누락). 런처가 자동 다운로드를 시작해 그대로 받았다(49GB, 두 샤드 헤더 크기 일치 확인, `/models` 여유 260GB). `/models`는 연구계·시험장이 같은 호스트 볼륨을 공유하므로 양쪽에서 보인다
+- **시험 묶음**: 4개 변형(gemma31b, gemma26b, qwen-mtp-off, qwen-mtp-on), GPU 2·TP1·내부 포트 6090/7090. 연구계·시험장 양쪽 md5 일치
+  - 18:20 수정: `gemma31b` 변형에 L40S 한 장용 재정의(`max_model_len 8192`, `max_num_batched_tokens 8192`, `gpu_memory_utilization 0.92`). 65536으로는 가중치 32.33 GiB + 프로파일 피크 뒤 KV가 0.94 GiB만 남아 기동 실패(30.79 GiB 필요, `smoke-old-gemma31b.try3-kv-insufficient-65k.log`)
+  - 18:28 추가: 8192·KV auto도 KV 4.53 GiB(6.89 GiB 필요)로 실패(`...try4-kv-insufficient-8k.log`, 가중치 외 피크 약 4 GiB) → `kv_cache_dtype fp8_e4m3` 추가. 재생성 뒤 양쪽 yaml md5 일치. 운영 조건과의 차이는 판정표에 기록
+  - 19:50 추가: `gemma26b` 변형은 0.9에서 KV 7.24 GiB(65536에 7.7 GiB 필요)로 실패(`smoke-old-gemma26b.try2-kv-insufficient-0.9.log`) → `gpu_memory_utilization 0.92`만 재정의. 양쪽 md5 일치
+- **GPU 2 외부 선점 (17:57~18:08, 3회)**: 가중치 fp8 변환 중 메모리를 잠깐 놓는 순간 다른 컨테이너의 프로세스가 23GB(46GB의 절반, `gpu_memory_utilization 0.5`에 해당)를 가져가 OOM. 연구계·시험장 안에는 해당 프로세스 없음(`/proc/*/fd`의 `/dev/nvidia*` 전수 확인, MPS는 GPU 3 전용). 대표님이 호스트에서 자동 재시작 서비스를 정리(18:1x). 이후 재발 없음
+- **베이스 다이제스트 (Docker Hub, 10-08 조회)**: `vllm/vllm-openai:v0.31.0@sha256:c1c9f6fd5c109ba7f0546a59f5b2f15fb87f64c77782e90a27b648b42a8e67c3` (amd64 압축 9.0GB)
+
 ## 검증
 - 예행 환경에서 `vllm --version`이 0.31.0, 제약 생성이 누락 없이 끝나고 `pip check` 통과 (실패하면 충돌 기록이 남아 있음)
 - 설정 해석 9/9 통과, `async_scheduling` 최종값이 False (런처 주입 포함 경로)
@@ -126,7 +146,7 @@ record(engine_args.async_scheduling, engine_args.quantization, engine_args.specu
 - 연구계 :5015 서빙이 영향을 받지 않음 (`./start.sh status`)
 
 ## 완료 기준
-- [ ] 결정 ②에 답변을 받음
-- [ ] 기준선·되돌리기 묶음·예행 설치 기록·시험 설정 묶음 저장 (`~/vllm-upgrade/`)
-- [ ] 위 검증 통과
-- [ ] master Phase 맵에서 part1 상태 갱신
+- [x] 결정 ②에 답변을 받음 (10-08 착수 지시: 정식 릴리스 0.31.0)
+- [x] 기준선·되돌리기 묶음·예행 설치 기록·시험 설정 묶음 저장 (`~/vllm-upgrade/`)
+- [x] 위 검증 통과 (실행 기록 참조)
+- [x] master Phase 맵에서 part1 상태 갱신 (10-09)
