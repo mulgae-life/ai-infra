@@ -312,7 +312,7 @@ cd /workspace/llm-serving/vllm
 - 이미 운영 중인 서버는 계획서 `agent-guide/plans/work-plan_261008_vllm-upgrade/part3-rollout-cleanup.md` P4 순서를 따른다: 새 게이트웨이를 옛 vLLM 위에서 먼저 재기동해 확인하고, 게이트웨이를 거치지 않는 직접 호출 클라이언트가 없는지 본 뒤, 조합을 대조하고 컨테이너를 바꾼다.
 - 코드와 이미지의 순서는 바뀌어도 된다. 게이트웨이 effort 처리와 MTP 끔 설정은 옛 이미지(0.20.2 nightly)에서도 같은 동작이다. 다만 새 이미지에 옛 코드를 붙이면 effort만 보낸 요청에서 thinking이 켜지므로, (5)의 `pull`을 건너뛰지 않는다.
 - `quantization: fp8`은 0.31에서 "deprecated, `fp8_per_tensor`를 쓰라"는 경고만 내고 같은 경로로 동작한다. 키 변경은 운영 반영을 확인한 뒤에 한다. 옛 nightly에서 `fp8_per_tensor`는 `fp8`과 다른 구현이라, 먼저 바꾸면 되돌릴 때 경로가 달라진다.
-- **되돌리기**: `docker tag "$IMG:pre-0.31" "$IMG"` → (4)와 같은 명령으로 컨테이너를 다시 만든다. 서빙 코드는 두 버전에서 동작하므로 그대로 둔다. 다음 빌드를 옛 버전으로 하려면 `.env`의 `VLLM_IMAGE`와 `Dockerfile.llm`의 `VLLM_VERSION`도 함께 되돌린다.
+- **되돌리기**: `docker tag "$IMG:pre-0.31" "$IMG"` → (4)와 같은 명령으로 컨테이너를 다시 만든다. 서빙 코드는 두 버전에서 동작하므로 그대로 둔다. 옛 조합(0.20.2 이미지 + nightly 휠)은 지금 `Dockerfile.llm`으로 다시 빌드할 수 없다(휠 덮어쓰기 단계가 없다). 되돌림은 보존 태그 이미지로만 하므로 그 이미지를 지우지 않는다.
 
 ---
 
