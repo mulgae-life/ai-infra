@@ -98,7 +98,7 @@ ai-infra/
     │   │   └── 6015/6016/6501/6502.yaml  # 내부 전용 (외부 입구는 pii/ 프록시)
     │   ├── tests/                   # 테스트 코드/픽스처/결과 디렉토리
     │   │   ├── test_vllm_server.py  # 서버 헬스/추론 10 카테고리 QA (게이트웨이 계약 포함)
-    │   │   ├── traffic_test_vllm.py # 보수적 트래픽/과부하 테스트
+    │   │   ├── traffic_test_vllm.py # 동시 부하 시험 (429 방어·답변 점검)
     │   │   ├── speed_test.py        # 모델 간 속도 매트릭스 누적 (진입점 ./start.sh speed)
     │   │   ├── ab_regression_probe.py   # vLLM 버전 A/B 회귀·품질 탐침 (--compare로 두 결과 대조)
     │   │   ├── effort_thinking_matrix.py # reasoning_effort × enable_thinking 계약 확인
@@ -164,7 +164,7 @@ ai-infra/
 | `llm-serving/vllm/vllm_server_launcher.py` | 다중 vLLM 서버 기동 (GPU 분할, yaml-relative runtime json) — LLM/STT 공용. `--download-only`로 모델+drafter 증분 동기화(서빙 경로는 네트워크 미접근), `speculative_config.model`의 `${model}` 치환 `SERVING_VLLM_BIN`이 있으면 그 `vllm`으로 띄움(연구계 0.31 가상환경용) |
 | `llm-serving/vllm/vllm_gateway.py` | OpenAI 호환 게이트웨이 (chat/completions + audio/transcriptions + realtime WebSocket) — LLM/STT 공용. 모델 교체 호환 계층 포함(`reasoning_effort` 번역과 effort를 주면 추론 켜기, `/v1/models`의 `root` 마스킹 — `compat` 설정) |
 | `llm-serving/vllm/tests/test_vllm_server.py` | 서버 헬스/추론 10 카테고리 QA(마지막 `gateway`는 게이트웨이 대상일 때만) — 진입점 `./start.sh test [name\|all\|URL]` |
-| `llm-serving/vllm/tests/traffic_test_vllm.py` | 운영 서버 보호를 우선한 smoke/overload 트래픽 테스트 — 진입점 `./start.sh traffic <포트>` (게이트웨이 전용, 대상 명시 필수) |
+| `llm-serving/vllm/tests/traffic_test_vllm.py` | 동시 부하 시험. 429 방어 응답과 답변 점검(생성 상한 도달은 경고, 상한 아닌 빈 답변은 실패) — 진입점 `./start.sh traffic <포트>` (게이트웨이 전용, 대상 명시 필수) |
 | `llm-serving/vllm/tests/speed_test.py` | 게이트웨이 단위 속도 매트릭스 측정 (모델명 자동 추출, results/speed_results.md 누적 append) — 진입점 `./start.sh speed [name\|all\|URL]` |
 | `llm-serving/vllm/tests/ab_regression_probe.py` | vLLM 버전업 회귀·품질 탐침(값 복사·도구 인자·JSON 스키마·이미지 반복·긴 입력). 옛·새 결과 파일을 `--compare`로 대조, 실패 시 종료 1 |
 | `llm-serving/vllm/tests/effort_thinking_matrix.py`·`gateway_compat_probe.py` | 게이트웨이 계약 확인 — effort × thinking 조합, 정체성 문구·developer 역할·`/v1/models` root 가림 |

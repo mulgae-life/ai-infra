@@ -160,7 +160,7 @@ OpenAI Audio API와 동일. multipart/form-data로 audio 파일 + form 필드 �
 
 | 필드 | 필수 | 값 | 설명 |
 |------|:----:|----|------|
-| `file` | O | 파일 | wav / mp3 / flac / m4a / ogg 등 (vLLM이 librosa로 디코드) |
+| `file` | O | 파일 | wav / mp3 / flac / m4a / ogg 등 (vLLM 0.31은 soundfile → torchcodec → PyAV 순서로 디코드) |
 | `model` | O | `whisper-large-v3` | `/v1/models`로 확인한 정확한 ID |
 | `language` | 권장 | `ko` 등 ISO-639-1 | 지정 시 언어 자동감지 비용 절약 |
 | `temperature` | 권장 | `0` | 숫자/고유명사 안정성 — Whisper 모델카드 권장 |

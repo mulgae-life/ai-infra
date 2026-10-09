@@ -1266,7 +1266,9 @@ async def _proxy_streaming(
 #   - chat/completions와 같이 admission(과부하 차단) + LB(least-connection) 적용
 #   - request body는 multipart/form-data (audio file + form fields)이라
 #     JSON 파싱 없이 raw bytes + 클라이언트 Content-Type(=boundary 포함)을 그대로 전달
-#   - 응답은 JSON ({"text": "...", "usage": {...}}) — 스트리밍 아님 (현재 vLLM 0.19 기준)
+#   - 응답은 JSON ({"text": "...", "usage": {...}})으로만 중계한다. vLLM은 form의 stream=true도
+#     받지만(0.31.0 entrypoints/speech_to_text/transcription/protocol.py:107) 이 프록시는
+#     스트리밍을 중계하지 않는다
 #   - 장시간 오디오를 고려한 별도 timeout 600s (chat default보다 길게)
 #
 # 한 함수에서 두 path를 서비스하기 위해 request.url.path를 그대로 백엔드에 전달.

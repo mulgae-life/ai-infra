@@ -30,9 +30,11 @@ test_vllm_server.py와 동일 구조이며, multipart audio transcription 호출
   tests/zeroth_ko_sample.flac — HuggingFace `Bingsu/zeroth-korean` (Apache 2.0) test split 첫 샘플.
   16kHz mono FLAC native 인코딩. 정답 텍스트: tests/zeroth_ko_sample.txt.
 
-※ 16kHz mono 사용 이유 — vLLM 0.20.2가 음성을 ASR 모델 expected SR(Whisper=16kHz)로 강제 resample하는데
-   resample 경로(`vllm.multimodal.media.audio.resample_audio_pyav`)가 PyAV에 의존한다. PyAV가 호스트/
+※ 16kHz mono 사용 이유 — vLLM이 음성을 ASR 모델 expected SR(Whisper=16kHz)로 강제 resample하는데
+   resample 경로(`vllm.multimodal.audio.resample_audio_pyav`)가 PyAV에 의존한다. PyAV가 호스트/
    컨테이너에 없으면 native_sr ≠ 16kHz인 음성은 `Invalid or unsupported audio file.` 400으로 거부됨.
+   0.20.2에서 확인했고, 0.31.0도 soundfile로 읽은 음성은 같은 함수로 리샘플한다(media/audio.py:246, 소스 대조만
+   했고 STT 실행 시험은 안 함). 서버 이미지에는 av가 들어 있다(aws/requirements.txt).
    16kHz mono native 자산은 resample을 트리거하지 않으므로 PyAV 의존성 없이 안전. 임의 음성 사용 시
    동일 조건(16kHz mono)으로 사전 변환 후 `--audio`로 전달 권장.
 

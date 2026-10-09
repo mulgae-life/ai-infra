@@ -6,7 +6,9 @@
 >
 > 사용자(API 호출)용 가이드: [`STT_API_GUIDE.md`](STT_API_GUIDE.md)
 
-vLLM 0.20.2 기반 STT 게이트웨이의 **시스템 구조 / 기동·중지 / 모델 관리 / 설정 / 트러블슈팅**을 다룹니다. § 번호는 사용자 가이드(`STT_API_GUIDE.md` §1~§5)와의 cross-reference 안정성을 위해 6부터 시작합니다.
+> **vLLM 버전 (2026-10-10)**: 서버 이미지와 연구계 런처는 0.31.0입니다. **STT는 0.31.0에서 시험하지 않았습니다** — 버전업 때 STT를 쓰지 않아 시험 범위에서 뺐고, 이 문서의 실측은 0.20.2(nightly) 기준입니다. 다시 쓰기 전에 [§11](#11-qa-체크리스트) QA를 먼저 돌립니다. 0.31에서 바뀐 음성 경로는 [§8.3](#83-의존성-필수)에 적었습니다.
+
+vLLM 기반 STT 게이트웨이의 **시스템 구조 / 기동·중지 / 모델 관리 / 설정 / 트러블슈팅**을 다룹니다. § 번호는 사용자 가이드(`STT_API_GUIDE.md` §1~§5)와의 cross-reference 안정성을 위해 6부터 시작합니다.
 
 ---
 
@@ -177,13 +179,17 @@ sudo aws s3 sync s3://hgi-ai-res/models/STT/ /models/STT/
 
 ### 8.3 의존성 (필수)
 
-Voxtral은 **`soundfile`, `soxr`, `librosa`** 가 vLLM serving 시 필수 (없으면 `EngineCore failed to start`):
+Voxtral은 **`soundfile`, `soxr`, `librosa`** 가 vLLM serving 시 필수 (없으면 `EngineCore failed to start`).
+
+- **서버 이미지**: `aws/requirements.txt`에 vLLM 0.31의 audio 의존성(`av`, `scipy`, `soundfile`, `soxr`, `mistral_common[audio]`)과 `librosa`가 `==`로 고정돼 들어 있습니다. 따로 설치하지 않습니다.
+- **연구계 컨테이너**: 런처가 `SERVING_VLLM_BIN`의 0.31 가상환경(`/home/hjjo/venvs/vllm-0.31`)으로 STT도 띄웁니다. 이 가상환경에는 위 패키지가 없고 `~/.local`도 보지 않으므로(`include-system-site-packages = false`), STT를 쓰기 전에 이미지와 같은 버전으로 넣습니다.
 
 ```bash
-pip install --user soundfile soxr librosa
+uv pip install --python /home/hjjo/venvs/vllm-0.31/bin/python \
+  av==19.0.1 soundfile==0.14.0 soxr==1.1.0 librosa==0.11.0 scipy==1.17.1
 ```
 
-운영계 컨테이너 재배포 시 동일 ImportError가 재발하지 않도록 `aws/requirements.txt`에 영구 등재 권장.
+**0.31의 음성 읽기 경로** (`vllm/multimodal/media/audio.py`): 기본(`auto`)은 soundfile → torchcodec → PyAV 순서로 시도합니다. soundfile로 읽은 음성이 모델 샘플레이트(Whisper·Voxtral 16kHz)와 다르면 PyAV로 리샘플하므로, `av`가 없으면 16kHz가 아닌 입력이 실패합니다. 16kHz mono로 보내면 리샘플을 타지 않습니다.
 
 ---
 
@@ -247,8 +253,8 @@ overload:
 
 | 증상 | 원인 / 해결 |
 |------|-------------|
-| `EngineCore failed to start` + `ImportError: soundfile` | Voxtral 의존성 미설치. `pip install --user soundfile soxr librosa` |
-| `vllm: error: unrecognized arguments: --task transcription` | vLLM 0.20.x에서 `--task` CLI 인자가 제거되고 model config 기반 자동 감지로 통합됨. launcher `_LAUNCHER_KEYS`(`vllm_server_launcher.py:66`)가 yaml의 `task` 키를 필터하여 vllm serve에 전달하지 않도록 보장(`{"gpus", "download_dir", "gateway_port", "port", "env", "task"}`). yaml의 `task` 키는 PoC 비교 운영 메타로만 보존. 자동 감지가 부정확한 모델이 나오면 launcher에 `--runner` 매핑 분기 추가. |
+| `EngineCore failed to start` + `ImportError: soundfile` | Voxtral 의존성 미설치. 연구계는 0.31 가상환경에 설치([§8.3](#83-의존성-필수)), 서버 이미지는 `aws/requirements.txt`로 들어감 |
+| `vllm: error: unrecognized arguments: --task transcription` | vLLM 0.20.x에서 `--task` CLI 인자가 제거되고 model config 기반 자동 감지로 통합됨. launcher `_LAUNCHER_KEYS`(`vllm_server_launcher.py:74`)가 yaml의 `task` 키를 필터하여 vllm serve에 전달하지 않도록 보장(`task` 포함 런처 전용 키 8개). yaml의 `task` 키는 PoC 비교 운영 메타로만 보존. 자동 감지가 부정확한 모델이 나오면 launcher에 `--runner` 매핑 분기 추가. |
 | 게이트웨이 `/health`가 503 + `ready: 0/1` | 백엔드 voxtral가 미기동 또는 로딩 중. `./start.sh status` → `[STARTING]`이면 1~2분 대기 |
 | 게이트웨이 로그 `realtime 백엔드 연결 실패` | voxtral.yaml의 `gateway_port`(5018)와 게이트웨이 포트 일치 확인. 디스커버리 결과는 게이트웨이 기동 로그(`logs/gateway_<port>.log`)에 표시 |
 | `[STALE]` 표시 | launcher가 SIGKILL/crash로 죽음. `./start.sh down voxtral`로 runtime 파일 정리 |

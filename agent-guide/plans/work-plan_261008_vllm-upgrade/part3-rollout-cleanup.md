@@ -58,13 +58,13 @@
 - [x] 운영 Gemma 인스턴스 2개(`prd-gemma.yaml`, `prd-pii-gemma.yaml`)의 `quantization: fp8`을 `fp8_per_tensor`로 바꾼다. 근거는 P3의 `fp8` ↔ `fp8_per_tensor` 확인이다
   - 10-09 밤 대표님 지시("최신버전에 맞게 다 맞춰줘")로 운영 반영 전에 앞당겼다. 시험장 31B(MTP 끔, `bundle/p5-gemma31b-pt`, 이 한 줄만 다름): 선형 커널·양자화 층 줄(md5 같음)·KV 17,385토큰이 `fp8` 기동과 같고 사용 중단 경고 0줄, 회귀 탐침 24 통과·1 건너뜀(긴 입력, 이전과 같음). 6개 인스턴스 모두 0.31 설정 해석(`check_config_parse.py --engine`) 통과
 - [x] ~~연구계 Gemma 인스턴스(`gemma.yaml`, `gemma-26b.yaml`)는 `fp8`을 유지한다.~~ 10-09 밤 뒤집음: 같은 지시로 `fp8_per_tensor`와 MTP 끔을 연구계 Gemma 2개에도 적용했다. 이 파일들은 서버의 `gemma`(:5015) 컨테이너가 0.31 이미지로 띄우므로 0.31 기준이 맞다. 남는 제약: 옛 nightly에서 `fp8`(`quantization/fp8.py`)과 `fp8_per_tensor`(`quantization/online/fp8.py`)는 다른 구현이라, 연구계 컨테이너(옛 nightly)에서 이 두 파일로 Gemma를 띄우는 것은 시험하지 않았다(지금 연구계 :5015는 `qwen.yaml`)
-- [ ] 런처의 `async_scheduling` 우회 블록은 **유지**하고 주석만 고친다. 0.31도 밑줄 키의 `false`를 버린다(`utils/argparse_utils.py:615`). 제거 조건은 "실제 `serve` 진입점에서 최종값이 False로 해석될 때"로 적는다
-- [ ] 운영 문서
+- [x] 런처의 `async_scheduling` 우회 블록은 **유지**하고 주석만 고친다. 0.31도 밑줄 키의 `false`를 버린다(`utils/argparse_utils.py:615`). 제거 조건은 "실제 `serve` 진입점에서 최종값이 False로 해석될 때"로 적는다 — 10-09 `bbaae21`
+- [x] 운영 문서 — 10-10 대표님 지시로 운영 반영 전에 마쳤다. 알려진 이슈 표는 상류 상태(10-10 GitHub)와 우리 시험 결과를 칸으로 나눠 다시 썼다(MTP 관련 #46088·#53912·#38106·#42261 추가, #37602·#38643 방어선 갱신). 같이 고친 것: 버전 표기, YAML 불리언 설명(§9.5), encoder cache 소스 위치, MoE 튜닝 설정 경로(`VLLM_TUNED_CONFIG_FOLDER`), STT API 가이드의 디코딩 순서, 게이트웨이 음성 프록시 주석. STT 문서에는 연구계 0.31 가상환경에 STT 의존성이 없다는 것과 설치 명령을 적었다
   - `VLLM_OPS_GUIDE.md`: 버전 표기, Gemma 4 파서 파일 경로(`parser/gemma4.py`, `reasoning/gemma4_engine_reasoning_parser.py`), 직접 호출의 effort 의미 변화(0.31은 최상위 effort가 thinking을 켬, 게이트웨이 경유는 그대로), 알려진 이슈 표 재확인
   - `STT_OPS_GUIDE.md`, `stt/tests/test_stt_server.py` 주석: 버전 표기와 리샘플러 변경. STT는 이번 A/B에서 시험하지 않았으므로(10-08 지시) "0.31에서 시험 안 함"으로 적고 시험 완료처럼 쓰지 않는다
   - `vllm/instances/_SCHEMA.txt`: MTP 첫 릴리스(0.21.0) 정정, 소스 줄 번호 인용 갱신 — 10-09 완료(`fp8_per_tensor` 설명, Gemma method 명시 설명, 0.31.0 줄 번호). `VLLM_OPS_GUIDE.md`는 서비스 구성·모델 비교표·MTP·Gemma 파서 설명만 고쳤고, 직접 호출 effort 의미와 알려진 이슈 표는 남았다
-- [ ] `aws/wheels/`의 nightly 휠을 `.archive/<날짜>_vllm-nightly-wheel/`로 옮긴다. 되돌리기 묶음은 휠이 아니라 태그해 둔 옛 이미지로 복구하므로 휠은 필요 없다. 문서가 정본으로 적은 `/models/wheels/`는 실제로 없으므로 표기도 정리한다
-- [ ] 연구계 옛 환경(`~/.local`의 nightly)은 그대로 둔다. 연구계 전환은 이 계획 범위 밖이며 대표님이 요청할 때 따로 계획한다
+- [x] `aws/wheels/`의 nightly 휠을 `.archive/<날짜>_vllm-nightly-wheel/`로 옮긴다. 되돌리기 묶음은 휠이 아니라 태그해 둔 옛 이미지로 복구하므로 휠은 필요 없다. 문서가 정본으로 적은 `/models/wheels/`는 실제로 없으므로 표기도 정리한다 — 10-10 레포 루트 `.archive/2026-10-10_vllm-nightly-wheel/`로 옮기고 `.gitignore`·`aws/start.sh` 주석을 고쳤다. 다음 S3 push부터 휠이 빠지고, 서버의 `aws/start.sh pull`(`--delete`)은 서버 사본도 지운다
+- [x] ~~연구계 옛 환경(`~/.local`의 nightly)은 그대로 둔다. 연구계 전환은 이 계획 범위 밖이다~~ 10-09 대표님 지시로 연구계 서빙은 0.31 가상환경으로 옮겼다(`SERVING_VLLM_BIN`). `~/.local`의 nightly는 지우지 않고 임베딩 :8020이 계속 쓴다
 - [ ] `agent-guide/SESSION.md` 갱신, `PROJECT.md` 코드 지도에 시험장, 이미지 이름, 이미지 기록 파일 반영
 
 ## 변경 예시

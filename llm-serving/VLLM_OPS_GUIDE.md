@@ -11,7 +11,7 @@
 >   - 운영계 PII: `:5501`(프록시) → gw `:6501` ← `prd-pii-gemma.yaml` · `:5502`(프록시) → gw `:6502` ← `prd-pii-qwen.yaml` (Qwen3.8 27B FP8, GPU 0, vLLM `:7080`)
 >   - 📌 **아래 기동·테스트 명령 예시는 연구계 비PII(`:5015`/`gemma-26b.yaml`) 기준**입니다. 운영계는 `:5501` / `prd-gemma` 등으로 치환하세요.
 > **인프라**: AWS L40S 46GB × 4장.
-> **vLLM 버전**: 0.19.0+.
+> **vLLM 버전**: 0.31.0 (운영 이미지 `aws/Dockerfile.llm`, 연구계 :5015 가상환경). 2026-10 이전은 0.20.2 + nightly(dev251)였고, 버전업 시험 기록은 [`vllm/tests/results/vllm-0.31-ab.md`](vllm/tests/results/vllm-0.31-ab.md)에 있습니다. 본문에 "0.19.0 기준"으로 남은 설명은 그때 소스로 확인한 것입니다.
 
 > 🆕 **2026-04-30 구조 변경**: 단일 `vllm_config.yaml` + `vllm_gateway_config.yaml` → **인스턴스 단위 `instances/<name>.yaml`** + **게이트웨이 단위 `gateways/<port>.yaml`**. 게이트웨이는 인스턴스 yaml의 `gateway_port` 메타 키로 backends를 자동 매칭(`discover_from`). 구식 yaml은 `agent-guide/.archive/2026-04-30_vllm-config-migration/`에 보존.
 >
@@ -538,7 +538,7 @@ RERANKER_MODEL=gemma-4
 
 > 런처가 자동 처리하므로 운영 시 직접 신경 쓸 일은 없음 — 내부 동작 참고용.
 
-vLLM의 YAML 파서(`vllm/utils/argparse_utils.py:501-504`)는 `key: true`만 `--key` 플래그로 변환하고 `key: false`는 아무것도 하지 않습니다. 기본값이 `None`인 필드(예: `async_scheduling`)는 YAML에 `false`로 적어도 CLI로 전달되지 않아 auto-enable 로직에 의해 `True`로 뒤집힙니다.
+vLLM의 YAML 파서는 `key: true`를 `--key` 플래그로 바꿉니다. 0.31.0부터는 `key: false`도 `--no-<key>`로 바꾸지만, 키 이름을 하이픈으로 바꾸기 전에 등록된 옵션을 조회합니다(`vllm/utils/argparse_utils.py:615`). 그래서 `async_scheduling`처럼 밑줄이 든 키는 `--no-async_scheduling`으로 조회돼 여전히 버려집니다. 기본값이 `None`인 필드는 CLI로 전달되지 않으면 auto-enable 로직에 의해 `True`로 뒤집힙니다. 옛 nightly는 `false`를 아예 무시했습니다.
 
 런처는 `async_scheduling: false`를 감지하면 `--no-async-scheduling` CLI 플래그를 직접 주입하여 이 제약을 우회합니다. 덕분에 YAML에 `false`로 써도 실제로 `false`가 적용됩니다.
 
@@ -1188,10 +1188,10 @@ curl -sS http://127.0.0.1:5015/v1/chat/completions -H "Content-Type: application
 
 vLLM V1의 **encoder cache**는 멀티모달 모델의 비전 인코더 출력(embedding)을 보관합니다. 이미지 1장이 패치 분할 후 만드는 encoder output 토큰 수를 단위로 동작합니다.
 
-**설계 제약** (vLLM 0.19.0 기준):
+**설계 제약** (vLLM 0.19.0에서 확인, 0.31.0 소스도 같음):
 
-- `encoder_cache_size`는 **사용자가 직접 설정할 수 없음** (`config/scheduler.py:94-106`).
-- 내부적으로 `max_num_batched_tokens` 값이 그대로 복사됨 (`scheduler.py:235`).
+- `encoder_cache_size`는 **사용자가 직접 설정할 수 없음** (0.31.0 `config/scheduler.py:154`, `init=False`).
+- 내부적으로 `max_num_batched_tokens` 값이 그대로 복사됨 (0.31.0 `config/scheduler.py:304-305`).
 - `max_num_seqs`와는 **연동되지 않음** — 동시 요청 상한을 올려도 encoder cache는 안 커짐.
 
 **용량 산정식**:
@@ -1276,13 +1276,19 @@ kill -9 <좀비 PID들>
 
 ### 13.6 알려진 vLLM 이슈 (운영 영향도)
 
-| 이슈 | 요약 | 현재 방어선 |
-|------|------|------------|
-| [vllm #37121](https://github.com/vllm-project/vllm/issues/37121) | Hybrid Mamba/Attention KV cache ~7배 과잉추정 | 기동 로그의 `num_gpu_blocks` 재확인 후 튜닝 |
-| [vllm #37602](https://github.com/vllm-project/vllm/issues/37602) | Qwen3.5 계열 동시 이미지 10+에서 EngineCore 크래시 | `max_num_seqs: 5` 상한 |
-| [vllm #38643](https://github.com/vllm-project/vllm/issues/38643) | Qwen3.5 FLA linear attention 포맷 불일치 gibberish | vLLM 0.19.0 수정 여부 확인 필요 |
-| [vllm #40124](https://github.com/vllm-project/vllm/issues/40124) | TurboQuant KV + Hybrid MoE가 Ampere(SM 80-86)에서 실패 | **L40S(Ada Lovelace, SM 89) 무영향** — GPU 교체 시에만 주의 |
-| 자체 Bug 2026-04-18 | `Encoder cache miss` assertion | `async_scheduling: false` + `max_num_seqs` 상한. 상세는 [vllm/bugfix/2026-04-18_vllm_multimodal_encoder_cache.md](vllm/bugfix/2026-04-18_vllm_multimodal_encoder_cache.md) |
+> 상류 상태는 2026-10-10 GitHub 기준이고, "우리 시험"은 L40S에서 0.31.0으로 잰 결과입니다([판정표](vllm/tests/results/vllm-0.31-ab.md)). 이슈가 닫혀도 우리 조건에서 해결이 확인되기 전에는 방어선을 풀지 않습니다.
+
+| 이슈 | 요약 | 상류 상태 (0.31.0) | 현재 방어선 |
+|------|------|------|------------|
+| [vllm #46088](https://github.com/vllm-project/vllm/issues/46088) | Gemma 4 + MTP + KV `auto`에서 긴 요청과 짧은 요청을 같이 돌리면 짧은 요청에 다른 요청 내용이 섞임 | 수정 없이 닫힘(not_planned) | **Gemma 인스턴스 4개 모두 MTP 끔**. 우리 축소 재현은 옛·새 모두 0건이라 검출력이 없어 안전 근거로 쓰지 않음. 버전업으로 해결이 확인되면 다시 켬 |
+| [vllm #53912](https://github.com/vllm-project/vllm/issues/53912) | Qwen3.5 계열(GDN) + 접두 캐시 + MTP에서 캐시된 상태가 오염돼 숫자 복사 오류·질문 되풀이 | 열림. 수정 PR #57128 병합 전 | **Qwen 인스턴스 MTP 끔**. 수정이 릴리스에 들어가면 우리 환경에서 재확인 뒤 켬 |
+| [vllm #38106](https://github.com/vllm-project/vllm/issues/38106) | 추론 켬 + 추측 디코딩 + 문법 제약(`tool_choice="required"`, JSON 스키마)에서 문법 상태가 깨져 도구 호출 실패 | 이슈는 열림. 같은 원인 수정 #44297·#44993이 0.31.0에 포함 | 옛 nightly + MTP는 우리 시험에서 108/320 실패, 0.31은 0건. 지금은 MTP를 꺼서 해당 없음. MTP를 다시 켤 때 `tests/mtp_known_bug_probe.py`로 재확인 |
+| [vllm #42261](https://github.com/vllm-project/vllm/issues/42261) | H200 + Gemma 31B MTP 8토큰에서 몇 시간마다 device-side assert 크래시 | 해결 확인 없이 닫힘(not_planned) | MTP 끔이라 해당 없음. 온프레미스 H200에서 MTP를 켤 때 관찰 항목 |
+| [vllm #37121](https://github.com/vllm-project/vllm/issues/37121) | Hybrid Mamba/Attention(Qwen3.5 계열) KV cache ~7배 과잉추정 | 열림 | 기동 로그의 `num_gpu_blocks` 재확인 후 튜닝 |
+| [vllm #37602](https://github.com/vllm-project/vllm/issues/37602) | Qwen3.5 계열 동시 이미지 10+에서 EngineCore 크래시 | 닫힘(07-23, completed) | `max_num_seqs: 20`. 0.31 Qwen3.8 2시간 부하에서 동시 이미지 10건 정답 10/10, 엔진 오류 0 |
+| [vllm #38643](https://github.com/vllm-project/vllm/issues/38643) | Qwen3.5 FLA linear attention 포맷 불일치 gibberish | 열림. 다른 사용자들은 최신 main에서 재현하지 못했고, 원인으로 지목된 경고는 #38255에서 오탐으로 제거됨 | 방어선 없음. 0.31 Qwen3.8 FP8은 기능·회귀 시험에서 증상 없음 |
+| [vllm #40124](https://github.com/vllm-project/vllm/issues/40124) | TurboQuant KV + Hybrid MoE가 Ampere(SM 80-86)에서 실패 | 열림 | **L40S(Ada Lovelace, SM 89) 무영향** — GPU 교체 시에만 주의 |
+| 자체 Bug 2026-04-18 | `Encoder cache miss` assertion | — | `async_scheduling: false` + `max_num_seqs` 상한. 0.31도 YAML의 `false`가 버려져 런처가 `--no-async-scheduling`을 붙임([§9.5](#95--참고-yaml-bool-false-전달-제약-런처-내부)). 상세는 [vllm/bugfix/2026-04-18_vllm_multimodal_encoder_cache.md](vllm/bugfix/2026-04-18_vllm_multimodal_encoder_cache.md) |
 
 ### 13.7 운영 환경 튜닝 백로그
 
@@ -1296,7 +1302,7 @@ Using default MoE config. Performance might be sub-optimal!
 Config file not found at .../configs/E=128,N=352,device_name=NVIDIA_<GPU>,dtype=fp8_w8a8.json
 ```
 
-**상태**: vLLM 0.19.1 동봉 311개 사전 튜닝 JSON 중 26B-A4B + fp8_w8a8 매칭은 H100_80GB_HBM3 한 종 뿐. L40S(개발)와 RTX PRO 6000 Blackwell(운영 예정) 모두 매칭 JSON 없음 → default fallback 동작.
+**상태**: vLLM 0.31.0 동봉 335개 사전 튜닝 JSON 중 TP2(`N=352`) + fp8_w8a8 매칭은 여전히 H100_80GB_HBM3 한 종 뿐이고, L40S용은 없어 default fallback으로 동작한다. TP1(`N=704`)은 `NVIDIA_RTX_PRO_6000_Blackwell_Workstation_Edition` 파일이 있다. 운영 GPU의 `device_name`이 이 이름과 같으면 TP1 26B-A4B는 튜닝 없이 맞는 파일을 쓴다. 기동 로그에 `Using configuration from ... for MoE layer`가 나오면 매칭된 것이다. 지금 운영 인스턴스는 31B 덴스라 MoE가 없다.
 
 **영향**: 정확도/안정성에는 영향 없음. MoE GEMM throughput 잠재 손실 (조합에 따라 10~30%).
 
@@ -1314,11 +1320,16 @@ python benchmarks/kernels/benchmark_moe.py \
   --dtype fp8_w8a8 \
   --tune
 
-# 3) 산출물을 vLLM이 읽는 경로에 배치
-cp E=128,N=352,device_name=NVIDIA_RTX_PRO_6000_Blackwell_Workstation_Edition,dtype=fp8_w8a8.json \
-   ~/.local/lib/python3.12/site-packages/vllm/model_executor/layers/fused_moe/configs/
+# 3) 산출물을 볼륨의 폴더에 두고 인스턴스 yaml의 env로 지정
+#    VLLM_TUNED_CONFIG_FOLDER가 동봉 configs/보다 먼저 조회된다(0.31.0 fused_moe.py:1135).
+#    이미지 안 site-packages에 복사하면 컨테이너를 다시 만들 때 사라진다.
+mkdir -p /models/moe-configs
+cp E=128,N=<산출 N>,device_name=<GPU 이름>,dtype=fp8_w8a8.json /models/moe-configs/
+#    instances/<name>.yaml:
+#    env:
+#      VLLM_TUNED_CONFIG_FOLDER: "/models/moe-configs"
 
-# 4) vLLM 재기동 → WARNING 사라지고 튜닝 config 적용
+# 4) vLLM 재기동 → WARNING 대신 "Using configuration from /models/moe-configs/..." 로그
 ```
 
 **선택 사항**: 산출 JSON을 vLLM 본가 `vllm/model_executor/layers/fused_moe/configs/`에 PR. RTX PRO 6000 Blackwell 변종은 이미 코어팀이 다른 모델용으로 동봉 시작한 GPU라 머지 가능성 높음.
@@ -1428,13 +1439,22 @@ grep -B1 -A20 "FAIL " tests/logs/test_20260430_144909.log
 
 ### 14.3 트래픽 테스트
 
-`traffic_test_vllm.py`는 실제 운영 서버 보호를 우선한 보수적 트래픽 테스트입니다. 기본은 저강도 smoke 확인이며, overload 모드는 429 과부하 방어 응답을 정상 방어로 집계합니다.
+`traffic_test_vllm.py`는 게이트웨이에 동시 요청을 걸어 서버가 버티는지 보는 부하 시험입니다. 기본값은 요청 40건, 동시 20, 요청당 생성 상한 4,096토큰, 절반은 4096px 이미지 포함이고, 질문 4개(사고 켬 2·끔 2)를 돌려 씁니다. 429 과부하 방어 응답은 실패가 아니라 정상 방어로 집계합니다. 예전 문서의 `--mode smoke/overload`는 지금 받기만 하고 쓰지 않습니다. 강도는 `--requests`, `--concurrency`, `--max-tokens`, `--image-ratio`로 정합니다.
+
+**답변 점검 (2026-10-10~)**: HTTP 200이어도 답이 없을 수 있어 응답마다 종료 사유(`finish_reason`)와 답변 글자 수를 봅니다.
+
+| 경우 | 진행 화면 | 판정 |
+|------|-----------|------|
+| 생성 상한에 걸림(`finish_reason: length`) | "상한 도달", 답변이 없으면 "답변 없음 — 생성 상한에 도달해 사고 중에 끊겼습니다" | 경고. 건수가 출력·리포트에 남고 통과는 유지 |
+| 상한이 아닌데 답변이 0자 | "답변 없음" | 실패. 사고만 하고 답을 안 낸 것이라 파서나 서버 쪽 이상 |
+
+예전 질문은 사고 켬 질문에 "약 250자"처럼 글자 수를 지정했습니다. Qwen3.8은 이 지시를 지키려고 사고 과정에서 한 글자씩 세느라 3천~4천 토큰을 썼고, 일부가 상한에 걸려 답 없이 끝났는데도 성공으로 집계됐습니다. 지금은 사고 켬 질문으로 전기요금 계산표와 하루 일정표를 만들게 합니다. 사고가 계산과 시각 배분에 쓰이므로 끝이 있고, Qwen3.8 기준 전체 생성이 1.3천~1.8천 토큰에서 멈춥니다. 질문이 바뀌면 지연·TPS를 예전 리포트와 바로 비교할 수 없으므로 리포트의 `config.prompts`에 어떤 질문으로 쟀는지 남깁니다.
 
 진입점은 `./start.sh traffic`입니다. 부하가 큰 명령이라 두 가지를 강제합니다. 대상을 반드시 찍어야 하고(무인자·`all` 거부), 게이트웨이만 받습니다. 인스턴스를 직접 겨냥하면 통과 조건에 들어가는 `/server-status`가 게이트웨이 전용이라 404가 떠서 부하 결과와 무관하게 항상 실패 판정이 납니다.
 
 ```bash
 ./start.sh traffic 5015                       # 게이트웨이 대상, 기본 설정
-./start.sh traffic 5015 --mode overload       # 뒤 인자는 traffic_test_vllm.py로 그대로 전달
+./start.sh traffic 5015 --requests 80 --concurrency 80 --require-429   # 뒤 인자는 traffic_test_vllm.py로 그대로 전달. 과부하 방어(429) 확인
 ./start.sh traffic http://호스트:5015 --requests 20 --concurrency 20
 ```
 
@@ -1449,14 +1469,14 @@ grep -B1 -A20 "FAIL " tests/logs/test_20260430_144909.log
 ```bash
 cd llm-serving/vllm
 
-# 저강도 생존/성공률 확인
-python tests/traffic_test_vllm.py --base-url http://43.203.142.247:5015 --mode smoke
+# 저강도 생존/성공률 확인 (텍스트만, 짧게)
+python tests/traffic_test_vllm.py --base-url http://43.203.142.247:5015 --requests 10 --concurrency 5 --image-ratio 0
 
-# 대기열/429 방어 확인
-python tests/traffic_test_vllm.py --base-url http://43.203.142.247:5015 --mode overload
+# 대기열/429 방어 확인 — 동시성이 게이트웨이 한도(처리 20 + 대기열 40 = 60)를 넘어야 429가 난다
+python tests/traffic_test_vllm.py --base-url http://43.203.142.247:5015 --requests 80 --concurrency 80 --require-429
 
-# 동시 사용자 20명 기준 짧은 응답 테스트
-python tests/traffic_test_vllm.py --base-url http://43.203.142.247:5015 --mode smoke --requests 20 --concurrency 20 --max-tokens 32
+# 동시 사용자 20명 기준 짧은 응답 테스트 (상한에 일부러 걸리므로 "상한 도달" 경고가 정상)
+python tests/traffic_test_vllm.py --base-url http://43.203.142.247:5015 --requests 20 --concurrency 20 --max-tokens 32
 ```
 
 운영 전에는 `max_tokens >= 512` 또는 실제 서비스 평균 프롬프트/출력 길이로 한 번 더 확인합니다. 테스트 후 `/health`가 200이어야 통과입니다(`/server-status` 조회 포트는 모드에 따라 다름 — [§10.1](#101-게이트웨이-전용-엔드포인트)). PII 모드에서는 위 `--base-url :5015`가 프록시를 경유하므로 마스킹 오버헤드가 포함된 실경로 성능입니다(순수 게이트웨이 성능은 내부 `:6015`로 측정). 비PII 모드는 `:5015`가 곧 게이트웨이라 그대로 순수 성능입니다.
@@ -1610,7 +1630,7 @@ llm-serving/
 │   ├── vllm_gateway.py          (LB + Admission Controller + 헬스체크 + 웜업)
 │   ├── tests/                   ← 테스트 코드 디렉토리
 │   │   ├── test_vllm_server.py  (10 카테고리 QA)
-│   │   ├── traffic_test_vllm.py (smoke/overload 트래픽 테스트)
+│   │   ├── traffic_test_vllm.py (동시 부하 시험)
 │   │   ├── speed_test.py        (모델 간 속도 매트릭스 누적)
 │   │   └── results/             (speed_results.md 등 누적 리포트)
 │   ├── instances/               ← 인스턴스 단위 yaml (vLLM 1대 = 1 yaml)

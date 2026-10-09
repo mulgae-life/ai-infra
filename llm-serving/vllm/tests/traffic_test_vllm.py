@@ -16,6 +16,8 @@
   7. 보호 장치: 허용되지 않은 에러율 또는 연속 실패 기준 초과 시 조기 중단.
   8. 사후 점검: 테스트 후 /health와 /server-status 생존 여부를 통과 조건에 반영.
   9. 지표 집계: 200 성공, 429 방어 응답, 상태코드, RPS, TPS, latency, TTFT 집계.
+     답변 점검: HTTP 200 중 생성 상한 도달(finish_reason=length)은 경고, 상한이 아닌데
+     답변이 0자면 실패로 판정한다.
  10. 결과 저장: logs/traffic_*.json 리포트 저장, 통과 기준 미달 시 exit 1.
 """
 
@@ -40,13 +42,20 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Callable
 
 
+# 사고 켬 질문에는 글자 수를 지정하지 않는다. "약 250자"를 주면 Qwen3.8이 사고 과정에서
+# 한 글자씩 세며 다듬느라 3천~4천 토큰을 쓰고, 생성 상한(4096)에 걸려 답 없이 끝났다
+# (2026-10-10 :5015 실측, 지난 리포트에서도 사고 켬 요청의 일부가 같은 증상).
+# 대신 계산과 시각 배분이 필요한 계획 문제를 준다. 사고가 실제로 일을 하면서도 끝이 있어
+# Qwen3.8 기준 사고 600~750 토큰, 전체 생성 1.3천~1.8천 토큰에서 멈춘다(같은 날 3회 동시 실측).
+# "한 문장씩" 같은 가벼운 질문은 사고가 140 토큰 안팎이라 부하 시험으로서 너무 가벼웠다.
+# 사고 끔 질문은 글자를 세지 않으므로 출력 부하를 만들려고 분량 지정을 유지한다.
 PROMPTS = [
     {
-        "content": "집에서 전기요금을 아끼기 위해 오늘부터 실천할 수 있는 방법을 약 250자 분량으로 설명해주세요. 최종 답변만 작성해주세요.",
+        "content": "4인 가족의 한 달 전기요금을 줄이는 계획을 세워주세요. 에어컨, 냉장고, 세탁기, TV, 조명의 소비전력과 하루 사용 시간을 가정해 월 사용량(kWh)을 계산하고, 절약 방법 다섯 가지와 각각의 월 예상 절감량을 표로 정리해주세요. 최종 답변만 작성해주세요.",
         "enable_thinking": True,
     },
     {
-        "content": "비 오는 날 아이와 함께 집에서 보내기 좋은 활동을 약 500자 분량으로 추천해주세요. 준비물, 진행 방법, 주의할 점을 포함하고 최종 답변만 작성해주세요.",
+        "content": "초등학생 두 명과 비 오는 토요일을 집에서 보낼 일정을 짜주세요. 오전 9시부터 오후 6시까지 점심과 간식 시간, 30분 낮잠을 넣고, 활동마다 시작·끝 시각, 준비물, 주의할 점을 표로 정리해주세요. 최종 답변만 작성해주세요.",
         "enable_thinking": True,
     },
     {
@@ -93,6 +102,32 @@ class RequestResult:
     completion_tokens: int | None
     total_tokens: int | None
     error: str
+    # HTTP 200이어도 답이 없을 수 있다. 사고가 생성 상한을 다 쓰면 finish_reason이 length이고
+    # 답변(content)은 0자다. 상태코드만 보면 이런 응답이 성공으로 섞인다.
+    finish_reason: str | None = None
+    answer_chars: int = 0  # 공백을 뺀 답변 글자 수. 줄바꿈만 온 응답도 답이 없는 것으로 본다
+    reasoning_tokens: int | None = None
+
+
+def _answer_outcome(result: RequestResult) -> str | None:
+    """HTTP 200 응답의 답변 상태. 정상이면 None, 실패 응답은 판단하지 않는다."""
+    if not result.ok:
+        return None
+    if result.finish_reason == "length":
+        return "truncated_empty" if result.answer_chars == 0 else "truncated"
+    if result.answer_chars == 0:
+        return "empty"
+    return None
+
+
+def _visible_chars(text: str) -> int:
+    return sum(1 for ch in text if not ch.isspace())
+
+
+def _reasoning_tokens(usage: dict[str, Any]) -> int | None:
+    details = usage.get("completion_tokens_details") or {}
+    value = details.get("reasoning_tokens") if isinstance(details, dict) else None
+    return value if isinstance(value, int) else None
 
 
 class DashboardState:
@@ -180,7 +215,12 @@ class DashboardState:
                     "thinking": "",
                 },
             )
-            if result.ok:
+            outcome = _answer_outcome(result)
+            if outcome in ("truncated", "truncated_empty"):
+                status = "상한 도달"
+            elif outcome == "empty":
+                status = "답변 없음"
+            elif result.ok:
                 status = "완료"
             elif _is_overload_rejection(result):
                 status = "429 방어"
@@ -205,7 +245,12 @@ class DashboardState:
             self._pass_criteria = pass_criteria
             self._report_path = report_path
             self._completed_at = time.time()
-            self._status = "완료" if pass_criteria["passed"] else "실패"
+            if not pass_criteria["passed"]:
+                self._status = "실패"
+            elif pass_criteria.get("warnings"):
+                self._status = "완료 (경고 있음)"
+            else:
+                self._status = "완료"
 
     def snapshot(self) -> dict[str, Any]:
         with self._lock:
@@ -575,8 +620,18 @@ _DASHBOARD_HTML = """<!doctype html>
     function badgeClass(status) {
       if (status === '완료') return 'done';
       if (status === '실패') return 'fail';
-      if (status === '429 방어') return 'wait';
+      if (status === '답변 없음') return 'fail';
+      if (status === '429 방어' || status === '상한 도달') return 'wait';
       return '';
+    }
+
+    // 답변 칸이 빈 이유. 끝난 요청에 "응답 대기 중"을 띄우면 아직 기다리는 것으로 오해한다.
+    function emptyAnswerText(request) {
+      const result = request.result;
+      if (!result) return request.thinking ? '사고 중 — 답변은 사고가 끝난 뒤 나옵니다' : '응답 대기 중';
+      if (!result.ok) return `응답 실패: ${result.error || result.status}`;
+      if (result.finish_reason === 'length') return '답변 없음 — 생성 상한(max_tokens)에 도달해 사고 중에 끊겼습니다';
+      return '답변 없음 — 모델이 답변 없이 끝냈습니다';
     }
 
     function renderRequest(request) {
@@ -586,7 +641,7 @@ _DASHBOARD_HTML = """<!doctype html>
         : '';
       const answer = request.answer
         ? esc(request.answer)
-        : '<span class="empty">응답 대기 중</span>';
+        : `<span class="empty">${esc(emptyAnswerText(request))}</span>`;
       const seconds = requestSeconds(request);
       const tps = requestTps(request);
       return `
@@ -646,9 +701,11 @@ _DASHBOARD_HTML = """<!doctype html>
       const requests = state.requests || [];
       const finished = summary.sent ?? requests.filter((item) => item.result).length;
       const total = config.requests || requests.length || 0;
-      const ok = summary.ok ?? requests.filter((item) => item.status === '완료').length;
+      const ok = summary.ok ?? requests.filter((item) => item.result?.ok).length;
       const rejected = summary.overload_rejected ?? requests.filter((item) => item.status === '429 방어').length;
       const failed = summary.failed ?? requests.filter((item) => item.status === '실패').length;
+      const truncated = summary.length_truncated ?? requests.filter((item) => item.status === '상한 도달').length;
+      const noAnswer = summary.empty_answer ?? requests.filter((item) => item.result?.ok && !item.result?.answer_chars).length;
       const progress = total > 0 ? Math.min(100, Math.round((finished / total) * 100)) : 0;
 
       statusEl.textContent = state.status || '준비 중';
@@ -662,6 +719,8 @@ _DASHBOARD_HTML = """<!doctype html>
         metric('성공', ok),
         metric('429 방어', rejected),
         metric('실패', failed),
+        metric('상한 도달', truncated),
+        metric('답변 없음', noAnswer),
         metric('RPS', fixed(summary.requests_per_second)),
         metric('서버 TPS', fixed(summary.completion_tokens_per_second)),
         metric('실제 TPS p50', fixed(summary.decode_tokens_per_second?.p50)),
@@ -971,8 +1030,10 @@ def _non_stream_once(
         usage = payload.get("usage", {}) if isinstance(payload, dict) else {}
         ok = status == 200
         error = "" if ok else _short_error(payload)
+        answer, thinking = _extract_message_text(payload)
+        choices = payload.get("choices") if isinstance(payload, dict) else None
+        finish_reason = choices[0].get("finish_reason") if choices else None
         if ok and token_callback:
-            answer, thinking = _extract_message_text(payload)
             token_callback(index, "thinking", thinking)
             token_callback(index, "answer", answer)
         return RequestResult(
@@ -985,6 +1046,9 @@ def _non_stream_once(
             completion_tokens=usage.get("completion_tokens"),
             total_tokens=usage.get("total_tokens"),
             error=error,
+            finish_reason=str(finish_reason) if finish_reason else None,
+            answer_chars=_visible_chars(answer),
+            reasoning_tokens=_reasoning_tokens(usage),
         )
     except Exception as e:
         return _exception_result(index, start, e)
@@ -1008,6 +1072,8 @@ def _stream_once(
     )
     usage: dict[str, Any] = {}
     first_token_at: float | None = None
+    finish_reason: str | None = None
+    answer_chars = 0
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             for raw_line in resp:
@@ -1025,11 +1091,14 @@ def _stream_once(
                     usage = chunk["usage"]
                 choices = chunk.get("choices") or []
                 if choices:
+                    if choices[0].get("finish_reason"):
+                        finish_reason = str(choices[0]["finish_reason"])
                     delta = choices[0].get("delta") or {}
                     answer_text = _coerce_text(delta.get("content"))
                     thinking_text = _coerce_text(
                         delta.get("reasoning_content") or delta.get("reasoning")
                     )
+                    answer_chars += _visible_chars(answer_text)
                     if first_token_at is None and (answer_text or thinking_text):
                         first_token_at = time.monotonic()
                     if token_callback:
@@ -1047,6 +1116,9 @@ def _stream_once(
                 completion_tokens=usage.get("completion_tokens"),
                 total_tokens=usage.get("total_tokens"),
                 error="",
+                finish_reason=finish_reason,
+                answer_chars=answer_chars,
+                reasoning_tokens=_reasoning_tokens(usage),
             )
     except urllib.error.HTTPError as e:
         raw = e.read().decode("utf-8", errors="replace")
@@ -1174,6 +1246,11 @@ def _summarize(results: list[RequestResult], elapsed_s: float) -> dict[str, Any]
     for r in results:
         key = str(r.status)
         status_counts[key] = status_counts.get(key, 0) + 1
+    finish_reason_counts: dict[str, int] = {}
+    for r in ok_results:
+        key = str(r.finish_reason)
+        finish_reason_counts[key] = finish_reason_counts.get(key, 0) + 1
+    outcomes = [_answer_outcome(r) for r in ok_results]
 
     return {
         "sent": len(results),
@@ -1183,6 +1260,11 @@ def _summarize(results: list[RequestResult], elapsed_s: float) -> dict[str, Any]
         "failed": len(failed_results),
         "error_rate": 0 if not results else len(failed_results) / len(results),
         "status_counts": status_counts,
+        "finish_reason_counts": finish_reason_counts,
+        # HTTP 200 중 생성 상한에 걸린 건수와, 답변이 0자인 건수(상한 도달 포함)
+        "length_truncated": sum(o in ("truncated", "truncated_empty") for o in outcomes),
+        "empty_answer": sum(o in ("truncated_empty", "empty") for o in outcomes),
+        "empty_answer_not_truncated": outcomes.count("empty"),
         "elapsed_seconds": elapsed_s,
         "requests_per_second": 0 if elapsed_s <= 0 else len(results) / elapsed_s,
         "completion_tokens_per_second": 0 if elapsed_s <= 0 else total_completion_tokens / elapsed_s,
@@ -1247,11 +1329,23 @@ def _evaluate_pass(
         failures.append("HTTP 429 과부하 차단 응답 없음")
     if not postcheck["ok"]:
         failures.extend(postcheck["failures"])
+    # 상한에 걸리지 않았는데 답이 없으면 서버·파서 쪽 이상이라 실패로 본다.
+    if summary["empty_answer_not_truncated"] > 0:
+        failures.append(f"답변 없이 끝난 HTTP 200 {summary['empty_answer_not_truncated']}건")
+    # 상한 도달은 요청 설정(max_tokens)과 질문 길이의 문제라 서버 안정성 판정에서는 경고로 둔다.
+    # 숨기지 않도록 리포트·출력·진행 화면에 건수를 남긴다.
+    warnings = []
+    if summary["length_truncated"] > 0:
+        warnings.append(
+            f"생성 상한(max_tokens={args.max_tokens}) 도달 {summary['length_truncated']}건, "
+            f"그중 답변 없음 {summary['empty_answer'] - summary['empty_answer_not_truncated']}건"
+        )
     return {
         "passed": not failures,
         "require_200": args.require_200,
         "require_429": args.require_429,
         "failures": failures,
+        "warnings": warnings,
     }
 
 
@@ -1409,6 +1503,8 @@ def main() -> None:
             "image_ratio": args.image_ratio,
             "image_edge": args.image_edge,
             "ui": args.ui,
+            # 질문이 바뀌면 지난 리포트와 지연·TPS를 바로 비교할 수 없다. 어떤 질문으로 잰 것인지 남긴다
+            "prompts": PROMPTS,
         },
         "effective_defaults": args.effective_defaults,
         "circuit_breaker_tripped": tripped,
@@ -1434,6 +1530,11 @@ def main() -> None:
     print(f"  허용/전체: {summary['allowed']}/{summary['sent']}")
     print(f"  에러율: {summary['error_rate']:.2%}")
     print(f"  상태코드: {summary['status_counts']}")
+    print(
+        f"  답변 점검: 상한 도달 {summary['length_truncated']}건, "
+        f"답변 없음 {summary['empty_answer']}건 (상한 아닌데 답변 없음 {summary['empty_answer_not_truncated']}건), "
+        f"종료 사유 {summary['finish_reason_counts']}"
+    )
     print(f"  RPS: {_format_float(summary['requests_per_second'])}")
     print(f"  server TPS: {_format_float(summary['completion_tokens_per_second'])}")
     print(
@@ -1463,6 +1564,8 @@ def main() -> None:
     print(f"  통과: {pass_criteria['passed']}")
     if pass_criteria["failures"]:
         print(f"  실패 사유: {pass_criteria['failures']}")
+    for warning in pass_criteria["warnings"]:
+        print(f"  ⚠️ 경고: {warning}")
     print(f"  리포트: {report_path}")
 
     if dashboard_server:

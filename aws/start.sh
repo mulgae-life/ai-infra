@@ -20,7 +20,7 @@ S3_URI="${AWS_INFRA_S3_URI:-s3://hgi-ai-res/hjjo/aws/}"
 
 # push(로컬→S3) / pull(S3→로컬) 공통 제외 목록.
 # ※ wheels/ 는 vLLM 0.31.0 전환으로 Dockerfile.llm이 더는 쓰지 않는다(nightly 휠 덮어쓰기 제거).
-#    폴더는 운영 반영 확인 뒤 .archive/로 옮긴다 — 그 전까지는 있으면 push에 함께 올라간다.
+#    2026-10-10 레포 루트 .archive/로 옮겼다. 되돌리기는 휠이 아니라 pre-0.31 태그 이미지로 한다.
 # ※ .env(각 서버의 런타임 로드본)는 제외한다 — 환경별 .env.dev/.env.prd만 S3에 보관하고
 #    각 서버가 배포 후 알맞은 것을 .env로 복사한다. 제외하지 않으면 pull 한 번에
 #    그 서버의 .env가 다른 환경 값으로 덮어써진다(MODE·USERNAME·GPU 배정까지 뒤바뀜).
@@ -48,7 +48,7 @@ require_aws() {
 # 프리픽스를 비운 뒤 올려 로컬과 정확히 일치시킨다.
 # 제외 목록(.git/·__pycache__/·.archive/·*.log)은 애초에 S3에 있어서는 안 되는 것들이라
 # 삭제 단계에서 함께 지워져도 잃을 것이 없다.
-# ※ wheels/(246MB)가 남아 있으면 제외 대상이 아니라 push마다 다시 올라간다(위 주석 참고).
+# ※ 큰 파일을 aws/ 아래에 두면 제외 대상이 아니라 push마다 다시 올라간다.
 #    변경분만 올리고 싶으면 --dryrun으로 규모를 먼저 확인할 것.
 cmd_push() {
     require_aws push
