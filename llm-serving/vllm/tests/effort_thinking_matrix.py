@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """reasoning_effort × enable_thinking 조합 시험 (게이트웨이 경유 / 백엔드 직접 공용).
 
-vLLM 0.31부터 요청 최상위 `reasoning_effort`가 있으면 `enable_thinking`을 자동으로 켠다
-(entrypoints/openai/chat_completion/protocol.py). 게이트웨이는 effort를 템플릿 인자로 옮겨 이 매핑을 피하고
-"thinking 스위치는 enable_thinking, effort는 강약"이라는 계약을 유지한다. 이 스크립트는 그 계약이
-옛(0.20 nightly)·새(0.31) 백엔드에서 똑같이 지켜지는지 조합별로 확인한다.
+게이트웨이 규칙(2026-10-10 대표님 결정): 기본은 추론 꺼짐, effort를 주면 추론 켜짐(effort가 강도),
+`enable_thinking`을 직접 보내면 그 값을 따르고, effort `none`은 언제나 끈다. 게이트웨이가 `enable_thinking`을
+명시해 넘기므로 vLLM 0.31의 최상위 effort 자동 처리(entrypoints/openai/chat_completion/protocol.py)와
+옛 nightly 모두에서 같게 동작해야 한다. 이 스크립트는 그 규칙을 조합별로 확인한다.
 
 판정은 `reasoning` 필드 유무만으로 하지 않는다. 출력 토큰 수(usage.completion_tokens)와 응답 구조를 같이 적는다.
 스트리밍·비스트리밍을 둘 다 돈다.
@@ -28,18 +28,22 @@ PROMPT = "자동차보험 대인배상I과 대인배상II의 보장 범위 차�
 CASES = {
     "qwen": [
         ("thinking 생략, effort 없음",        None,     {},                          (False, None)),
-        ("thinking 생략, effort high",        "high",   {},                          (False, "xhigh")),
+        ("thinking 생략, effort high",        "high",   {},                          (True, "xhigh")),
+        ("thinking 생략, effort low",         "low",    {},                          (True, "low")),
         ("thinking false, effort high",       "high",   {"enable_thinking": False},  (False, "xhigh")),
         ("thinking true, effort 없음",        None,     {"enable_thinking": True},   (True, None)),
         ("thinking true, effort high",        "high",   {"enable_thinking": True},   (True, "xhigh")),
         ("thinking true, effort low",         "low",    {"enable_thinking": True},   (True, "low")),
         ("thinking true, effort medium",      "medium", {"enable_thinking": True},   (True, "medium")),
         ("thinking true, effort none",        "none",   {"enable_thinking": True},   (False, "none")),
-        ("thinking 생략, kwargs effort high", None,     {"reasoning_effort": "high"}, (False, "xhigh")),
+        ("thinking 생략, kwargs effort high", None,     {"reasoning_effort": "high"}, (True, "xhigh")),
+        ("thinking 생략, effort none",        "none",   {},                          (False, "none")),
+        ("thinking 생략, 스펙 밖 effort",      "banana", {},                          (False, "dropped")),
     ],
     "gemma": [
         ("thinking 생략, effort 없음",        None,     {},                          (False, None)),
-        ("thinking 생략, effort high",        "high",   {},                          (False, "dropped")),
+        ("thinking 생략, effort high",        "high",   {},                          (True, "dropped")),
+        ("thinking false, effort high",       "high",   {"enable_thinking": False},  (False, "dropped")),
         ("thinking true, effort 없음",        None,     {"enable_thinking": True},   (True, None)),
         ("thinking true, effort high",        "high",   {"enable_thinking": True},   (True, "dropped")),
         ("thinking true, effort none",        "none",   {"enable_thinking": True},   (False, "none")),

@@ -888,7 +888,7 @@ def _select_effort_profile(
 def _translate_effort(
     payload: dict, server: BackendServer, compat: CompatConfig
 ) -> tuple[dict | None, str | None]:
-    """reasoning_effort를 백엔드가 아는 값으로 번역한다.
+    """reasoning_effort를 백엔드가 아는 값으로 번역하고, effort가 오면 추론을 켠다.
 
     클라이언트는 OpenAI 표준값을 그대로 보내면 되고, 백엔드가 그 값을 모르면
     조용히 제거되어 200으로 응답한다. 값이 바뀐 사실은 X-Effort-Applied 헤더와
@@ -925,17 +925,24 @@ def _translate_effort(
         new_kwargs["enable_thinking"] = False
         applied = _EFFORT_THINKING_OFF
     elif resolved:
-        # 최상위가 아니라 템플릿 인자로 넘긴다. vLLM 0.31부터 최상위 reasoning_effort가
-        # 있으면 enable_thinking을 자동으로 켠다(chat_completion/protocol.py). 그러면
-        # "thinking 스위치는 enable_thinking, effort는 강약"이라는 게이트웨이 계약이 깨진다.
-        # 템플릿 인자는 그 매핑을 타지 않고, thinking 기본값은 인스턴스 설정을 따른다.
-        # 옛 nightly도 최상위가 없으면 템플릿 인자 값을 그대로 쓰므로 두 버전에서 같다.
+        # 최상위가 아니라 템플릿 인자로 넘긴다. 추론을 켤지는 아래에서 게이트웨이가
+        # enable_thinking으로 명시하고, vLLM 0.31의 최상위 effort 자동 처리
+        # (chat_completion/protocol.py)에 맡기지 않는다. 옛 nightly는 그 처리가 없어
+        # 맡기면 버전마다 동작이 달라진다.
         new_kwargs["reasoning_effort"] = resolved
         applied = resolved
     else:
         # 백엔드가 effort를 모르거나(프로파일 없음), 알아도 받지 않는 값이거나,
         # vLLM 스펙 밖의 문자열이다. 셋 다 제거하면 정상 응답이 된다.
         applied = _EFFORT_DROPPED
+
+    # effort를 주면 추론을 켠다(2026-10-10 대표님 결정. OpenAI와 vLLM 0.31의 규칙과 같다).
+    # 클라이언트가 enable_thinking을 직접 보냈으면 그 값을 따른다. 강도를 지원하지 않는
+    # 계열(Gemma)도 추론은 켠다. 스펙 밖 문자열은 추론 요청으로 보지 않는다.
+    effort_key = requested.lower()
+    if (effort_key != "none" and effort_key in _OPENAI_EFFORT_VALUES
+            and "enable_thinking" not in kwargs):
+        new_kwargs["enable_thinking"] = True
 
     if new_kwargs:
         new_payload["chat_template_kwargs"] = new_kwargs

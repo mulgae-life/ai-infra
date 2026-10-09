@@ -14,6 +14,8 @@ vLLM 서버 배포 후 기능 검증을 위한 테스트 스위트.
   7. 경계값/스트레스: 빈 입력, 긴 입력, 동시 텍스트 요청, 잘못된 JSON, 필수 필드 누락 확인.
   8. 프리픽스 캐싱: 동일 시스템 프롬프트 반복 호출의 응답 시간 비교.
   9. 멀티모달: 단일 이미지, 동시 이미지, 이미지+텍스트 혼합 요청 안정성 확인.
+ 10. 게이트웨이 계약: effort와 추론 켜고 끄기, 정체성 문구, developer 역할, 모델 경로 가림 확인.
+     대상이 게이트웨이일 때만 돈다(백엔드 vLLM에 직접 붙으면 건너뜀).
 
 사용법 (vllm/ 디렉토리에서 실행):
     # 기본 (localhost:5015, base-url 포트 → gateways/+instances/에서 모델명 자동 추출)
@@ -43,6 +45,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
+
+# 정체성 확인의 금지어·질문은 단독 탐침과 같은 목록을 쓴다(같은 폴더라 스크립트 실행 시 import된다).
+from gateway_compat_probe import _FORBIDDEN as _IDENTITY_FORBIDDEN, IDENTITY_QUESTIONS
 
 # ── 로그 Tee (콘솔 + 파일) ──────────────────────────────
 # main 진입 시 sys.stdout/stderr를 _Tee로 교체. 콘솔에는 색 그대로,
@@ -542,22 +547,42 @@ def test_sampling(ctx: TestContext):
 
 # ── 5. Thinking 모드 ────────────────────────────────────
 
+def _reasoning_of(msg: dict) -> str:
+    """reasoning_parser가 분리한 사고 본문. 버전에 따라 필드명이 다르다."""
+    return str(msg.get("reasoning") or msg.get("reasoning_content") or "")
+
+
+def _thinking_off_verdict(msg: dict) -> tuple[bool, str]:
+    """사고가 꺼졌는지 판정한다.
+
+    content의 <think>만 보면, 사고가 켜져도 파서가 reasoning 필드로 분리하는 순간 통과한다
+    (2026-10-09 effort 때문에 사고가 켜진 사고를 이 스위트가 놓쳤다). 그래서 reasoning 필드도 본다.
+    호출부는 skip_special_tokens=False를 함께 보낸다(5.2와 같은 조건). Gemma 4는 특수 토큰이 남아야
+    사고를 분리하는데, 0.31은 파서가 요청마다 강제하지만(parser/engine/parser_engine.py adjust_request)
+    파서가 강제하지 않는 버전에서도 사고가 content에 평문으로 섞여 판정을 놓치지 않게 하기 위해서다.
+    """
+    reasoning = _reasoning_of(msg)
+    content = str(msg.get("content") or "")
+    has_think_tag = "<think>" in content
+    ok = not reasoning and not has_think_tag
+    return ok, f"reasoning {len(reasoning)}자, <think> 포함: {has_think_tag}, 응답: {content[:80]}"
+
+
 def test_thinking(ctx: TestContext):
     c = ctx.colors
     print(f"\n{_c(c, 'bold', '5. Thinking 모드')}")
 
     def t_5_1():
-        """Thinking OFF (기본) — <think> 미생성"""
+        """Thinking OFF (기본) — 사고 미생성"""
         status, body = _chat(
             ctx,
             [{"role": "user", "content": "상해보험과 질병보험의 차이점은?"}],
             max_tokens=100,
+            skip_special_tokens=False,
         )
         if status != 200:
             return False, f"HTTP {status}"
-        content = body["choices"][0]["message"]["content"]
-        has_think = "<think>" in content
-        return not has_think, f"<think> 포함: {has_think}, 응답: {content[:80]}"
+        return _thinking_off_verdict(body["choices"][0]["message"])
 
     def t_5_2():
         """요청 단위 Thinking ON (서버 OFF → 요청 ON)"""
@@ -585,15 +610,14 @@ def test_thinking(ctx: TestContext):
             ctx,
             [{"role": "user", "content": "실손보험 자기부담금이 얼마야?"}],
             max_tokens=50,
+            skip_special_tokens=False,
             chat_template_kwargs={"enable_thinking": False},
         )
         if status != 200:
             return False, f"HTTP {status}"
-        content = body["choices"][0]["message"]["content"]
-        has_think = "<think>" in content
-        return not has_think, f"<think> 포함: {has_think}"
+        return _thinking_off_verdict(body["choices"][0]["message"])
 
-    _run_test(ctx, "5.1", "Thinking", "OFF (기본) — <think> 미생성", t_5_1)
+    _run_test(ctx, "5.1", "Thinking", "OFF (기본) — 사고 미생성", t_5_1)
     _run_test(ctx, "5.2", "Thinking", "요청 단위 ON — reasoning 분리", t_5_2)
     _run_test(ctx, "5.3", "Thinking", "요청 단위 OFF 명시적 전달", t_5_3)
 
@@ -1011,6 +1035,95 @@ def test_multimodal(ctx: TestContext):
     _run_test(ctx, "9.4", "멀티모달", "이미지 + 텍스트 혼합 동시 10개", t_9_4)
 
 
+# ── 10. 게이트웨이 계약 ─────────────────────────────────
+# vllm_gateway.py가 클라이언트에 약속하는 동작(VLLM_OPS_GUIDE §10.4). 백엔드 vLLM에 직접 붙으면
+# effort 번역·정체성 주입·경로 가림이 없어 규칙 자체가 다르므로 이 카테고리를 건너뛴다.
+
+def _is_gateway(ctx: TestContext) -> bool:
+    """/server-status는 게이트웨이에만 있다(vLLM은 404)."""
+    status, _ = _request(f"{ctx.base_url}/server-status", timeout=10)
+    return status == 200
+
+
+def test_gateway(ctx: TestContext):
+    c = ctx.colors
+    print(f"\n{_c(c, 'bold', '10. 게이트웨이 계약')}")
+    if not _is_gateway(ctx):
+        print(f"  {_c(c, 'yellow', '건너뜀')} — 대상이 게이트웨이가 아님(/server-status 없음, 백엔드 직접 연결)")
+        return
+
+    question = [{"role": "user", "content": "자동차보험 대인배상I과 대인배상II의 보장 범위 차이를 두 문장으로 설명해줘."}]
+
+    def _thinking(**extra) -> tuple[int, dict, str]:
+        # 사고가 켜지면 길어지므로 max_tokens·timeout을 넉넉히 둔다(사고 본문이 잘려도 reasoning은 채워진다).
+        status, body = _chat(ctx, question, max_tokens=700, temperature=0, skip_special_tokens=False,
+                             timeout=180, **extra)
+        if status != 200:
+            return status, {}, ""
+        msg = body["choices"][0]["message"]
+        return status, msg, _reasoning_of(msg)
+
+    def t_10_1():
+        """effort만 보내면 사고가 켜진다 (Gemma처럼 강도를 모르는 계열도 켜짐)"""
+        status, msg, reasoning = _thinking(reasoning_effort="medium")
+        if status != 200:
+            return False, f"HTTP {status}"
+        return bool(reasoning), f"reasoning {len(reasoning)}자, 응답: {str(msg.get('content') or '')[:80]}"
+
+    def t_10_2():
+        """enable_thinking false를 직접 보내면 effort가 있어도 꺼진다"""
+        status, msg, _ = _thinking(reasoning_effort="high", chat_template_kwargs={"enable_thinking": False})
+        if status != 200:
+            return False, f"HTTP {status}"
+        return _thinking_off_verdict(msg)
+
+    def t_10_3():
+        """effort none은 enable_thinking true여도 끈다"""
+        status, msg, _ = _thinking(reasoning_effort="none", chat_template_kwargs={"enable_thinking": True})
+        if status != 200:
+            return False, f"HTTP {status}"
+        return _thinking_off_verdict(msg)
+
+    def t_10_4():
+        """정체성 질문에 기반 모델·회사 이름이 나오지 않는다"""
+        leaks = []
+        for q in IDENTITY_QUESTIONS:
+            status, body = _chat(ctx, [{"role": "user", "content": q}], max_tokens=150, temperature=0)
+            if status != 200:
+                return False, f"HTTP {status}: {q}"
+            content = str(body["choices"][0]["message"].get("content") or "")
+            found = [w for w in _IDENTITY_FORBIDDEN if w in content.lower()]
+            if found:
+                leaks.append(f"{q[:20]!r} → {found}: {content[:80]}")
+        return not leaks, "\n".join(leaks) or f"질문 {len(IDENTITY_QUESTIONS)}개 모두 미노출"
+
+    def t_10_5():
+        """developer 역할 시스템 메시지가 400 없이 반영된다"""
+        status, body = _chat(ctx, [
+            {"role": "developer", "content": "답은 반드시 '확인:'으로 시작한다."},
+            {"role": "user", "content": "오늘 할 일을 한 줄로 정해줘."},
+        ], max_tokens=40, temperature=0)
+        if status != 200:
+            return False, f"HTTP {status}"
+        content = str(body["choices"][0]["message"].get("content") or "")
+        return "확인" in content, f"응답: {content[:80]}"
+
+    def t_10_6():
+        """/v1/models의 root가 체크포인트 경로 대신 별칭이다"""
+        status, body = _request(f"{ctx.base_url}/v1/models")
+        if status != 200:
+            return False, f"HTTP {status}"
+        pairs = [(m.get("id"), m.get("root")) for m in body.get("data", [])]
+        return bool(pairs) and all(i == r for i, r in pairs), f"(id, root): {pairs}"
+
+    _run_test(ctx, "10.1", "게이트웨이", "effort만 → 사고 켜짐", t_10_1)
+    _run_test(ctx, "10.2", "게이트웨이", "enable_thinking false 우선 → 꺼짐", t_10_2)
+    _run_test(ctx, "10.3", "게이트웨이", "effort none → 꺼짐", t_10_3)
+    _run_test(ctx, "10.4", "게이트웨이", "정체성 질문 — 기반 모델 미노출", t_10_4)
+    _run_test(ctx, "10.5", "게이트웨이", "developer 역할 병합", t_10_5)
+    _run_test(ctx, "10.6", "게이트웨이", "모델 경로 가림", t_10_6)
+
+
 # ═══════════════════════════════════════════════════════════
 # 카테고리 레지스트리
 # ═══════════════════════════════════════════════════════════
@@ -1025,6 +1138,7 @@ CATEGORIES = {
     "edge": ("경계값 / 스트레스", test_edge_cases),
     "caching": ("프리픽스 캐싱", test_caching),
     "multimodal": ("멀티모달 (이미지)", test_multimodal),
+    "gateway": ("게이트웨이 계약", test_gateway),
 }
 
 
@@ -1101,6 +1215,7 @@ def parse_args():
               edge        경계값 / 스트레스
               caching     프리픽스 캐싱
               multimodal  멀티모달 (이미지, image.png 필요)
+              gateway     게이트웨이 계약 (게이트웨이 대상일 때만)
 
             예시 (vllm/ 디렉토리에서 실행):
               python tests/test_vllm_server.py

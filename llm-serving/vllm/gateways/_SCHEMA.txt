@@ -123,6 +123,13 @@ served_model_name) 뒤에서 Gemma/Qwen/GLM을 갈아끼우기 위한 계층이�
       표준값(minimal/low/medium/high)을 그대로 보내면 되고, 백엔드가 그 값을
       모르면 필드가 제거되어 200으로 응답한다. 적용 결과는 응답 헤더
       X-Effort-Applied와 게이트웨이 로그에 남는다.
+      추론 켜고 끄기(2026-10-10~): 기본은 인스턴스 설정(꺼짐)을 따르고, effort를
+      주면 추론을 켠다. 클라이언트가 enable_thinking을 직접 보냈으면 그 값을
+      따르고, effort none은 언제나 끈다. 스펙 밖 문자열은 추론을 켜지 않는다.
+      게이트웨이가 enable_thinking을 명시하고 effort는 chat_template_kwargs로
+      넘긴다. vLLM 0.31의 최상위 effort 자동 처리(0.31.0
+      entrypoints/openai/chat_completion/protocol.py:585-586)는 옛 nightly에 없어
+      거기에 맡기면 버전마다 동작이 달라지기 때문이다.
       끄면 클라이언트 값이 백엔드로 그대로 전달된다 — Qwen3.8에 high를 보내면
       HTTP 400이 난다.
   mask_model_path
