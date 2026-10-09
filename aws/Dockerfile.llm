@@ -6,6 +6,14 @@ FROM ${BASE_IMAGE}
 # - prd: 위 항목 스킵 → 이미지 슬림화
 ARG MODE=dev
 
+# 이 레포의 서빙 코드와 의존성은 vLLM 0.31.0 기준이다(게이트웨이 effort 처리, requirements 오디오 고정).
+# .env의 VLLM_IMAGE를 바꾸지 않고 빌드하면 옛 베이스로 조용히 만들어지므로 첫 단계에서 멈춘다.
+# 버전업 때는 .env*의 VLLM_IMAGE와 이 값을 함께 바꾼다. 비교는 로컬 표시(+cu130 등)를 뗀 버전으로 한다.
+ARG VLLM_VERSION=0.31.0
+RUN python3 -c 'import importlib.metadata as m, sys; v = m.version("vllm"); w = sys.argv[1]; \
+sys.exit(0 if v.split("+")[0] == w else f"베이스 이미지의 vLLM {v} != {w}: .env의 VLLM_IMAGE를 vllm/vllm-openai:v{w}@sha256:... 로 바꾸세요")' \
+    "$VLLM_VERSION"
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ============================================
@@ -86,8 +94,9 @@ COPY gen-core-constraints.py /opt/gen-core-constraints.py
 #  ⑤ 최종 조합과 전체 목록을 이미지 안에 남긴다. 운영 빌드는 이 두 파일을 aws/image-freeze-0.31.0.txt와 대조
 # pip는 python3 -m pip로 부른다: 0.31 런타임은 apt Python에 get-pip로 pip를 따로 깔아, 셸의 pip가
 # 다른 인터프리터를 가리킬 여지를 없앤다
-RUN python3 /opt/gen-core-constraints.py > /tmp/vllm-core-constraints.txt \
-    && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt -c /tmp/vllm-core-constraints.txt \
+# 제약 파일은 /opt에 남긴다: 진입점이 EXTRA_REQUIREMENTS를 설치할 때도 같은 제약을 건다(entrypoint-llm.sh)
+RUN python3 /opt/gen-core-constraints.py > /opt/vllm-core-constraints.txt \
+    && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt -c /opt/vllm-core-constraints.txt \
     && python3 -m pip check \
     && python3 /opt/gen-core-constraints.py --final > /opt/image-core-final.txt \
     && cat /opt/image-core-final.txt \

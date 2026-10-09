@@ -158,7 +158,9 @@ RHEL 9까지는 `nvidia-driver:580-open` 같은 **모듈 스트림**으로 브�
 
 ### 5-3. 런타임 pip 오프라인 처리
 
-`aws/entrypoint-llm.sh`는 **컨테이너가 뜰 때마다** `EXTRA_REQUIREMENTS`(기본 `/data/requirements.txt`)를 `pip install`합니다. 폐쇄망에서는 PyPI에 못 나가 `set -e`로 컨테이너가 죽습니다. 컨테이너 스크립트를 고치지 않고 해결하는 방법은 pip 설정을 root 홈에 두는 것입니다 — 운영 컨테이너의 `/root`는 호스트 `/volume/root`에 영속되므로 한 번 만들면 재생성돼도 남습니다.
+> vLLM 0.31.0 전환부터 `.env.prd`의 `EXTRA_REQUIREMENTS`는 비어 있습니다. 서빙 의존성은 이미지 빌드 때 들어가므로 이 절은 값을 따로 넣은 경우에만 필요합니다. 값을 넣으면 진입점이 빌드 때의 핵심 패키지 제약을 걸어 설치합니다.
+
+`aws/entrypoint-llm.sh`는 **컨테이너가 뜰 때마다** `EXTRA_REQUIREMENTS`(값이 있을 때)를 `pip install`합니다. 폐쇄망에서는 PyPI에 못 나가 `set -e`로 컨테이너가 죽습니다. 컨테이너 스크립트를 고치지 않고 해결하는 방법은 pip 설정을 root 홈에 두는 것입니다 — 운영 컨테이너의 `/root`는 호스트 `/volume/root`에 영속되므로 한 번 만들면 재생성돼도 남습니다.
 
 ```bash
 # 네트워크가 열려 있을 때, 컨테이너 안에서

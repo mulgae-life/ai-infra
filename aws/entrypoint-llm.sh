@@ -33,11 +33,18 @@ setup_user_home() {
 
 # ============================================
 # 런타임 requirements 설치 (vLLM 의존성 보강용)
+# 기본은 비워 둔다 — 서빙 의존성은 이미지 빌드 때 requirements.txt로 들어간다.
+# 값을 주면 컨테이너가 뜰 때마다 설치하므로, 빌드 때 만든 핵심 패키지 제약(vLLM·torch·transformers·
+# FlashInfer 등 ==)을 같이 건다. 추가 패키지가 그 조합을 바꾸려 하면 설치가 실패하고 컨테이너가 멈춘다
+# (조용히 버전이 바뀌는 것보다 낫다). 제약 파일이 없는 옛 이미지는 예전처럼 제약 없이 설치한다.
 # ============================================
+CORE_CONSTRAINTS=/opt/vllm-core-constraints.txt
 if [ -n "${EXTRA_REQUIREMENTS:-}" ]; then
     if [ -f "${EXTRA_REQUIREMENTS}" ]; then
         echo "==> 추가 패키지 설치: $EXTRA_REQUIREMENTS"
-        pip install --no-cache-dir --break-system-packages -q -r "$EXTRA_REQUIREMENTS"
+        constraint_args=()
+        [ -f "$CORE_CONSTRAINTS" ] && constraint_args=(-c "$CORE_CONSTRAINTS")
+        python3 -m pip install --no-cache-dir --break-system-packages -q -r "$EXTRA_REQUIREMENTS" "${constraint_args[@]}"
     else
         echo "⚠️ EXTRA_REQUIREMENTS=${EXTRA_REQUIREMENTS} 파일이 존재하지 않습니다." >&2
     fi

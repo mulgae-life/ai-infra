@@ -99,13 +99,13 @@ docker compose logs -f llm        # 로그 확인
 |----|------|:----:|
 | `VOLUME_DEVICE` | EBS 디바이스 경로 (`lsblk` 확인, 추가 EBS만). **비우면 루트 디스크에 `/volume` 생성** (운영계 + S3 재동기화 정책 시) ⚠️ 인스턴스 종료 시 손실 | — |
 | `VOLUME_PATH` | EBS 마운트 경로 (기본 `/volume`) | — |
-| `EXTRA_REQUIREMENTS` | 컨테이너 내 pip 추가 설치 경로 (기본 `/data/requirements.txt`) | — |
+| `EXTRA_REQUIREMENTS` | 컨테이너가 뜰 때마다 추가로 pip 설치할 파일 경로. **비워 둔다**(서빙 의존성은 이미지 빌드 때 `requirements.txt`로 들어간다). 값을 주면 빌드 때의 핵심 패키지 제약(`/opt/vllm-core-constraints.txt`)을 걸어 설치하므로 vLLM·torch·transformers 버전을 바꾸는 패키지는 설치가 실패하고 컨테이너가 멈춘다 | — |
 
 **이미지**
 
 | 키 | 설명 | 필수 |
 |----|------|:----:|
-| `VLLM_IMAGE` | vLLM 베이스 이미지 (버전 업그레이드 시 여기만 변경) | ✅ |
+| `VLLM_IMAGE` | vLLM 베이스 이미지. 태그와 다이제스트를 함께 적는다(현재 `vllm/vllm-openai:v0.31.0@sha256:c1c9f6fd…`). 버전을 바꾸면 `Dockerfile.llm`의 `ARG VLLM_VERSION`도 같이 바꾼다 — 둘이 다르면 빌드 첫 단계에서 멈춘다 | ✅ |
 | `LLM_IMAGE_NAME` | 빌드 결과 이미지 태그 (기본 dev=`llm-dev`, prd=`llm-prd`). **`docker-compose.yml`과 `user.sh`가 공유** — 한 .env에서만 관리 | — |
 | `CUDA_TEST_IMAGE` | Phase 2 GPU 연동 테스트용 이미지 (기본 `nvidia/cuda:12.8.1-base-ubuntu24.04`) | — |
 
@@ -271,6 +271,49 @@ sudo ~/aws/user.sh rebuild              # 이미지 갱신 + 기존 옵션 보�
 > sudo ~/aws/user.sh up jin --password new_pw --gpus 0,1
 > ```
 
+### 9-3. vLLM 버전업 반영 (0.31.0, 이미 셋업된 서버)
+
+호스트 셋업(`setup-ec2.sh`)은 다시 하지 않는다. 운영 이미지가 이미 CUDA 13(torch cu130)이라 드라이버 조건이 같다. 바뀌는 것은 이미지(`aws/`), env 두 줄, 서빙 코드(`llm-serving/`) 세 가지다.
+
+```bash
+# ── (1) 로컬(연구계) → S3: env 원본과 서빙 코드를 함께 올린다
+cd /workspace/ai-infra/aws && ./start.sh push
+cd /workspace/ai-infra/llm-serving && ./start.sh push
+
+# ── (2) 대상 서버 호스트: 받기 + env 확인
+cd ~/aws && ./start.sh pull
+cp .env.prd .env               # 개발계는 .env.dev. 서버 고유값(VOLUME_DEVICE 등)을 고쳐 둔 서버는 아래 두 줄만 옮긴다
+grep -E '^(VLLM_IMAGE|EXTRA_REQUIREMENTS)=' .env
+#   VLLM_IMAGE=vllm/vllm-openai:v0.31.0@sha256:c1c9f6fd5c109ba7f0546a59f5b2f15fb87f64c77782e90a27b648b42a8e67c3
+#   EXTRA_REQUIREMENTS=          ← 비어 있어야 한다
+
+# ── (3) 이미지 빌드 — 되돌리기용으로 지금 서빙 컨테이너가 실제로 쓰는 이미지 ID에 태그를 먼저 남긴다
+IMG=$(grep '^LLM_IMAGE_NAME=' .env | cut -d= -f2)      # 운영 llm-prd, 개발 llm-dev
+docker tag "$(docker inspect -f '{{.Image}}' <지금 서빙 컨테이너>)" "$IMG:pre-0.31"   # 새 서버면 생략
+docker compose build             # 베이스 9GB를 받는다. 첫 단계에서 vLLM 버전을 확인하고, 끝에 --final 조합을 출력한다
+docker run --rm --entrypoint cat "$IMG" /opt/image-core-final.txt   # 핵심 조합. 이미지 확인 때 만든 aws/image-freeze-0.31.0.txt와 다르면 여기서 멈춘다
+#   → vllm==0.31.0 / torch==2.13.0+cu130 / transformers==5.17.0 …
+
+# ── (4) 서빙 컨테이너를 새 이미지로
+sudo ./user.sh up llm-serving --root --password <pw> --service-port 5501 --gpus 0   # 새로 만들 때
+sudo ./user.sh rebuild <이름>                                                       # 이미 있는 user.sh 컨테이너(포트·GPU 보존)
+docker compose up -d --force-recreate                                               # compose 메인 컨테이너(llm-root)를 쓰는 서버
+
+# ── (5) 컨테이너 안: 서빙 코드 받기 → 기동 → 확인
+sudo docker exec -it llm-serving bash
+aws s3 sync s3://hgi-ai-res/hjjo/llm-serving/ /workspace/llm-serving/   # 처음 한 번. 이후는 cd /workspace/llm-serving && ./start.sh pull
+chmod +x /workspace/llm-serving/start.sh /workspace/llm-serving/*/start.sh
+cd /workspace/llm-serving/vllm
+./start.sh up prd-gemma && ./start.sh up 5501   # PII 모드면 llm-serving/DEPLOY_GUIDE.md §3.2
+./start.sh logs prd-gemma -n 400 | grep -E 'speculative_config|Model Runner|Selected'   # speculative_config=None (운영 Gemma MTP 끔)
+./start.sh test prd-gemma
+```
+
+- 이미 운영 중인 서버는 계획서 `agent-guide/plans/work-plan_261008_vllm-upgrade/part3-rollout-cleanup.md` P4 순서를 따른다: 새 게이트웨이를 옛 vLLM 위에서 먼저 재기동해 확인하고, 게이트웨이를 거치지 않는 직접 호출 클라이언트가 없는지 본 뒤, 조합을 대조하고 컨테이너를 바꾼다.
+- 코드와 이미지의 순서는 바뀌어도 된다. 게이트웨이 effort 처리와 MTP 끔 설정은 옛 이미지(0.20.2 nightly)에서도 같은 동작이다. 다만 새 이미지에 옛 코드를 붙이면 effort만 보낸 요청에서 thinking이 켜지므로, (5)의 `pull`을 건너뛰지 않는다.
+- `quantization: fp8`은 0.31에서 "deprecated, `fp8_per_tensor`를 쓰라"는 경고만 내고 같은 경로로 동작한다. 키 변경은 운영 반영을 확인한 뒤에 한다. 옛 nightly에서 `fp8_per_tensor`는 `fp8`과 다른 구현이라, 먼저 바꾸면 되돌릴 때 경로가 달라진다.
+- **되돌리기**: `docker tag "$IMG:pre-0.31" "$IMG"` → (4)와 같은 명령으로 컨테이너를 다시 만든다. 서빙 코드는 두 버전에서 동작하므로 그대로 둔다. 다음 빌드를 옛 버전으로 하려면 `.env`의 `VLLM_IMAGE`와 `Dockerfile.llm`의 `VLLM_VERSION`도 함께 되돌린다.
+
 ---
 
 ## 10. 디렉토리 구조 (`/volume`)
@@ -305,5 +348,7 @@ sudo ~/aws/user.sh rebuild              # 이미지 갱신 + 기존 옵션 보�
 | `user.sh up` 시 포트 범위 초과 | 사용자 컨테이너가 49개 도달. 미사용 사용자 `down`으로 정리 |
 | Claude Code 설치 실패 (폐쇄망) | dev 모드에서만 시도, 실패해도 컨테이너는 정상 기동. 수동 설치: `curl -fsSL https://claude.ai/install.sh \| bash` |
 | Fabric Manager 자동 설치 실패 | NVSwitch GPU(H100/H200 등)에서 발생 가능. 로그의 안내대로 수동 설치: `dnf module install -y nvidia-driver:<branch>-open/fm` |
-| 빌드 시 `transformers` 충돌 | `requirements.txt` 마지막에 `transformers`를 `--no-deps`로 설치하므로 vLLM 핀과 충돌 안 함 (의도된 설계) |
+| 빌드 첫 단계에서 `베이스 이미지의 vLLM X != 0.31.0` | `.env`의 `VLLM_IMAGE`가 옛 값이다. `.env.prd`(개발계는 `.env.dev`)를 다시 `cp`하거나 두 줄(`VLLM_IMAGE`·`EXTRA_REQUIREMENTS`)을 §9-3대로 고친다 |
+| 빌드 중 pip `ResolutionImpossible` / `Cannot install` | `requirements.txt`의 패키지가 베이스의 핵심 조합(vLLM·torch·transformers·FlashInfer 등, `gen-core-constraints.py`)을 바꾸려 한다. 그 패키지의 버전을 베이스와 맞는 값으로 고친다. 핵심 조합은 베이스 이미지가 정하므로 requirements에서 바꾸지 않는다 |
+| 컨테이너가 기동 직후 멈추고 로그에 `==> 추가 패키지 설치` 뒤 pip 오류 | `EXTRA_REQUIREMENTS`에 값이 남아 있고, 그 파일이 핵심 조합을 바꾸려 한다(진입점이 같은 제약을 건다). `.env`에서 비우고 `user.sh rebuild <이름>` |
 | 호스트 GPU 모니터링 (`nvitop`) 동작 안 함 | Phase 1에서 PEP 668 우회로 자동 설치되지만 실패 가능. 수동: `pip3 install --break-system-packages nvitop`. 실행: 호스트 셸에서 `nvitop` |

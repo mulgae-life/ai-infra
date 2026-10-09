@@ -137,7 +137,7 @@ cd /workspace/llm-serving/stt
 # 비교 PoC: ./start.sh up qwen3_asr(또는 whisper_v3) → ./start.sh up 5017
 ```
 
-> ⚠️ **Voxtral 의존성**: 컨테이너 재배포 시 `pip install soundfile soxr librosa` 필요. 영구 등재는 `aws/requirements.txt`. 미설치 시 vLLM 기동 직후 `EngineCore failed to start` + `ImportError: soundfile` 로 fail.
+> ⚠️ **Voxtral 의존성**: `soundfile`·`soxr`·`librosa`·`av`·`mistral_common[audio]`는 `aws/requirements.txt`로 이미지 빌드 때 들어간다(vLLM 0.31.0 이미지부터 따로 설치하지 않는다). 옛 이미지에서 빠져 있으면 vLLM 기동 직후 `EngineCore failed to start` + `ImportError: soundfile` 로 fail.
 > ⚠️ **GPU 충돌**: voxtral(GPU 2)은 LLM(GPU 0·1)과 충돌 없음. 비교용 `qwen3_asr`(GPU 0)는 LLM과, `whisper_v3`(GPU 2)는 voxtral과 겹침 → 충돌 대상 먼저 stop(`./start.sh down <name>` — 이름 명시 권장). 상세는 [`stt/README.md`](stt/README.md) "운영 주의".
 
 ### 3.4 Qwen (LLM 옵션, PII 모드 구성만)
