@@ -97,7 +97,7 @@ ai-infra/
     │   │   ├── 5501.yaml             #   외부 직접 (0.0.0.0, 비PII 운영 gemma)
     │   │   └── 6015/6016/6501/6502.yaml  # 내부 전용 (외부 입구는 pii/ 프록시)
     │   ├── tests/                   # 테스트 코드/픽스처/결과 디렉토리
-    │   │   ├── test_vllm_server.py  # 서버 헬스/추론 9 카테고리 QA
+    │   │   ├── test_vllm_server.py  # 서버 헬스/추론 10 카테고리 QA (게이트웨이 계약 포함)
     │   │   ├── traffic_test_vllm.py # 보수적 트래픽/과부하 테스트
     │   │   ├── speed_test.py        # 모델 간 속도 매트릭스 누적 (진입점 ./start.sh speed)
     │   │   ├── ab_regression_probe.py   # vLLM 버전 A/B 회귀·품질 탐침 (--compare로 두 결과 대조)
@@ -161,9 +161,9 @@ ai-infra/
 | `aws/entrypoint-llm.sh` | 컨테이너 시작 시 사용자·홈·SSH 준비. `EXTRA_REQUIREMENTS`가 있으면 빌드 때 제약을 걸어 추가 설치(기본은 비움) |
 | `aws/gen-core-constraints.py` | 베이스 이미지의 vLLM·torch·transformers·FlashInfer 등을 `==` 제약으로 출력(기본) / 최종 서빙 조합 확인(`--final`, 누락 시 빌드 실패) |
 | `aws/docker-compose.yml` | 메인 컨테이너 정의 (`.env`로 GPU/메모리/포트 제어) |
-| `llm-serving/vllm/vllm_server_launcher.py` | 다중 vLLM 서버 기동 (GPU 분할, yaml-relative runtime json) — LLM/STT 공용. `--download-only`로 모델+drafter 증분 동기화(서빙 경로는 네트워크 미접근), `speculative_config.model`의 `${model}` 치환 |
-| `llm-serving/vllm/vllm_gateway.py` | OpenAI 호환 게이트웨이 (chat/completions + audio/transcriptions + realtime WebSocket) — LLM/STT 공용. 모델 교체 호환 계층 포함(`reasoning_effort` 번역, `/v1/models`의 `root` 마스킹 — `compat` 설정) |
-| `llm-serving/vllm/tests/test_vllm_server.py` | 서버 헬스/추론 9 카테고리 QA — 진입점 `./start.sh test [name\|all\|URL]` |
+| `llm-serving/vllm/vllm_server_launcher.py` | 다중 vLLM 서버 기동 (GPU 분할, yaml-relative runtime json) — LLM/STT 공용. `--download-only`로 모델+drafter 증분 동기화(서빙 경로는 네트워크 미접근), `speculative_config.model`의 `${model}` 치환 `SERVING_VLLM_BIN`이 있으면 그 `vllm`으로 띄움(연구계 0.31 가상환경용) |
+| `llm-serving/vllm/vllm_gateway.py` | OpenAI 호환 게이트웨이 (chat/completions + audio/transcriptions + realtime WebSocket) — LLM/STT 공용. 모델 교체 호환 계층 포함(`reasoning_effort` 번역과 effort를 주면 추론 켜기, `/v1/models`의 `root` 마스킹 — `compat` 설정) |
+| `llm-serving/vllm/tests/test_vllm_server.py` | 서버 헬스/추론 10 카테고리 QA(마지막 `gateway`는 게이트웨이 대상일 때만) — 진입점 `./start.sh test [name\|all\|URL]` |
 | `llm-serving/vllm/tests/traffic_test_vllm.py` | 운영 서버 보호를 우선한 smoke/overload 트래픽 테스트 — 진입점 `./start.sh traffic <포트>` (게이트웨이 전용, 대상 명시 필수) |
 | `llm-serving/vllm/tests/speed_test.py` | 게이트웨이 단위 속도 매트릭스 측정 (모델명 자동 추출, results/speed_results.md 누적 append) — 진입점 `./start.sh speed [name\|all\|URL]` |
 | `llm-serving/vllm/tests/ab_regression_probe.py` | vLLM 버전업 회귀·품질 탐침(값 복사·도구 인자·JSON 스키마·이미지 반복·긴 입력). 옛·새 결과 파일을 `--compare`로 대조, 실패 시 종료 1 |

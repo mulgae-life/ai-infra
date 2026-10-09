@@ -4,10 +4,11 @@
 > **API 호출 사용법**: [`VLLM_API_GUIDE.md`](VLLM_API_GUIDE.md) 참고.
 
 > **서비스 구성 — 2-모드 운용**: 각 진입 포트는 **① 비PII 모드**(게이트웨이가 곧 외부 입구 — **현재 기본**)와 **② PII 모드**(프록시가 같은 포트를 인수, 게이트웨이는 내부로) 중 하나로 운영합니다. 외부 호출 주소는 모드와 무관하게 불변(gemma 연구 `:5015`/운영 `:5501`, qwen 연구 `:5016`/운영 `:5502`).
->   - **연구계 비PII (현재 프로파일)**: `:5015`(`gateways/5015.yaml`) ← `gemma-26b.yaml` (Gemma 4 26B-A4B fp8, GPU 0·1 TP2, vLLM `:7071`, MTP) **또는** `qwen.yaml` (Qwen3.8 27B FP8, GPU 0·1 TP2, vLLM `:7080`). 두 인스턴스 모두 `gateway_port: 5015`라 기동한 쪽이 백엔드가 됩니다 — GPU가 겹쳐 동시 기동은 불가. **현재는 `qwen.yaml`**.
+>   - **연구계 비PII (현재 프로파일)**: `:5015`(`gateways/5015.yaml`) ← `gemma-26b.yaml` (Gemma 4 26B-A4B fp8_per_tensor, GPU 0·1 TP2, vLLM `:7071`, MTP 끔) **또는** `qwen.yaml` (Qwen3.8 27B FP8, GPU 0·1 TP2, vLLM `:7080`). 두 인스턴스 모두 `gateway_port: 5015`라 기동한 쪽이 백엔드가 됩니다 — GPU가 겹쳐 동시 기동은 불가. **현재는 `qwen.yaml`**.
+>   - **연구계 컨테이너의 vLLM (10-09~)**: 0.31.0 가상환경 `/home/hjjo/venvs/vllm-0.31`(시험장 검증 조합과 버전이 모두 같음). `~/.bashrc`의 `SERVING_VLLM_BIN`을 런처가 읽어 이 환경의 `vllm`으로 띄운다(없으면 PATH의 `vllm`, 서버 이미지는 지정하지 않음). `~/.local`의 옛 nightly는 임베딩 서버(:8020)가 계속 쓴다. 옛 버전으로 되돌리기: `env -u SERVING_VLLM_BIN ./start.sh restart qwen`
 >   - 연구계 PII: `:5015`(프록시) → gw `:6015` ← `gemma.yaml` (Gemma 4 31B, vLLM `:7070`). `:5016`/gw `:6016`은 `qwen.yaml`이 5015로 옮겨간 뒤 매칭 인스턴스가 없어 비어 있습니다.
->   - **운영계 비PII (현재 운용)**: `:5501`(`gateways/5501.yaml`) ← `prd-gemma.yaml` (Gemma 4 26B-A4B, GPU 0, vLLM `:7070`)
->   - 운영계 PII: `:5501`(프록시) → gw `:6501` ← `prd-pii-gemma.yaml` · `:5502`(프록시) → gw `:6502` ← `prd-pii-qwen.yaml`
+>   - **운영계 비PII (현재 운용)**: `:5501`(`gateways/5501.yaml`) ← `prd-gemma.yaml` (Gemma 4 31B, GPU 0, vLLM `:7070`, MTP 끔)
+>   - 운영계 PII: `:5501`(프록시) → gw `:6501` ← `prd-pii-gemma.yaml` · `:5502`(프록시) → gw `:6502` ← `prd-pii-qwen.yaml` (Qwen3.8 27B FP8, GPU 0, vLLM `:7080`)
 >   - 📌 **아래 기동·테스트 명령 예시는 연구계 비PII(`:5015`/`gemma-26b.yaml`) 기준**입니다. 운영계는 `:5501` / `prd-gemma` 등으로 치환하세요.
 > **인프라**: AWS L40S 46GB × 4장.
 > **vLLM 버전**: 0.19.0+.
@@ -18,7 +19,7 @@
 >
 > 🆕 **2026-06-04 PII/DLP 가드 (enforcement)**: 사내 정책으로 LLM 앞단에 PII 가드가 의무화됨. 외부에 열린 단일 포트를 **PII 프록시가 인수**하고 게이트웨이는 내부 포트로 한 칸 물러난다 — 연구계 `:5015`→게이트웨이 `:6015`, 운영계 `:5501`→게이트웨이 `:6501`. **외부 호출 주소(`:5015`/`:5501`)는 불변**. PII 프록시·NER 서버 코드는 [`pii/`](pii/), 설계는 [`agent-guide/plans/pii-dlp-gateway.md`](../agent-guide/plans/pii-dlp-gateway.md), 기동 절차는 아래 [§7.9](#79-pii-가드-포함-기동)를 참고. ⚠️ 게이트웨이 yaml 파일명·`gateway.port`가 6015/6501로 바뀌었으므로 `./start.sh up 6015`처럼 **새 포트로 호출**한다.
 >
-> 🆕 **2026-07-21 2-모드 운용 전환**: PII 가드는 **선택 모드**가 됨 — 현재 연구·운영 모두 **비PII 모드**(게이트웨이가 외부 포트에 직접, PII 스택 미기동)로 운용하고, PII 모드는 필요 시 프록시+NER을 올려 전환한다. 연구계 비PII 프로파일은 `gemma-26b.yaml`(26B-A4B, MTP drafter `${model}-assistant` 자동 추종) ↔ `gateways/5015.yaml` 페어, 운영계는 `prd-gemma.yaml` ↔ `gateways/5501.yaml`. 모델 증분 동기화는 `./start.sh download`([§8.2](#82-다운로드최신-동기화--startsh-download)).
+> 🆕 **2026-07-21 2-모드 운용 전환**: PII 가드는 **선택 모드**가 됨 — 현재 연구·운영 모두 **비PII 모드**(게이트웨이가 외부 포트에 직접, PII 스택 미기동)로 운용하고, PII 모드는 필요 시 프록시+NER을 올려 전환한다. 연구계 비PII 프로파일은 `gemma-26b.yaml`(26B-A4B) ↔ `gateways/5015.yaml` 페어, 운영계는 `prd-gemma.yaml` ↔ `gateways/5501.yaml`. 모델 증분 동기화는 `./start.sh download`([§8.2](#82-다운로드최신-동기화--startsh-download)).
 
 ---
 
@@ -79,7 +80,7 @@ chatbot-poc (.env)
 │ vLLM :7070 (GPU 0)           │    │ vLLM :7080 (GPU 0)           │
 │ instances/prd-pii-gemma.yaml │    │ instances/prd-pii-qwen.yaml  │
 │   gateway_port: 6501 ────────┘    │   gateway_port: 6502 ────────┘
-│   model: gemma-4-31B-it      │    │   model: Qwen3.6-27B-FP8     │
+│   model: gemma-4-31B-it      │    │   model: Qwen3.8-27B-FP8     │
 └──────────────────────────────┘    └──────────────────────────────┘
 ```
 > ⚠️ PII 모드에서는 gemma·qwen 모두 외부 입구가 **PII 프록시**, 게이트웨이는 **내부 전용**이다(아래 🔒 박스). 연구계는 gemma `:5015`→`:6015` / qwen `:5016`→`:6016`, 운영계는 gemma `:5501`→`:6501` / qwen `:5502`→`:6502`. 같은 외부 포트에 두 모드를 동시에 쓸 수 없으므로 **모드는 포트당 택일**이다(예: 연구계 `:5015`는 비PII면 게이트웨이, PII면 프록시).
@@ -738,6 +739,18 @@ curl -s http://127.0.0.1:7080/v1/models | jq '.data[0].root'
 
 적용 결과는 응답 헤더 `X-Effort-Applied`와 게이트웨이 로그에 남습니다. 값이 `dropped`면 현재 백엔드가 이 옵션을 지원하지 않아 무시된 것입니다.
 
+**추론 켜고 끄기 (2026-10-10~)** — 기본은 추론 꺼짐이고, effort를 주면 추론이 켜집니다(OpenAI와 vLLM 0.31의 규칙과 같음).
+
+| 요청 | 추론 |
+|---|---|
+| 아무것도 안 보냄 | 꺼짐 (인스턴스 기본값) |
+| effort만 보냄 (`minimal`~`max`) | **켜짐**, Qwen3.8은 그 강도로. 강도를 지원하지 않는 계열(Gemma)은 켜지기만 함 |
+| `chat_template_kwargs.enable_thinking`을 직접 보냄 | 보낸 값을 따름 (effort보다 우선) |
+| effort `none` | 꺼짐 (`enable_thinking: true`를 보내도 끔) |
+| 스펙 밖 문자열 | 기본값 그대로 (꺼짐) |
+
+게이트웨이가 `enable_thinking`을 명시해 넘기므로 옛 nightly와 0.31에서 같게 동작합니다. 백엔드에 직접 붙으면 이 규칙이 아니라 vLLM 규칙을 따릅니다(0.31은 최상위 effort로만 자동으로 켬).
+
 ```bash
 # 번역 동작 확인 — 백엔드 직결은 400, 게이트웨이 경유는 200
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:7080/v1/chat/completions \
@@ -851,13 +864,13 @@ fingerprint_value: gemma-4
 
 ### 11.1 지원 모델 비교
 
-| | **Qwen3.8-27B-FP8 (연구계)** | Qwen3.6-27B-FP8 | Qwen3.5-27B-FP8 | **Gemma 4 26B-A4B-it (운영계)** | Gemma 4 31B-it |
+| | **Qwen3.8-27B-FP8 (연구계)** | Qwen3.6-27B-FP8 | Qwen3.5-27B-FP8 | Gemma 4 26B-A4B-it | **Gemma 4 31B-it (운영계)** |
 |---|---|---|---|---|---|
 | **HF 모델 ID** | `Qwen/Qwen3.8-27B-FP8` | `Qwen/Qwen3.6-27B-FP8` | `Qwen/Qwen3.5-27B-FP8` | `google/gemma-4-26B-A4B-it` | `google/gemma-4-31B-it` |
 | **파라미터** | 27B (Dense, Mamba-hybrid) | 27B (Dense, Mamba-hybrid) | 27B (Dense) | 26B active / ~45B total (MoE) | 30.7B (Dense) |
 | **아키텍처** | linear 48 + full 16 레이어 (Mamba-hybrid, 3.6과 동일 구성) | Gated DeltaNet 75% + Gated Attention 25% (Mamba-hybrid) | Transformer | MoE | Transformer |
 | **기본 dtype** | FP8 (사전 양자화, e4m3) | FP8 (사전 양자화) | FP8 (사전 양자화) | BF16 | BF16 |
-| **양자화 필요?** | 불필요 | 불필요 | 불필요 | `quantization: fp8` (온라인) | `quantization: fp8` (온라인) |
+| **양자화 필요?** | 불필요 | 불필요 | 불필요 | `quantization: fp8_per_tensor` (온라인) | `quantization: fp8_per_tensor` (온라인) |
 | **가중치 크기** | 29 GB | ~29 GB | ~27 GB | ~25 GB | ~29 GB |
 | **라이선스** | Apache 2.0 | Apache 2.0 | Apache 2.0 | Gemma | Apache 2.0 |
 | **HF 토큰** | 불필요 | 불필요 | 불필요 | 불필요 | 불필요 |
@@ -868,8 +881,8 @@ fingerprint_value: gemma-4
 | **tool_call_parser** | `qwen3_xml` | `qwen3_xml` (카드 권장: `qwen3_coder`) | `qwen3_xml` | `gemma4` | `gemma4` |
 | **reasoning_parser** | `qwen3` | `qwen3` | `qwen3` | `gemma4` | `gemma4` |
 | **샘플링 (Thinking)** | temp=1.0, top_k=20, top_p=0.95, presence_penalty=0 | temp=1.0, top_k=20, top_p=0.95, presence_penalty=1.5 | temp=0.6, top_k=20, top_p=0.95 | temp=1.0, top_k=64, top_p=0.95 | temp=1.0, top_k=64, top_p=0.95 |
-| **MTP Speculative Decoding** | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **vLLM 최소 버전** | 0.20.2 실기동 확인 | 0.19.0 | 0.18.0 | 0.19.0 | 0.19.0 |
+| **MTP Speculative Decoding** | ✅ (지금 끔) | ✅ | ✅ | ✅ drafter 별도 (지금 끔) | ✅ drafter 별도 (지금 끔) |
+| **vLLM 최소 버전** | 0.20.2 (0.31.0 실기동 확인) | 0.19.0 | 0.18.0 | 0.19.0 (0.31.0 실기동 확인) | 0.19.0 (0.31.0 실기동 확인) |
 | **transformers 최소 버전** | 5.8.0 (config.json 기재) | ≥4.56.0 | ≥4.56.0 | ≥5.5.0 | ≥5.5.0 |
 
 > Qwen3.8 열은 로컬 체크포인트(`/models/LLM/Qwen/Qwen3.8-27B-FP8`)의 `config.json`·`chat_template.jinja`·모델 카드에서 직접 확인한 값입니다. 벤치마크와 세대 비교는 [`slm_research/models/qwen3.8.md`](../agent-guide/docs/slm_research/models/qwen3.8.md), Qwen3.5 vs 3.6와 Gemma 4 vs Qwen3.6 비교는 [`slm_research/topics/gemma4-vs-qwen.md`](../agent-guide/docs/slm_research/topics/gemma4-vs-qwen.md) 참고.
@@ -1058,7 +1071,9 @@ vllm serve Qwen/Qwen3.6-27B-FP8 \
   --speculative-config '{"method": "mtp", "num_speculative_tokens": 2}'
 ```
 
-> ⚠️ **MTP method 표기 차이**: vLLM recipes는 `"method": "mtp"`, HF 모델 카드는 `"method": "qwen3_next_mtp"`. 두 문자열 모두 동일 MTP 경로지만 vLLM 버전마다 허용 값이 다를 수 있습니다. **운영 투입 전 실제 vLLM 0.19.0에서 시도 후 채택**하세요.
+> ⚠️ **MTP method 표기 차이**: vLLM recipes는 `"method": "mtp"`, HF 모델 카드는 `"method": "qwen3_next_mtp"`. vLLM 0.31.0은 `qwen3_next_mtp`를 받으면 사용 중단 경고를 내고 `mtp`로 바꿉니다(`vllm/config/speculative.py:1135-1139`). 그래서 `mtp`로 적습니다.
+>
+> ⚠️ **지금 Qwen·Gemma 인스턴스는 모두 MTP를 끕니다.** Qwen은 접두 캐시와 MTP를 함께 쓰면 같은 접두의 요청이 틀린 답을 내는 문제(#53912), Gemma는 요청 혼합 오염(#46088)이 해결되지 않았습니다. 다시 켜는 조건은 `instances/qwen.yaml`·`prd-gemma.yaml`의 주석에 있습니다.
 
 ### 12.2 preserve_thinking (에이전트 반복 루프 최적화)
 
@@ -1116,7 +1131,7 @@ default_chat_template_kwargs:
 
 ### 12.5 reasoning_effort (사고 길이 제어, Qwen3.8)
 
-Qwen3.8에서 새로 생긴 채팅 템플릿 변수입니다. thinking을 켠 호출에서 **모델이 얼마나 오래 생각할지**를 지시문으로 조절합니다. `enable_thinking`이 ON/OFF 스위치라면 `reasoning_effort`는 그 안의 강약 조절입니다.
+Qwen3.8에서 새로 생긴 채팅 템플릿 변수입니다. thinking을 켠 호출에서 **모델이 얼마나 오래 생각할지**를 지시문으로 조절합니다. 게이트웨이 경유에서는 effort를 주면 추론도 함께 켜집니다(§10.4의 "추론 켜고 끄기" 표).
 
 | 값 | 템플릿이 주입하는 지시문 | 용도 |
 |----|------------------------|------|
@@ -1150,13 +1165,12 @@ Qwen3.8에서 새로 생긴 채팅 템플릿 변수입니다. thinking을 켠 �
 vLLM은 `merge_kwargs(서버 기본값, merge_kwargs(요청 kwargs, 최상위 필드))` 순으로 병합합니다(`renderers/params.py:28`, `entrypoints/openai/chat_completion/serving.py:194`). 최상위 필드를 주지 않으면 `None`이라 병합에서 제외되고 하위 값이 그대로 살아납니다.
 
 ```bash
-# 이 요청만 깊게 생각시키기 (게이트웨이 경유 — high가 xhigh로 번역된다)
+# 이 요청만 깊게 생각시키기 (게이트웨이 경유 — high가 xhigh로 번역되고 추론도 켜진다)
 curl -sS http://127.0.0.1:5015/v1/chat/completions -H "Content-Type: application/json" -d '{
   "model": "gemma-4",
   "messages": [{"role":"user","content":"이 설계의 병목을 찾아줘"}],
   "max_tokens": 8000,
-  "reasoning_effort": "high",
-  "chat_template_kwargs": {"enable_thinking": true}
+  "reasoning_effort": "high"
 }'
 ```
 
@@ -1333,6 +1347,8 @@ cd /workspace/llm-serving/vllm
 ```
 
 전체 카테고리를 다 돌리면 멀티모달·캐싱 항목 때문에 대상 1대당 수 분이 걸립니다. 배포 직후 빠르게 확인할 때는 `--category infra inference`로 좁히세요. 하나라도 실패하면 종료 코드 1이라 cron·CI에서 그대로 판정에 쓸 수 있습니다.
+
+마지막 `gateway` 카테고리는 게이트웨이가 클라이언트에 약속한 동작(§10.4)을 봅니다. effort와 추론 켜고 끄기, 정체성 문구, developer 역할, 모델 경로 가림입니다. 대상이 게이트웨이일 때만 돌고, 인스턴스에 직접 붙으면 "건너뜀"으로 표시됩니다. 사고가 꺼졌는지는 응답의 `<think>`만이 아니라 `reasoning` 필드까지 봅니다. 파서가 사고를 분리하면 `<think>`가 content에 남지 않기 때문입니다.
 
 아래는 테스트 스크립트를 직접 호출하는 방법입니다. 포트를 직접 지정하거나 `-v` 같은 옵션을 쓸 때 참고하세요.
 
@@ -1536,7 +1552,7 @@ python tests/speed_test.py --base-url http://localhost:5015 --results-path tests
 | 5.2 | 요청 단위 ON | `reasoning` (또는 `reasoning_content`) 필드 존재 |
 | 5.3 | 요청 단위 OFF 명시적 전달 | content에 `<think>` 미포함 |
 
-> **`skip_special_tokens`는 클라이언트가 신경 쓸 필요가 없습니다.** Gemma 4의 `<|channel>...<channel|>`는 스페셜 토큰이라 기본 설정으로는 제거되어 reasoning 분리가 깨지는데, vLLM 0.20.2의 `Gemma4ReasoningParser.adjust_request()`가 요청마다 `skip_special_tokens=False`를 자동으로 넣어줍니다(`vllm/reasoning/gemma4_reasoning_parser.py:60-65`, 호출은 `vllm/parser/abstract_parser.py:513-520`). Qwen의 `<think>...</think>`는 일반 토큰이라 애초에 무관합니다.
+> **`skip_special_tokens`는 클라이언트가 신경 쓸 필요가 없습니다.** Gemma 4의 `<|channel>...<channel|>`는 스페셜 토큰이라 기본 설정으로는 제거되어 reasoning 분리가 깨지는데, vLLM의 Gemma 4 파서가 요청마다 `skip_special_tokens=False`로 처리합니다(0.31.0 `vllm/parser/gemma4.py`의 `Gemma4Parser`. 옛 nightly는 `vllm/reasoning/gemma4_reasoning_parser.py`의 `adjust_request()`). Qwen의 `<think>...</think>`는 일반 토큰이라 애초에 무관합니다.
 > 예전 가이드가 요구하던 요청 본문의 `skip_special_tokens: false`는 이제 불필요합니다.
 
 #### Tool Calling (`tool`)
@@ -1593,7 +1609,7 @@ llm-serving/
 │   ├── vllm_server_launcher.py  (yaml 단위 vLLM 서브프로세스 + 포트 자동 회피 + runtime json)
 │   ├── vllm_gateway.py          (LB + Admission Controller + 헬스체크 + 웜업)
 │   ├── tests/                   ← 테스트 코드 디렉토리
-│   │   ├── test_vllm_server.py  (9 카테고리 QA)
+│   │   ├── test_vllm_server.py  (10 카테고리 QA)
 │   │   ├── traffic_test_vllm.py (smoke/overload 트래픽 테스트)
 │   │   ├── speed_test.py        (모델 간 속도 매트릭스 누적)
 │   │   └── results/             (speed_results.md 등 누적 리포트)

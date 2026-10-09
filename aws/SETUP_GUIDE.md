@@ -205,6 +205,7 @@ sudo ~/aws/user.sh up jin --password new_pw --gpus 0,1
 - 이미지: 베이스가 `vllm/vllm-openai:v0.31.0`이 됩니다.
 - `.env` 두 줄: `VLLM_IMAGE`(0.31.0 다이제스트), `EXTRA_REQUIREMENTS`(비움).
 - 서빙 코드: `llm-serving/`.
+- 추론 규칙: 게이트웨이를 거친 요청에 `reasoning_effort`가 있으면 추론이 켜집니다(`enable_thinking`을 직접 보낸 요청은 그 값을 따름). 지금까지는 effort만으로 켜지지 않았습니다. 상세는 [`VLLM_OPS_GUIDE.md` §10.4](../llm-serving/VLLM_OPS_GUIDE.md#104-모델-교체-호환-계층-compat).
 - 호스트 셋업(`setup-ec2.sh`)은 다시 하지 않습니다. 지금 운영 이미지도 CUDA 13 기반이라 드라이버 조건이 같습니다.
 
 **1) 로컬 → S3**
@@ -287,8 +288,8 @@ grep -o 'speculative_config=[A-Za-z]*' logs/vllm_prd-gemma.log | tail -1   # spe
 ```
 
 - 코드 받기를 건너뛰지 않습니다. 새 이미지에 옛 서빙 코드를 쓰면 `reasoning_effort`만 보낸 요청에서 사고 과정이 켜집니다.
-- `speculative_config=None`은 MTP(다중 토큰 예측)가 꺼져 있다는 뜻입니다. 운영 Gemma는 MTP를 끕니다.
-- 로그의 `fp8 ... deprecated, use fp8_per_tensor` 경고는 정상입니다. 설정은 바꾸지 않습니다.
+- `speculative_config=None`은 MTP(다중 토큰 예측)가 꺼져 있다는 뜻입니다. Gemma·Qwen 인스턴스는 모두 MTP를 끕니다.
+- 로그에 `fp8 ... deprecated, use fp8_per_tensor` 경고가 나오면 옛 서빙 코드입니다. 지금 설정은 `fp8_per_tensor`라 이 경고가 나오지 않습니다. 코드 받기부터 다시 합니다.
 - PII 모드로 운영하는 서버는 기동 명령이 다릅니다: [`DEPLOY_GUIDE.md` §3.2](../llm-serving/DEPLOY_GUIDE.md#32-gemma-기동-비pii-기본--pii-모드).
 
 **되돌리기**
