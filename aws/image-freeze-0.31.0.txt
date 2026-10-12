@@ -1,0 +1,39 @@
+# vLLM 0.31.0 이미지 기준값 — 개발 서버에서 처음 빌드해 시험한 이미지 (2026-10-12)
+#   베이스: vllm/vllm-openai:v0.31.0@sha256:c1c9f6fd5c109ba7f0546a59f5b2f15fb87f64c77782e90a27b648b42a8e67c3
+#   빌드: Dockerfile.llm 21c0c68, MODE=dev (dev/prd 차이는 Node·codex뿐이라 pip 목록은 같다)
+#
+# 운영 서버는 빌드 뒤, 서빙 컨테이너를 바꾸기 전에 대조한다 (SETUP_GUIDE §4-3 4단계):
+#   docker run --rm -i --entrypoint sha256sum llm-prd -c - < ~/aws/image-freeze-0.31.0.txt
+# 세 줄 모두 OK여야 한다. FAILED가 있으면 반영을 멈춘다.
+#   image-core-final.txt FAILED → 핵심 패키지 조합이 다르다. 아래 목록과 비교해 원인을 찾는다
+#   그 밖의 FAILED          → requirements의 하한만 둔 패키지가 다르게 깔렸다. 영향 판정 후 필요한 재시험
+#
+# image-core-final.txt 내용 (빌드 생성기 --final 출력, 해시 일치 확인):
+#   vllm==0.31.0
+#   torch==2.13.0+cu130
+#   torchaudio==2.11.0+cu130
+#   torchvision==0.28.0+cu130
+#   triton==3.7.1
+#   transformers==5.17.0
+#   tokenizers==0.23.2
+#   flashinfer-python==0.7.0.post1
+#   xgrammar==0.2.7
+#   fastapi==0.136.3
+#   starlette==1.7.0
+#   pydantic==2.13.5
+#   numpy==2.2.6
+#   mistral_common==1.12.0
+#   flashinfer-cubin==0.7.0.post1
+#   flashinfer-jit-cache==0.7.0.post1+cu130
+#   torchcodec==0.17.0+cu130
+#   av==19.0.1
+#   scipy==1.17.1
+#   soundfile==0.14.0
+#   soxr==1.1.0
+#   librosa==0.11.0
+#
+# 개발 서버는 S3 쓰기 권한이 없어 전체 목록(image-freeze.txt) 대신 해시만 남긴다.
+# 빈 줄을 두지 않는다 — sha256sum -c가 빈 줄을 형식 오류로 경고한다
+961e5fe07c82a1b755154e1e2d6c939b3a0cf3a9fac0e52162b2fb8fd2ea0348  /opt/image-core-final.txt
+c458aeeca8eb045a496be79231246780249994bd7e25352b4c06b7447e3e9e47  /opt/pip-check-base.txt
+8b895024ab5b9122ac22f11bf6df20d47193f7219e626394dc60f92574768c99  /opt/image-freeze.txt

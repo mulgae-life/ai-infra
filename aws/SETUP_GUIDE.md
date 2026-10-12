@@ -250,13 +250,13 @@ IMG=$(grep '^LLM_IMAGE_NAME=' .env | cut -d= -f2)      # 운영 llm-prd, 개발 
 docker tag "$(docker inspect -f '{{.Image}}' <서빙 컨테이너>)" "$IMG:pre-0.31"
 
 docker compose build
-docker run --rm --entrypoint cat "$IMG" /opt/image-core-final.txt | tee ~/image-core-0.31.0.txt
+docker run --rm -i --entrypoint sha256sum "$IMG" -c - < image-freeze-0.31.0.txt
 ```
 
 - 빌드는 베이스 이미지(약 9GB)를 먼저 받습니다.
 - 빌드 첫 단계에서 베이스의 vLLM 버전을 확인합니다. `.env`가 옛 값이면 여기서 멈춥니다([6-2](#6-2-이미지-빌드)).
-- 마지막 명령은 핵심 패키지 버전을 출력합니다. 첫 줄이 `vllm==0.31.0`이어야 합니다.
-- 처음 빌드한 서버(개발 서버)의 출력이 기준입니다. 운영 서버의 출력이 이와 다르면 멈춥니다.
+- 마지막 명령은 새 이미지를 개발 서버에서 시험을 통과한 이미지(10-12)와 대조합니다. 세 줄이 모두 `OK`여야 합니다.
+- `FAILED`가 나오면 서빙 컨테이너를 바꾸지 않고 멈춥니다. 무엇이 다른지는 `docker run --rm --entrypoint cat "$IMG" /opt/image-core-final.txt`로 핵심 패키지를 출력해 `image-freeze-0.31.0.txt` 안의 목록과 비교합니다.
 - 빌드가 끝나면 이후 `user.sh`로 만드는 컨테이너는 모두 새 이미지를 씁니다. 확인을 마칠 때까지 다른 컨테이너를 다시 만들지 않습니다.
 
 **5) 서빙 컨테이너를 새 이미지로**
