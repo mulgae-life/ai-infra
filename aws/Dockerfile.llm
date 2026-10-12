@@ -95,7 +95,8 @@ COPY gen-core-constraints.py /opt/gen-core-constraints.py
 #     높은 2.30.7로 덮어쓴다(UV_OVERRIDE, docker/Dockerfile:913). 10-12 개발 서버 빌드가 여기서 멈췄다
 #     베이스의 충돌 목록은 빌드 로그와 /opt/pip-check-base.txt에 남는다
 #  ④ --final: FlashInfer 부속·음성 경로까지 최종 서빙 조합 확인(하나라도 없으면 실패)
-#  ⑤ 최종 조합과 전체 목록을 이미지 안에 남긴다. 운영 빌드는 이 두 파일을 aws/image-freeze-0.31.0.txt와 대조
+#  ⑤ 최종 조합과 전체 목록을 이미지 안에 남긴다. 운영 빌드는 /opt의 세 파일 해시를 aws/image-freeze-0.31.0.txt와
+#     sha256sum -c로 대조한다(SETUP_GUIDE §4-3)
 # pip는 python3 -m pip로 부른다: 0.31 런타임은 apt Python에 get-pip로 pip를 따로 깔아, 셸의 pip가
 # 다른 인터프리터를 가리킬 여지를 없앤다
 # 제약 파일은 /opt에 남긴다: 진입점이 EXTRA_REQUIREMENTS를 설치할 때도 같은 제약을 건다(entrypoint-llm.sh)

@@ -24,9 +24,9 @@ last-updated: 2026-10-12 (vLLM 0.31 개발 서버 반영, 빌드 pip check 수�
 
 | 우선순위 | 작업 | 상태 |
 |---------|------|------|
-| P1 | **vLLM 0.31 버전업**: 계획서 `agent-guide/plans/work-plan_261008_vllm-upgrade/`(P0~P1·P5 ✅). 개발 서버 반영 ✅(10-12, 빌드·`gemma` 컨테이너 재생성·`test 5501`·이미지 대조 OK). 다음은 P4: 대표님이 운영 서버에서 `aws/SETUP_GUIDE.md` §4-3, 빌드 뒤 `image-freeze-0.31.0.txt` 해시 대조 세 줄 OK 확인 후 서빙 컨테이너 교체. 잔존: 개발 서버 `Maximum concurrency` 로그로 `max_num_seqs` 판정, S3의 `.ruff_cache/` 3개는 다음 llm-serving push가 지움, 연쇄 4판 자동 판정 두 경로, 실패 주입 모의 | 운영 반영 대기 |
+| P1 | **vLLM 0.31 버전업**: 계획서 `agent-guide/plans/work-plan_261008_vllm-upgrade/`. 개발 서버 ✅(10-12). 다음은 P4 운영 서버(대표님, `aws/SETUP_GUIDE.md` §4-3, 빌드 뒤 해시 대조 OK 후 교체). 잔존: S3 `.ruff_cache/`(다음 llm-serving push가 지움), 연쇄 4판 자동 판정 두 경로, 실패 주입 모의 | 운영 반영 대기 |
 | P1 | **온프레미스 H200 셋업 (`on-prem/`)**: 골격 `f9c1012`. 잔존: 설치팀 회신(HGX/PCIe, `VOLUME_DEVICE`, RAM), 실서버 `setup-host.sh` 첫 실행, RHEL Docker의 `apparmor=unconfined` 무시 여부, §5-3 pip 오프라인 실측, `start.sh check` drafter 경로(대표님 결정) | 골격 ✅, 실서버 대기 |
-| P1 | **운영계 반영 (`gemma-4` 별칭·정체성 프롬프트 + 31B 전환)**: 31B 본체 S3 반입 → `push` → 운영계 `pull` → 인스턴스·게이트웨이 **둘 다** 재기동(별칭·fingerprint 반영). 기동 로그로 `max_num_seqs: 20` 판정. MTP를 꺼서 drafter는 불필요 | 연구계 ✅, 운영계 대기 |
+| P1 | **운영계 반영 (`gemma-4` 별칭·정체성 프롬프트 + 31B 전환)**: 31B 본체 S3 반입 → `push` → 운영계 `pull` → 인스턴스·게이트웨이 **둘 다** 재기동(별칭·fingerprint 반영). MTP를 꺼서 drafter는 불필요 | 연구계 ✅, 운영계 대기 |
 | P1 | **:5015 게이트웨이 프로파일 (26B 기준)**: fp8_per_tensor·TP2·gmu 0.9·max_len 65536, overload 20/40. 잔존: 장문 latency·429 비율 측정. 지금 :5015 뒤는 qwen | 장문 검증 잔존 |
 | P1 | **MTP 벤치**: 모든 Gemma·Qwen 인스턴스 MTP 끔(10-08·10-09). 다시 켜는 조건은 #46088 수정 확인. 잔존: acceptance/TPOT 사내 벤치(`agent-guide/docs/slm_research/topics/mtp.md` §5) | 벤치 잔존 |
 | P1 | **모델 간 속도 매트릭스**: `./start.sh speed [name\|all]`. 26B-A4B 6행 확보. 잔존: 31B·Qwen 풀 매트릭스로 3모델 비교 | 부분 완료 |
@@ -40,7 +40,7 @@ last-updated: 2026-10-12 (vLLM 0.31 개발 서버 반영, 빌드 pip check 수�
 | P2 | **비PII qwen 대칭 보강**: qwen은 PII 경유(6502)만 존재. 필요 시 인스턴스(gw 5502) + `gateways/5502.yaml` 추가. **대표님 답변 대기** | Todo |
 | P2 | **`prd-gemma` vLLM host 정리**: `host: 0.0.0.0`이라 :7070 외부 노출. 방화벽 7070 차단 확인 또는 127.0.0.1 통일 | Todo |
 | P2 | **STT 동시 N 세션 전환**: voxtral gmu 0.35→0.40~0.50, max_num_seqs 1→2~4 + 게이트웨이 overload 동기 상향. 동시 stream 목표 결정 후 | Todo |
-| P2 | **운영계 STT 의존성 반영**: `aws/requirements.txt`의 `soundfile/soxr/librosa` 재배포 + Voxtral 17GB S3 경유 `/models/STT/` 동기화 | Todo |
+| P2 | **운영계 STT 의존성**: 음성 패키지는 0.31 이미지에 들어감(10-12 확인). 잔존: Voxtral 17GB S3 경유 `/models/STT/` 동기화. STT 미사용 | 보류 |
 | P2 | **RTX PRO 6000 이전 후 fused MoE 튜닝**: `benchmark_moe.py`로 config json 생성 → site-packages 배치. 트리거: 운영 환경 셋업 완료 | Todo |
 | P2 | **wrapper/logging.sh 가이드 보강**: STT/VLLM OPS 가이드에 본체/wrapper 구조 + `logging.sh` S3 카운트 sync 섹션 | Todo |
 | P3 | `agent-guide/` MCP 도구 섹션 채우기 | Todo |
@@ -51,7 +51,7 @@ last-updated: 2026-10-12 (vLLM 0.31 개발 서버 반영, 빌드 pip check 수�
 
 | 날짜 | 한 일 |
 |------|------|
-| **10-12** | 개발 서버 0.31 반영(대표님) · 공식 이미지가 NCCL을 torch 고정값보다 높게 덮어써 `pip check`가 원래 실패, 설치 전후 비교로 바꿈 `21c0c68`. 시험장 예행은 PyPI 설치라 이 충돌이 없었음 · 절차서 `restart && test`가 게이트웨이 기동 전에 시험해 분리 `21c0c68` · 개발 서버가 S3 쓰기 불가라 이미지 기준을 해시로 남김(`aws/image-freeze-0.31.0.txt`, `sha256sum -c` 대조, 개발 서버에서 OK 확인) |
+| **10-12** | 개발 서버 0.31 반영(대표님) · 공식 이미지의 NCCL 덮어쓰기로 `pip check`가 원래 실패해 설치 전후 비교로 `21c0c68`(시험장은 PyPI 설치라 못 잡음) · 절차서 `restart && test` 분리 `21c0c68` · 이미지 기준을 해시로 `e93b352`(개발 서버 S3 쓰기 불가) · 문서 정합. `max_num_seqs` 판정은 스케줄러가 자체 조절해 관문에서 뺌 |
 | **10-10** | 인스턴스 0.31 정렬·연구계 0.31 전환 `a7cf66c` · 게이트웨이 추론 규칙(effort를 주면 켬, `enable_thinking`이 우선, `none`은 끔) `0eee4cb`. "effort는 강도만"은 내 하위 호환 판단이라 대표님이 뒤집음 · P5 문서·휠 정리를 앞당김 `e9608b6` · 부하 시험이 빈 답 HTTP 200을 성공으로 세던 것 수정 `e9608b6`. 원인은 "약 250자" 지시로 글자를 세다 상한 도달(temperature 0 반복 가설은 틀림) · S3 push(대표님), push 제외 규칙이 최상위 캐시를 놓쳐 보강 `73ad777` |
 | **10-09** | vLLM 0.31 P2·P3: 정식 이미지 전환 `bbaae21` · A/B 도구·판정표 `f40fdfc` · 운영 Gemma MTP 끔 `89d4899` · env·빌드 확인·버전업 절차 `2ba83cb`·`ce56d2c` · 인스턴스 `fp8_per_tensor` 정렬 · 연구계 가상환경 `~/venvs/vllm-0.31` 전환(`~/.local` nightly는 임베딩 :8020용) · SSH 한글 로케일 `44722eb`. 연구계 Gemma `fp8` 유지 계획은 뒤집음, 옛 게이트웨이가 effort 수정 전 코드라 재기동, 공백 반복은 "모델 습관"이 아니라 "공통 출력 이상"으로 정정 |
 | **10-08** | vLLM 0.31 계획서 `db11b7e` · Qwen MTP 끔 `1d097b7` · 정체성 문구 기본값 비공개 `de23caf` · 시험장 0.31 예행 설치 · `ai-research/` 신설 + 보험 임베딩 골격 `00085cf`·계획서 v2 `efa102c`(협업 원본 `.archive/2026-10-08_insurance-ft-plan-collab/`). 하드 네거티브 채굴을 E1 앞에 두려던 안은 설계 7.1절과 어긋나 E2로 옮김 |

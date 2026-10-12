@@ -31,13 +31,14 @@
   3. `docker compose build`. 이때 공통 이름 `llm-prd:latest`가 새 이미지로 옮겨 간다. 이미 떠 있는 컨테이너는 그대로지만, 이후 `user.sh`로 만드는 모든 컨테이너는 새 이미지를 쓴다. 대조를 마칠 때까지 다른 재생성을 하지 않는다
   4. 조합 대조 (GPU 불필요, 임시 컨테이너): `docker run --rm --entrypoint python3 llm-prd:latest /opt/gen-core-constraints.py --final`과 이미지 안 `/opt/image-freeze.txt`를 꺼내 `aws/image-freeze-0.31.0.txt`와 비교한다
      - 10-09: 대표님이 이미지 확인(part2 ④~⑦) 대신 개발 서버 빌드를 먼저 하므로, 그 서버의 `/opt/image-core-final.txt` 출력이 기준이다(`aws/SETUP_GUIDE.md` §4-3)
+     - 10-12: 개발 서버가 S3 쓰기 불가라 전체 목록 대신 `/opt` 세 파일(`image-core-final`·`pip-check-base`·`image-freeze`) 해시를 기준으로 남겼다. 대조는 `docker run --rm -i --entrypoint sha256sum llm-prd -c - < ~/aws/image-freeze-0.31.0.txt` 한 줄이고 세 줄 모두 OK여야 한다. `image-core-final` FAILED는 아래 `--final` 차이와 같이 멈춘다
      - `--final` 항목(핵심·FlashInfer 부속·음성 경로)이 하나라도 다르면 멈춘다. `llm-prd:latest`를 보존 태그로 되돌리고 차이를 알려 준다
      - 그 밖의 패키지 차이는 영향 범위를 판정한다. 게이트웨이·클라이언트·음성 처리에 닿는 패키지(HTTP 클라이언트·서버, 직렬화, 오디오 처리)가 바뀌었으면 시험장에서 관련 시험을 다시 하고 통과한 뒤 진행한다. 닿지 않는 것만 기록으로 넘긴다
      - 하나라도 다르면 "시험 이미지와 같은 이미지"라고 부르지 않는다
   5. 재생성: `./user.sh rebuild <name>`. **이름을 반드시 준다.** 이름이 없으면 `managed-by=user.sh` 컨테이너 전부를 다시 만든다(`user.sh:440-447`)
   6. 재생성 뒤 확인 (아래 체크리스트)
 - [ ] 운영 확인 체크리스트 (재생성 뒤, 대표님용)
-  - 이미지 확인: `python`·`vllm` 실경로와 버전, `pip check`, 사용자 site와 겹치는 패키지
+  - 이미지 확인: `python`·`vllm` 실경로와 버전, `pip check`(공식 베이스가 원래 실패한다. `/opt/pip-check-base.txt`에 없는 줄만 문제), 사용자 site와 겹치는 패키지
   - 기동 로그 핵심 줄: Model Runner V2, 양자화 방식, MTP 방식(운영 Gemma는 결정 ⑨로 `speculative_config=None`이어야 한다)
     - 블록 FP8 체크포인트(Qwen 계열 FP8)를 쓰는 인스턴스는 `Selected … for Fp8LinearMethod` 줄로 선형층 커널을 확인한다. L40S(8.9)에서는 0.31이 옛 Triton W8A8 대신 Marlin(가중치만 FP8)을 골랐다. 운영 GPU(RTX PRO 6000 12.0, H200 9.0)의 선택은 확인하지 않았다. 10-09 대표님 결정(master 결정 ⑦)에 따라 어떤 커널이 선택되든 설정으로 바꾸지 않고 기록만 한다. 소스 조건상 두 GPU에서는 CUTLASS 블록(H200은 DeepGEMM 패키지가 있으면 DeepGEMM)이 Marlin보다 앞 순위다
     - Gemma(온라인 `fp8_per_tensor`, 10-09 변경)는 `Fp8PerTensorOnlineLinearMethod`가 나오고 `fp8 deprecated` 경고가 없어야 한다. 경고가 나오면 옛 서빙 코드다

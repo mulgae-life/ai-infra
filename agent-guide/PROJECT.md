@@ -157,7 +157,8 @@ ai-infra/
 | `llm-serving/start.sh` | S3 코드 배포 (`push`/`pull`). 구 `sync.sh` — 하위 `vllm/`·`stt/`·`pii/`의 `start.sh`는 서비스 제어라 역할이 다름 |
 | `aws/setup-ec2.sh` | Amazon Linux 2023 호스트 1회 셋업 (사용자/SSH/EBS/Docker/NVIDIA, Phase 1↔2 자동 전환) |
 | `aws/user.sh` | 사용자별 독립 컨테이너 + 포트 자동 할당(`up`/`down`/`list`/`rebuild`) |
-| `aws/Dockerfile.llm` | vLLM 베이스(v0.31.0 정식 이미지) + SSH. dev/prd 모드 분기. 첫 단계에서 베이스 vLLM 버전을 `ARG VLLM_VERSION`과 대조(다르면 중단), 핵심 패키지 조합을 제약(`/opt/vllm-core-constraints.txt`)으로 고정해 requirements를 설치 |
+| `aws/Dockerfile.llm` | vLLM 베이스(v0.31.0 정식 이미지) + SSH. dev/prd 모드 분기. 첫 단계에서 베이스 vLLM 버전을 `ARG VLLM_VERSION`과 대조(다르면 중단), 핵심 패키지 조합을 제약(`/opt/vllm-core-constraints.txt`)으로 고정해 requirements를 설치. `pip check`는 설치 전후를 비교해 새 충돌만 막는다(공식 베이스가 NCCL을 덮어써 원래 실패) |
+| `aws/image-freeze-0.31.0.txt` | 개발 서버에서 시험을 통과한 0.31 이미지의 기준 해시(`/opt` 세 파일). 운영 빌드 뒤 `sha256sum -c`로 대조 |
 | `aws/entrypoint-llm.sh` | 컨테이너 시작 시 사용자·홈·SSH 준비. `EXTRA_REQUIREMENTS`가 있으면 빌드 때 제약을 걸어 추가 설치(기본은 비움) |
 | `aws/gen-core-constraints.py` | 베이스 이미지의 vLLM·torch·transformers·FlashInfer 등을 `==` 제약으로 출력(기본) / 최종 서빙 조합 확인(`--final`, 누락 시 빌드 실패) |
 | `aws/docker-compose.yml` | 메인 컨테이너 정의 (`.env`로 GPU/메모리/포트 제어) |
