@@ -220,9 +220,12 @@ cd /workspace/ai-infra/llm-serving && ./start.sh push
 ```bash
 # 서빙 컨테이너 안 — 아직 옛 vLLM이 떠 있는 상태
 cd /workspace/llm-serving && ./start.sh pull
-cd vllm && ./start.sh restart 5501 && ./start.sh test 5501
+cd vllm && ./start.sh restart 5501
+./start.sh status                    # 5501이 [UP]이 된 뒤에 시험한다
+./start.sh test 5501
 ```
 
+- `restart`는 게이트웨이를 백그라운드로 띄우고 바로 끝납니다. `&&`로 `test`를 붙이면 포트가 열리기 전에 시험이 돌아 "서버 연결 실패"가 납니다.
 - 새 게이트웨이가 옛 vLLM에서 시험을 통과해야 다음으로 갑니다.
 - 게이트웨이를 거치지 않고 vLLM 포트(:7070)에 직접 붙는 클라이언트가 있는지 확인합니다. 있으면 멈추고 검토합니다. 0.31은 `reasoning_effort`만 보낸 요청에서 사고 과정(thinking)을 켜는 방식이 다릅니다.
 
@@ -398,6 +401,7 @@ sudo ./user.sh rebuild <서빙 컨테이너>     # 또는 5)에서 쓴 방법으
 |---|---|---|
 | `buildx` 버전 오류 | AL2023 기본 buildx가 0.17.0 미만 | `setup-ec2.sh`를 다시 실행하면 0.21.2로 바꿈. 직접: `curl -fsSL https://github.com/docker/buildx/releases/download/v0.21.2/buildx-v0.21.2.linux-amd64 -o /usr/libexec/docker/cli-plugins/docker-buildx && chmod +x $_` |
 | `베이스 이미지의 vLLM X != 0.31.0` | `.env`의 `VLLM_IMAGE`가 옛 값 | `cp .env.prd .env`(개발 서버는 `.env.dev`)를 다시 하거나 `VLLM_IMAGE`, `EXTRA_REQUIREMENTS` 두 줄을 [4-3](#4-3-vllm-0310-버전업-이미-셋업된-서버) 값으로 고침 |
+| `[pip check] 위 충돌은 requirements.txt 설치가 새로 만든 것` | `requirements.txt` 설치가 베이스에 없던 의존성 충돌을 만듦. 베이스에 원래 있는 충돌(NCCL 2.30.7 등)은 바로 위에 따로 출력되고 통과함 | 출력된 줄의 패키지를 충돌이 없는 버전으로 고침 |
 | pip `ResolutionImpossible` / `Cannot install` | `requirements.txt`의 패키지가 베이스의 핵심 패키지(vLLM, torch, transformers, FlashInfer 등) 버전을 바꾸려 함. 목록은 `gen-core-constraints.py` | 그 패키지를 베이스와 맞는 버전으로 고침. 핵심 패키지 버전은 베이스 이미지가 정하므로 requirements에서 바꾸지 않음 |
 
 ### 6-3. 컨테이너

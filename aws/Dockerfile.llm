@@ -90,14 +90,26 @@ COPY gen-core-constraints.py /opt/gen-core-constraints.py
 #  ① 생성기 기본 모드: 베이스의 핵심 패키지를 배포 메타데이터 기준 == 제약으로 낸다(필수 누락 시 실패)
 #  ② requirements.txt를 그 제약으로 설치 → 챗봇 의존성이 베이스 조합을 바꾸려 하면 빌드가 실패한다
 #     (예전처럼 transformers를 하한만 두고 다시 깔면 0.31의 상한 5.18 미만을 넘을 수 있었다)
-#  ③ pip check → ④ --final: FlashInfer 부속·음성 경로까지 최종 서빙 조합 확인(하나라도 없으면 실패)
+#  ③ pip check는 설치 전후를 비교해 requirements가 새로 만든 충돌만 막는다. 베이스 자체가 pip check를
+#     통과하지 못하기 때문이다: vLLM 공식 Dockerfile이 DeepEP용으로 NCCL을 torch 고정값(2.29.7)보다
+#     높은 2.30.7로 덮어쓴다(UV_OVERRIDE, docker/Dockerfile:913). 10-12 개발 서버 빌드가 여기서 멈췄다
+#     베이스의 충돌 목록은 빌드 로그와 /opt/pip-check-base.txt에 남는다
+#  ④ --final: FlashInfer 부속·음성 경로까지 최종 서빙 조합 확인(하나라도 없으면 실패)
 #  ⑤ 최종 조합과 전체 목록을 이미지 안에 남긴다. 운영 빌드는 이 두 파일을 aws/image-freeze-0.31.0.txt와 대조
 # pip는 python3 -m pip로 부른다: 0.31 런타임은 apt Python에 get-pip로 pip를 따로 깔아, 셸의 pip가
 # 다른 인터프리터를 가리킬 여지를 없앤다
 # 제약 파일은 /opt에 남긴다: 진입점이 EXTRA_REQUIREMENTS를 설치할 때도 같은 제약을 건다(entrypoint-llm.sh)
+# pip check는 충돌이 있으면 1로 끝나므로 출력만 파일에 받는다. 파일이 비면(pip 자체 오류) 멈춘다
 RUN python3 /opt/gen-core-constraints.py > /opt/vllm-core-constraints.txt \
+    && { python3 -m pip check > /opt/pip-check-base.txt || true; } \
     && python3 -m pip install --no-cache-dir -r /tmp/requirements.txt -c /opt/vllm-core-constraints.txt \
-    && python3 -m pip check \
+    && { python3 -m pip check > /opt/pip-check-final.txt || true; } \
+    && test -s /opt/pip-check-base.txt && test -s /opt/pip-check-final.txt \
+    && echo "[pip check] 베이스 이미지에 원래 있던 충돌:" && cat /opt/pip-check-base.txt \
+    && if grep -v '^No broken requirements found' /opt/pip-check-final.txt \
+            | grep -vxFf /opt/pip-check-base.txt; then \
+           echo "[pip check] 위 충돌은 requirements.txt 설치가 새로 만든 것 — 빌드 중단"; exit 1; \
+       fi \
     && python3 /opt/gen-core-constraints.py --final > /opt/image-core-final.txt \
     && cat /opt/image-core-final.txt \
     && python3 -m pip freeze > /opt/image-freeze.txt
