@@ -21,7 +21,7 @@
 | 로컬 PC에 풀스택 dev/GPU 컨테이너 띄우기 | [`my-docker-server/SETUP_GUIDE.md`](my-docker-server/SETUP_GUIDE.md) |
 | AWS GPU 인스턴스에 vLLM 베이스 + 다중 사용자 운영 환경 셋업 | [`aws/SETUP_GUIDE.md`](aws/SETUP_GUIDE.md) |
 | 온프레미스 H200 서버(RHEL 10) 호스트 셋업 + 네트워크 끊기 전 점검 | [`on-prem/SETUP_GUIDE.md`](on-prem/SETUP_GUIDE.md) |
-| vLLM API 호출 (사용자) | [`llm-serving/VLLM_API_GUIDE.md`](llm-serving/VLLM_API_GUIDE.md) |
+| vLLM API 호출 (사용자) | 연구계 [`llm-serving/VLLM_API_GUIDE_research.md`](llm-serving/VLLM_API_GUIDE_research.md) · 개발계·운영계 [`llm-serving/VLLM_API_GUIDE_dev_prd.md`](llm-serving/VLLM_API_GUIDE_dev_prd.md) |
 | vLLM 서버 + 멀티 GPU 게이트웨이 띄우기 (운영자) | [`llm-serving/VLLM_OPS_GUIDE.md`](llm-serving/VLLM_OPS_GUIDE.md) |
 | STT API 호출 (사용자) | [`llm-serving/STT_API_GUIDE.md`](llm-serving/STT_API_GUIDE.md) |
 | STT 서버 + 게이트웨이 띄우기 (운영자) | [`llm-serving/STT_OPS_GUIDE.md`](llm-serving/STT_OPS_GUIDE.md) |

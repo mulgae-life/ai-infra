@@ -229,7 +229,7 @@ cd /workspace/llm-serving/pii && bash start.sh down 5501 && bash start.sh up 550
 ## 참고
 
 - 인프라/컨테이너: [`../aws/SETUP_GUIDE.md`](../aws/SETUP_GUIDE.md)
-- vLLM API 호출 (사용자): [`VLLM_API_GUIDE.md`](VLLM_API_GUIDE.md)
+- vLLM API 호출 (사용자): 연구계 [`VLLM_API_GUIDE_research.md`](VLLM_API_GUIDE_research.md) · 개발계·운영계 [`VLLM_API_GUIDE_dev_prd.md`](VLLM_API_GUIDE_dev_prd.md)
 - vLLM 운영 상세 (토폴로지·모델 교체·메모리 표): [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md)
 - PII 가드 개요·기동·정책: [`pii/README.md`](pii/README.md), [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md) §7.9
 - PII 모델 라이선스 고지 / 모델 조사: [`pii/NOTICE.md`](pii/NOTICE.md), [`pii/pii_model_research.md`](pii/pii_model_research.md)

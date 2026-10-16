@@ -4,7 +4,7 @@
 
 > 📌 **운용 모드**: PII 가드는 **선택 모드**다(2026-07 전환). 현재 연구·운영 모두 **비PII 모드**(게이트웨이가 외부 포트에 직접, PII 스택 미기동)로 운용 중이며, 이 문서의 토폴로지·기동 절차는 **PII 모드 적용 시** 기준이다. 모드 비교는 [`../VLLM_OPS_GUIDE.md`](../VLLM_OPS_GUIDE.md) §6.1.
 
-> 빠른 호출(사용자)은 [`../VLLM_API_GUIDE.md`](../VLLM_API_GUIDE.md) §3.6~§3.7(PII 박스), 기동·정책 상세(운영자)는 [`../VLLM_OPS_GUIDE.md`](../VLLM_OPS_GUIDE.md) §7.9.
+> 빠른 호출(사용자)은 [`../VLLM_API_GUIDE_research.md`](../VLLM_API_GUIDE_research.md) §3.6~§3.7(PII 박스), 기동·정책 상세(운영자)는 [`../VLLM_OPS_GUIDE.md`](../VLLM_OPS_GUIDE.md) §7.9.
 
 ## 토폴로지
 

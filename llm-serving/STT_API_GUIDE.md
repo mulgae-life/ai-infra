@@ -397,6 +397,6 @@ async def transcribe(file: UploadFile):
 
 - 서버 운영(기동/중지·모델 교체·튜닝·트러블슈팅): [`STT_OPS_GUIDE.md`](STT_OPS_GUIDE.md)
 - 배포 절차(로컬 → S3 → EC2): [`DEPLOY_GUIDE.md`](DEPLOY_GUIDE.md)
-- vLLM SLM API (Chat): [`VLLM_API_GUIDE.md`](VLLM_API_GUIDE.md)
+- vLLM SLM API (Chat): 연구계 [`VLLM_API_GUIDE_research.md`](VLLM_API_GUIDE_research.md) · 개발계·운영계 [`VLLM_API_GUIDE_dev_prd.md`](VLLM_API_GUIDE_dev_prd.md)
 - OpenAI Audio API 표준: <https://platform.openai.com/docs/api-reference/audio>
 - OpenAI Realtime API 표준: <https://platform.openai.com/docs/api-reference/realtime>

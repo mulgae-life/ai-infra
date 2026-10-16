@@ -20,7 +20,8 @@ LLM 서빙 프레임워크 운영 구성 모음. 서버 인프라(EC2/Docker)와
 
 | 파일 / 디렉토리 | 역할 |
 |------|------|
-| [`VLLM_API_GUIDE.md`](VLLM_API_GUIDE.md) | **사용자용** API 가이드 (호출 예시 · 파라미터 · `.env` 통합) |
+| [`VLLM_API_GUIDE_research.md`](VLLM_API_GUIDE_research.md) | **사용자용** API 가이드 — 연구계 `:5015` (호출 예시 · 파라미터) |
+| [`VLLM_API_GUIDE_dev_prd.md`](VLLM_API_GUIDE_dev_prd.md) | **사용자용** API 가이드 — 개발계·운영계 `:5501` (외부 전달용) |
 | [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md) | **운영자용** 가이드 (서버 기동 · 모델 교체 · 트러블슈팅 · QA) |
 | [`vllm/start.sh`](vllm/start.sh) | 빠른 기동 스크립트 (`up [name\|all]` / `down [name\|all]` / `restart [name\|all]` / `status` / `download [name\|all]` 모델 증분 동기화. `up`·`down` 무인자는 [y/N] 전체 적용 confirm, `./start.sh` 단독 실행은 사용법 출력) |
 | [`vllm/vllm_server_launcher.py`](vllm/vllm_server_launcher.py) | vLLM 서버 런처 (인스턴스 yaml `-c` 인자 수신) |
@@ -34,7 +35,7 @@ LLM 서빙 프레임워크 운영 구성 모음. 서버 인프라(EC2/Docker)와
 | [`../agent-guide/docs/slm_research/`](../agent-guide/docs/slm_research/README.md) | 모델 조사 문서 (Gemma, Qwen, Jev). 목록은 README. 연구계 전용이라 배포 폴더 밖에 둔다 |
 | [`vllm/bugfix/`](vllm/bugfix/) | 운영 중 발견된 이슈 기록 |
 
-운영 인스턴스/게이트웨이 추가는 yaml 한 파일 복사 → 값만 수정 → `./start.sh up <name>` (인스턴스) 또는 게이트웨이 재기동(자동 디스커버리). 자세한 사용법은 [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md) 참조. 단순 호출만 필요한 사용자는 [`VLLM_API_GUIDE.md`](VLLM_API_GUIDE.md)부터 보세요.
+운영 인스턴스/게이트웨이 추가는 yaml 한 파일 복사 → 값만 수정 → `./start.sh up <name>` (인스턴스) 또는 게이트웨이 재기동(자동 디스커버리). 자세한 사용법은 [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md) 참조. 단순 호출만 필요한 사용자는 연구계 [`VLLM_API_GUIDE_research.md`](VLLM_API_GUIDE_research.md), 개발계·운영계 [`VLLM_API_GUIDE_dev_prd.md`](VLLM_API_GUIDE_dev_prd.md)부터 보세요.
 
 ## 🔒 PII/DLP 가드 (선택 모드 — 현재 미운용)
 

@@ -1,7 +1,7 @@
 # vLLM SLM 운영 가이드 (운영자용)
 
 > **대상**: 서버 운영자 (기동/중지, 설정 튜닝, 모델 교체, 트러블슈팅, QA)
-> **API 호출 사용법**: [`VLLM_API_GUIDE.md`](VLLM_API_GUIDE.md) 참고.
+> **API 호출 사용법**: 연구계 [`VLLM_API_GUIDE_research.md`](VLLM_API_GUIDE_research.md), 개발계·운영계 [`VLLM_API_GUIDE_dev_prd.md`](VLLM_API_GUIDE_dev_prd.md) 참고.
 
 > **서비스 구성 — 2-모드 운용**: 각 진입 포트는 **① 비PII 모드**(게이트웨이가 곧 외부 입구 — **현재 기본**)와 **② PII 모드**(프록시가 같은 포트를 인수, 게이트웨이는 내부로) 중 하나로 운영합니다. 외부 호출 주소는 모드와 무관하게 불변(gemma 연구 `:5015`/운영 `:5501`, qwen 연구 `:5016`/운영 `:5502`).
 >   - **연구계 비PII (현재 프로파일)**: `:5015`(`gateways/5015.yaml`) ← `gemma-26b.yaml` (Gemma 4 26B-A4B fp8_per_tensor, GPU 0·1 TP2, vLLM `:7071`, MTP 끔) **또는** `qwen.yaml` (Qwen3.8 27B FP8, GPU 0·1 TP2, vLLM `:7080`). 두 인스턴스 모두 `gateway_port: 5015`라 기동한 쪽이 백엔드가 됩니다 — GPU가 겹쳐 동시 기동은 불가. **현재는 `qwen.yaml`**.
@@ -36,7 +36,7 @@
 14. [QA 테스트](#14-qa-테스트)
 15. [참고 자료](#15-참고-자료)
 
-> 📝 § 번호는 사용자 가이드(`VLLM_API_GUIDE.md` §1~§4)와 겹치지 않도록 6부터 시작합니다.
+> 📝 § 번호는 사용자 가이드(`VLLM_API_GUIDE_research.md`·`VLLM_API_GUIDE_dev_prd.md` §1~§4)와 겹치지 않도록 6부터 시작합니다.
 
 ---
 
@@ -546,7 +546,7 @@ vLLM의 YAML 파서는 `key: true`를 `--key` 플래그로 바꿉니다. 0.31.0�
 
 ## 10. API 운영 레퍼런스
 
-> 사용자(클라이언트) 호출 가이드는 [`VLLM_API_GUIDE.md`](VLLM_API_GUIDE.md)를 참고하세요. 본 섹션은 운영자에게만 의미 있는 **게이트웨이 디버그 엔드포인트**, **모델 검증용 복붙 예시**, **모델 교체 호환 계층**을 다룹니다.
+> 사용자(클라이언트) 호출 가이드는 연구계 [`VLLM_API_GUIDE_research.md`](VLLM_API_GUIDE_research.md), 개발계·운영계 [`VLLM_API_GUIDE_dev_prd.md`](VLLM_API_GUIDE_dev_prd.md)를 참고하세요. 본 섹션은 운영자에게만 의미 있는 **게이트웨이 디버그 엔드포인트**, **모델 검증용 복붙 예시**, **모델 교체 호환 계층**을 다룹니다.
 
 ### 10.1 게이트웨이 전용 엔드포인트
 
@@ -599,7 +599,7 @@ curl http://127.0.0.1:6016/server-status
 
 ### 10.2 Qwen3.6 Thinking 모델 검증용 복붙 예시
 
-> Qwen 인스턴스(`:5016`) 단독 검증/디버그 시 사용. 사용자 일반 호출 가이드는 [`VLLM_API_GUIDE.md` §3.2](VLLM_API_GUIDE.md#32-thinking-모드-사고-과정-분리) 참고.
+> Qwen 인스턴스(`:5016`) 단독 검증/디버그 시 사용. 사용자 일반 호출 가이드는 [`VLLM_API_GUIDE_research.md` §3.2](VLLM_API_GUIDE_research.md#32-thinking-모드-사고-과정-분리) 참고.
 
 **Qwen3.6 공식 권장 샘플링 파라미터** (모델 카드 기준):
 
@@ -1620,7 +1620,8 @@ python tests/speed_test.py --base-url http://localhost:5015 --results-path tests
 
 ```
 llm-serving/
-├── VLLM_API_GUIDE.md            ← 사용자용 API 가이드 (§1~§4)
+├── VLLM_API_GUIDE_research.md   ← 사용자용 API 가이드 — 연구계 (§1~§4)
+├── VLLM_API_GUIDE_dev_prd.md    ← 사용자용 API 가이드 — 개발계·운영계 (외부 전달용)
 ├── VLLM_OPS_GUIDE.md            ← 이 문서 (운영자용, §6~§15)
 ├── DEPLOY_GUIDE.md              ← 배포 절차 (로컬 → S3 → EC2)
 ├── README.md                    ← llm-serving 인덱스 (vllm/sglang/stt)
@@ -1657,7 +1658,8 @@ llm-serving/
 
 **워크스페이스 문서**
 
-- [`VLLM_API_GUIDE.md`](VLLM_API_GUIDE.md) — 사용자용 API 가이드 (호출 예시 · 파라미터 · `.env` 통합)
+- [`VLLM_API_GUIDE_research.md`](VLLM_API_GUIDE_research.md) — 사용자용 API 가이드, 연구계 (호출 예시 · 파라미터)
+- [`VLLM_API_GUIDE_dev_prd.md`](VLLM_API_GUIDE_dev_prd.md) — 사용자용 API 가이드, 개발계·운영계 (외부 전달용)
 - [`DEPLOY_GUIDE.md`](DEPLOY_GUIDE.md) — 배포 절차 (로컬 → S3 → EC2 동기화)
 - [`README.md`](README.md) — llm-serving 디렉토리 인덱스
 - [`stt/README.md`](stt/README.md) — STT PoC 가이드
