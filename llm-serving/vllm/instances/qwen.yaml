@@ -38,7 +38,9 @@ env:
                                  # ⚠️ KV connector(Nixl/Mooncake) 쓰면 vLLM이 기동 거부
 
 # 추론
-max_model_len: 65536             # 컨텍스트 길이 (프롬프트+출력 합산)
+max_model_len: 262144            # 컨텍스트 길이 (프롬프트+출력 합산). 모델 기본 최대치(YaRN 없이)
+                                 #    L40S×2 0.9 기준 KV 풀 68.3만 토큰 → 최대 길이 요청 동시 약 2.6건 (10-19 실측)
+                                 #    25.6만 토큰 입력 비스트리밍 167초로 게이트웨이 300초 안 (스트리밍 20만 TTFT 123초)
 max_num_seqs: 20                 # 동시 처리 시퀀스 수
 max_num_batched_tokens: 32768    # 배치 최대 토큰 수 (멀티모달은 encoder_cache로 복제)
 seed: 42                         # 재현용 전역 시드
