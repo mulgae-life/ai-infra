@@ -24,7 +24,7 @@ last-updated: 2026-10-19 (vLLM 0.31·운영계 31B 전환 완료 처리, Gemma 4
 
 | 우선순위 | 작업 | 상태 |
 |---------|------|------|
-| P1 | **vLLM 0.31 버전업**: 계획서 `agent-guide/plans/work-plan_261008_vllm-upgrade/`. 개발 서버 빌드·`test 5501` 통과(10-12). 개발계 통과를 운영계와 같게 본다(대표님 10-19). 잔존: S3 `.ruff_cache/`(다음 llm-serving push가 지움), 연쇄 4판 자동 판정 두 경로, 실패 주입 모의 | **완료** |
+| P1 | **vLLM 0.31 버전업**: 계획서 `.archive/2026-10-19_vllm-upgrade/`(10-19 보관). 개발 서버 빌드·`test 5501` 통과(10-12). 개발계 통과를 운영계와 같게 본다(대표님 10-19). 잔존: S3 `.ruff_cache/`(다음 llm-serving push가 지움), 연쇄 4판 자동 판정 두 경로, 실패 주입 모의 | **완료** |
 | P1 | **온프레미스 H200 셋업 (`on-prem/`)**: 골격 `f9c1012`. 잔존: 설치팀 회신(HGX/PCIe, `VOLUME_DEVICE`, RAM), 실서버 `setup-host.sh` 첫 실행, RHEL Docker의 `apparmor=unconfined` 무시 여부, §5-3 pip 오프라인 실측, `start.sh check` drafter 경로(대표님 결정) | 골격 ✅, 실서버 대기 |
 | P1 | **운영계 반영 (`gemma-4` 별칭·정체성 프롬프트 + 31B 전환)**: 31B 본체 S3 반입 → `push` → 운영계 `pull` → 인스턴스·게이트웨이 **둘 다** 재기동(별칭·fingerprint 반영). MTP를 꺼서 drafter는 불필요. 10-12 개발 서버에서 `prd-gemma`(31B) 기동·`test 5501` 통과로 완료 처리(10-19). `/v1/models`의 `gemma-4` 별칭을 따로 본 기록은 없음 | **완료** |
 | P1 | **:5015 게이트웨이 프로파일 (26B 기준)**: fp8_per_tensor·TP2·gmu 0.9·max_len 65536, overload 20/40. 잔존: 장문 latency·429 비율 측정. 지금 :5015 뒤는 qwen | 장문 검증 잔존 |

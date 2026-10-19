@@ -1,6 +1,6 @@
 # vLLM 0.31.0 A/B 판정표 (2026-10-08~)
 
-> 계획서: `agent-guide/plans/work-plan_261008_vllm-upgrade/` (part2 P3). 상태: **진행 중**
+> 계획서: `.archive/2026-10-19_vllm-upgrade/work-plan_261008_vllm-upgrade/` (part2 P3, 완료 후 보관 — git에서는 `482905b` 이전 이력). 상태: **진행 중**
 > 옛 = 연구계 hjjo `~/.local` nightly `0.20.2rc1.dev251+gef34592a1`(운영 이미지와 같은 빌드) / 새 = 시험장 `llm-hgiai` 시스템 site(`/usr/local/lib/python3.12/dist-packages`) pip `0.31.0`(P1 예행 설치본)
 > 조건: 같은 호스트의 L40S 46GB **GPU 2 한 장, TP1**, 같은 시험 설정 묶음(`~/vllm-upgrade/bundle/<변형>/`, 양쪽 md5 일치), 같은 시험 인자(`~/vllm-upgrade/ab_run.sh`). 결과는 "L40S·이 설정 기준"이고 운영 GPU(RTX PRO 6000 96GB) 성능으로 일반화하지 않는다.
 > 기록 위치: "스크래치"·"스크래치패드"라고 적은 도구와 협업 기록은 10-09 밤 레포 `.archive/2026-10-09_vllm-upgrade-p3/`(git 밖)로 옮겼다. 경로는 그 폴더 기준이다
