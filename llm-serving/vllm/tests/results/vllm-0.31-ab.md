@@ -1,6 +1,6 @@
 # vLLM 0.31.0 A/B 판정표 (2026-10-08~)
 
-> 계획서: `.archive/2026-10-19_vllm-upgrade/work-plan_261008_vllm-upgrade/` (part2 P3, 완료 후 보관 — git에서는 `482905b` 이전 이력). 상태: **진행 중**
+> 계획서: `.archive/2026-10-19_vllm-upgrade/work-plan_261008_vllm-upgrade/` (part2 P3, 완료 후 보관 — git에서는 `482905b` 이전 이력). 상태: **완료** (마지막 측정 10-10 게이트웨이 규칙 확인. 보류·❌ 칸은 결정 ⑧에 따라 배포 관문이 아닌 참고 기록으로 남김. 이미지 빌드·개발 서버 확인은 10-12 통과, SESSION.md P1)
 > 옛 = 연구계 hjjo `~/.local` nightly `0.20.2rc1.dev251+gef34592a1`(운영 이미지와 같은 빌드) / 새 = 시험장 `llm-hgiai` 시스템 site(`/usr/local/lib/python3.12/dist-packages`) pip `0.31.0`(P1 예행 설치본)
 > 조건: 같은 호스트의 L40S 46GB **GPU 2 한 장, TP1**, 같은 시험 설정 묶음(`~/vllm-upgrade/bundle/<변형>/`, 양쪽 md5 일치), 같은 시험 인자(`~/vllm-upgrade/ab_run.sh`). 결과는 "L40S·이 설정 기준"이고 운영 GPU(RTX PRO 6000 96GB) 성능으로 일반화하지 않는다.
 > 기록 위치: "스크래치"·"스크래치패드"라고 적은 도구와 협업 기록은 10-09 밤 레포 `.archive/2026-10-09_vllm-upgrade-p3/`(git 밖)로 옮겼다. 경로는 그 폴더 기준이다
@@ -171,7 +171,7 @@ effort × thinking 기대값은 계획서 part2 P3. 세 조합: 옛 게이트웨
 | `min_tokens` 100000 (> max_tokens) | 400 "min_tokens must be less than or equal to max_tokens" | ✅ |
 | `max_tokens` 100000 (> max_model_len 8192) | 400 "cannot be greater than max_model_len" | ✅ |
 
-## 품질·회귀 집중 (A/B 2차분, 10-09 진행 중)
+## 품질·회귀 집중 (A/B 2차분, 10-09)
 
 `tests/ab_regression_probe.py` + `traffic_test` 스트리밍 3회(텍스트만 / 이미지 50%·1024px, 요청 60·동시 10·400토큰). 백엔드 직접 호출. 진행 스크립트 `~/vllm-upgrade/ab_regress_side.sh`(양쪽 md5 일치), 진행 로그 연구계 `~/vllm-upgrade/regress_orch.log`.
 - 판정 항목: 숫자·코드 복사 5, 도구 호출 4(thinking 끔/켬 × 스트리밍/비스트리밍; 인자 값·호출 1건·id·type·finish_reason·본문 호출 표식 누출·스트림 `[DONE]`), 도구 결과를 돌려준 뒤 최종 답변 2, JSON 스키마 4(스키마 준수와 기대값을 따로), 같은 이미지 반복 6(순차 3 + 동시 3, 응답 숫자가 5 하나뿐일 때만 정답), 긴 입력 1(확인 코드 + 실제 입력이 목표의 0.9~1.05배), 빈 답변 1. 기록 항목: greedy 20개(옛·새 일치율·유사도).
