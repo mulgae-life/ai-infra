@@ -51,7 +51,9 @@ overload:
   enabled: true                # 동시 처리량/대기열 제한
   max_inflight_requests: 20    # 즉시 백엔드로 넘길 최대 요청 (단일 max_num_seqs 이하 권장)
   max_queue_size: 40           # 추가 대기 허용 요청 수
-  queue_timeout_seconds: 180   # 슬롯 대기 최대 시간 → 초과 시 429
+  queue_timeout_seconds: 300   # 슬롯 대기 최대 시간 → 초과 시 429. 대기 중엔 헤더도 안 나가므로
+                               #    클라이언트 타임아웃은 이보다 길어야 한다
+                               #    (10-19 180→300: 256K 장문이 슬롯을 3분 가까이 쥐어 부하 중 429 다발)
   retry_after_seconds: 10      # 429 Retry-After 값
 
 # 모델 교체 호환 계층 (기본 활성 — 키 상세: ./_SCHEMA.txt)
