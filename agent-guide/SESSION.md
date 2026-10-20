@@ -1,7 +1,7 @@
 ---
 name: session
 description: ai-infra 레포 현재 상태. 세션 시작 시 다음 작업과 최근 변경 파악용.
-last-updated: 2026-10-20 (:5015 27B 256K 상향, 게이트웨이 대기 한도 300초)
+last-updated: 2026-10-20 (:5015 27B 256K 상향, 게이트웨이 대기 한도 300초, Next NVFP4 조사 후 보류)
 ---
 
 # 세션 상태
@@ -34,6 +34,7 @@ last-updated: 2026-10-20 (:5015 27B 256K 상향, 게이트웨이 대기 한도 3
 | P1 | **STT 한국어 실측**: Whisper-large-v3 1순위(+한국어 fine-tune 트랙) 채택. `test_stt.py`(WER/RTF/정성)로 실측 확정 | 의사결정 ✅, 실측 대기 |
 | P2 | **Jev 방식 후속**: 결과 `agent-guide/docs/slm_research/topics/jev-probe.md`(정확도는 같은 수준, 처리량이 초당 6~9건에서 막힘). ① TP1 A/B(서빙 설정 변경이라 대표님 결정) ② 업무 문항 600개를 Jev API로 풀기(외부 전송이라 대표님 확인) | 실측 ✅, 후속 결정 대기 |
 | P2 | **보험 임베딩 파인튜닝**: 실행 계획서 `agent-guide/plans/work-plan_261008_insurance-embedding/`(P0~P6, 결정 5건은 master "결정 요청" 표), 실행 공간 `ai-research/insurance-embedding/`. 다음은 계획서 확정 → P0 결정 요청서. 라이브러리 최신화 때 학습 환경은 서빙과 분리(vLLM 0.31.0이 torch 2.13.0 고정) | 계획 초안 ✅, 대표님 검토 대기 |
+| P2 | **Qwen3.8-Flash-Next 교체 (`nvidia/Qwen3.8-Flash-Next-NVFP4`)**: 조사 `.archive/2026-10-20_next-nvfp4-조사/`. thinking ON이면 Next 우세, OFF면 27B와 비슷, 한국어 근거 없음. L40S×2는 n-gram 임베딩 CPU 이관·MTP 끔 전제로 장당 가중치 37.4~37.9GiB라 256K 불가. 재개 조건: 디스크 133GB 여유(EBS 확장 불가, 대표님 10-20) | 보류 |
 | P2 | **26B-A4B MTP 튜닝**: acceptance 32~47%(31B 70~85%). 동시성 4+ 실측 후 낮으면 `num_speculative_tokens 4→2` 또는 MTP off A/B. 10-09 MTP를 껐으므로 다시 켤 때 한다 | 보류 |
 | P2 | **PII NER 고도화 (보류, PII 미사용 중)**: 재사용 전 필수 🚨 512 토큰 초과 청킹(현재 500 → fail-open 무검사/fail-closed 차단) · 마이크로 배칭 · replica 스케일아웃 | 보류 |
 | P2 | **PII 가드 운영 적용 (보류)**: 운영계 :5501 실기동 · 실데이터 recall 게이트 · 스트리밍 progressive buffer · 이미지 OCR PII · `PII_AUDIT_SALT` 확인. 설계 `agent-guide/plans/pii-dlp-gateway.md` | 보류 |
@@ -51,7 +52,7 @@ last-updated: 2026-10-20 (:5015 27B 256K 상향, 게이트웨이 대기 한도 3
 
 | 날짜 | 한 일 |
 |------|------|
-| **10-20** | :5015 게이트웨이 대기 한도 180→300초·재기동 `9c75eea`(코드는 10-10 커밋과 동작 같음 확인). 부하 중 429는 "미해결"로 봤다가 혼잡 거절은 정상 동작으로 정리(대표님). 대기열 새치기 의심(`AdmissionController`)은 자원 확보 시 혼잡이 줄어 따로 다루지 않음 |
+| **10-20** | :5015 게이트웨이 대기 한도 180→300초·재기동 `9c75eea`(코드는 10-10 커밋과 동작 같음 확인). 부하 중 429는 "미해결"로 봤다가 혼잡 거절은 정상 동작으로 정리(대표님). 대기열 새치기 의심(`AdmissionController`)은 자원 확보 시 혼잡이 줄어 따로 다루지 않음 · Next NVFP4 품질 조사(infra-codex 교차 검증)는 디스크 부담으로 보류. "thinking OFF에서 Next 불안정"은 원문이 `medium` 사례라 철회 |
 | **10-19** | vLLM 0.31·운영계 31B 전환 완료 처리(개발계 통과 = 운영계, 대표님) · :5015 27B 컨텍스트 65536→262144 `9d2e64b`, KV 68.3만 토큰(동시 2.6건)·20만/25.6만 토큰 바늘 찾기 정답 · Next는 `nvidia/Qwen3.8-Flash-Next-NVFP4`로 정함(0.31 PLE 로더가 fp8 PLE·ModelOpt만 받아 AutoRound·AWQ 탈락). "Next 128K 안정적"은 활성화 몫 실측 후 철회 |
 | **10-16** | API 가이드를 연구계·개발/운영계 두 벌로 분리, 0.31 에러 코드 실측 정정(422가 아니라 400) `0bb6abb` · Gemma 4 API 초보자 가이드 PPT(AI Studio 무료, v1·v2 디자인 13장) `8867910`·`0ea3076`. 신규 프로젝트는 결제 연결 전 403이 나서 가이드 오류 표에 넣음. 캡처용 키·클라우드 프로젝트는 삭제 |
 | **10-12** | 개발 서버 0.31 반영(대표님) · 공식 이미지의 NCCL 덮어쓰기로 `pip check`가 원래 실패해 설치 전후 비교로 `21c0c68`(시험장은 PyPI 설치라 못 잡음) · 절차서 `restart && test` 분리 `21c0c68` · 이미지 기준을 해시로 `e93b352`(개발 서버 S3 쓰기 불가) · 문서 정합. `max_num_seqs` 판정은 스케줄러가 자체 조절해 관문에서 뺌 |
