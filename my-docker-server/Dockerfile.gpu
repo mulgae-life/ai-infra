@@ -48,8 +48,9 @@ ENV PATH=$NVM_DIR/versions/node/default/bin:$PATH
 # Python 패키지
 # ============================================
 # CUDA 13 대응: CuPy 는 cuda13x 휠, Numba 의 CUDA 지원은 numba-cuda 패키지(cu13)가 맡는다
+# numpy<2.5: numba-cuda 0.30.4 가 NumPy 2.5 에서 제거된 np.row_stack 을 참조해 커널 컴파일이 실패한다
 RUN pip install --no-cache-dir \
-    numpy numba "numba-cuda[cu13]" cupy-cuda13x \
+    "numpy<2.5" numba "numba-cuda[cu13]" cupy-cuda13x \
     matplotlib pytest ipython nvitop
 
 # ============================================

@@ -50,7 +50,7 @@ PC·사내 서버 한 대에 개발용·GPU용 컨테이너를 띄우고 SSH(VSC
 | Docker | Docker Engine + Compose v2 |
 | GPU (cfd만) | NVIDIA 드라이버 **R615 이상** (`nvidia-smi`의 CUDA Version ≥ 13.4) + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). 없으면 dev만. 드라이버가 낮으면 `Dockerfile.gpu`의 CUDA 태그를 드라이버 버전 이하로 낮춘다. 12.x로 내리면 같은 파일의 `cupy-cuda13x`→`cupy-cuda12x`, `numba-cuda[cu13]`→`numba-cuda[cu12]`도 함께 바꾼다 |
 | 권한 | `sudo` 가능 계정. `docker` 그룹이면 docker 명령은 sudo 불필요 |
-| 디스크 | 이미지 약 27GB (cfd 19 + dev 8). 여유 40GB 권장 |
+| 디스크 | 이미지 약 31GB (cfd 22 + dev 9). 빌드 중에는 빌드 캐시가 더 쌓이므로 여유 70GB 권장. 빌드 후 `docker builder prune`으로 캐시를 회수한다 |
 
 ```bash
 # Docker 미설치 시
