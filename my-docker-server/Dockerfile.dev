@@ -37,7 +37,7 @@ RUN update-locale LANG="${LANG}"
 # ============================================
 ENV NVM_DIR=/usr/local/nvm
 RUN mkdir -p $NVM_DIR \
-    && curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash \
+    && curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash \
     && . $NVM_DIR/nvm.sh \
     && nvm install --lts \
     && nvm alias default lts/* \
@@ -73,7 +73,7 @@ RUN pip install --no-cache-dir --ignore-installed \
     sse-starlette sqlmodel jinja2 python-multipart \
     playwright beautifulsoup4 lxml \
     requests httpx aiohttp \
-    PyPDF2 python-docx openpyxl markdown nh3 PyYAML \
+    PyPDF2 pypdf python-docx openpyxl markdown nh3 PyYAML \
     pandas \
     supabase python-dotenv \
     fastmcp notion-client \
@@ -96,16 +96,18 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 # 사용자 생성 + 설정
 # ============================================
 ARG USERNAME=user
-ARG PASSWORD=changeme
 ARG UID=2000
 ARG GID=2000
-RUN existing_user=$(getent passwd ${UID} | cut -d: -f1 || true); \
+# 비밀번호는 빌드 비밀값(compose secrets: user_password ← .env PASSWORD)으로 받는다.
+# ARG 로 받으면 값이 이미지 이력(docker history)에 평문으로 남는다
+RUN --mount=type=secret,id=user_password,required=true \
+    existing_user=$(getent passwd ${UID} | cut -d: -f1 || true); \
     [ -n "$existing_user" ] && userdel -r "$existing_user" || true; \
     existing_group=$(getent group ${GID} | cut -d: -f1 || true); \
     [ -n "$existing_group" ] && groupdel "$existing_group" || true; \
     groupadd -g ${GID} ${USERNAME} || true; \
     useradd -m -s /bin/bash -u ${UID} -g ${GID} ${USERNAME} \
-    && echo "${USERNAME}:${PASSWORD}" | chpasswd \
+    && echo "${USERNAME}:$(cat /run/secrets/user_password)" | chpasswd \
     && usermod -aG sudo ${USERNAME} \
     && su - ${USERNAME} -c "git config --global --add safe.directory /workspace && git config --global core.quotePath false" \
     && echo "set -g mouse on" > /home/${USERNAME}/.tmux.conf \

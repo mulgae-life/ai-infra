@@ -4,7 +4,7 @@ PC·사내 서버 한 대에 개발용·GPU용 컨테이너를 띄우고 SSH(VSC
 
 **제공 기능**
 - 풀스택 개발 컨테이너 `dev-fullstack` (Ubuntu 24.04)
-- GPU 연산 컨테이너 `cfd` (CUDA 12.6)
+- GPU 연산 컨테이너 `cfd` (CUDA 13.4)
 - 코드·홈·SSH 호스트 키 호스트 보존 → 재빌드해도 유지
 - Claude Code / Codex / Gemini CLI 내장
 - SSH 브루트포스 대응 (컨테이너 sshd 설정 + 호스트 방화벽)
@@ -48,7 +48,7 @@ PC·사내 서버 한 대에 개발용·GPU용 컨테이너를 띄우고 SSH(VSC
 |---|---|
 | OS | Linux (Ubuntu 검증) |
 | Docker | Docker Engine + Compose v2 |
-| GPU (cfd만) | NVIDIA 드라이버 + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). 없으면 dev만 |
+| GPU (cfd만) | NVIDIA 드라이버 **R615 이상** (`nvidia-smi`의 CUDA Version ≥ 13.4) + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). 없으면 dev만. 드라이버가 낮으면 `Dockerfile.gpu`의 CUDA 태그를 드라이버 버전 이하로 낮춘다. 12.x로 내리면 같은 파일의 `cupy-cuda13x`→`cupy-cuda12x`, `numba-cuda[cu13]`→`numba-cuda[cu12]`도 함께 바꾼다 |
 | 권한 | `sudo` 가능 계정. `docker` 그룹이면 docker 명령은 sudo 불필요 |
 | 디스크 | 이미지 약 27GB (cfd 19 + dev 8). 여유 40GB 권장 |
 
@@ -87,7 +87,7 @@ ssh <USERNAME>@localhost -p 5000        # cfd
 | 키 | 의미 | 설정 기준 |
 |---|---|---|
 | `USERNAME` | 컨테이너 계정 = SSH 로그인 이름 | 호스트 계정과 동일 권장 |
-| `PASSWORD` | SSH·sudo 비밀번호 | 공인 IP 노출 시 길게 |
+| `PASSWORD` | SSH·sudo 비밀번호 | 공인 IP 노출 시 길게. 빌드 비밀값으로 전달돼 이미지 이력에 남지 않음. 바꾸면 재빌드 |
 | `UID` / `GID` | 계정 숫자 ID | **호스트와 반드시 일치** (`id -u`/`id -g`) |
 
 - UID/GID 불일치 → `/workspace` 파일 권한 어긋남
@@ -140,6 +140,25 @@ Host desktop-pub-cfd
   ```
 - 호스트 키 보존으로 재빌드해도 지문 불변 (4절)
 
+### 서비스 포트 접속 / 외부 공개
+
+| 대상 | 방법 | 공유기 포트포워딩 |
+|---|---|---|
+| 내 기기 (집 LAN) | `<호스트 LAN IP>:<포트>` | 불필요 |
+| 내 기기 (집 밖) | `<Tailscale IP>:<포트>` | 불필요 |
+| 누구나 (웹 공개) | Tailscale Funnel → `https://<머신이름>.<tailnet>.ts.net` | 불필요 |
+
+- 서비스는 컨테이너 안에서 `0.0.0.0`으로 띄움 (`127.0.0.1`이면 포트 연결을 못 탐)
+- 서비스 포트(5001-5009, 5011-5019)는 공유기 포트포워딩 **하지 않음** → 로그인 없는 개발 서버가 인터넷에 그대로 노출되고, Docker 공개 포트는 호스트 방화벽(ufw)도 거치지 않음
+- 웹 공개는 호스트에서 Funnel (방문자는 Tailscale 불필요, HTTPS 전용, 외부 포트는 443/8443/10000)
+  ```bash
+  tailscale funnel --bg 5011          # 공개 시작
+  tailscale funnel status             # 현황
+  tailscale funnel --https=443 off    # 공개 중지
+  ```
+  - 최초 1회: Tailscale 관리 콘솔에서 MagicDNS·HTTPS·Funnel 권한 활성화 (명령 실행 시 안내 링크 표시)
+  - 백엔드는 공개하지 않고 웹 서버가 대신 호출 (브라우저 JS가 `localhost:<백엔드>`를 직접 부르면 외부 방문자에게는 동작하지 않음)
+
 ---
 
 ## 4. 재빌드 시 남는 것 / 사라지는 것
@@ -153,6 +172,7 @@ Host desktop-pub-cfd
 | `/workspace` | `/workspace` | 코드·프로젝트 |
 | `/home/<USERNAME>` | `/opt/docker-homes/<서비스>/<USERNAME>` | 홈 전체 |
 | `/etc/ssh/hostkeys` | `/opt/docker-homes/<서비스>/ssh-hostkeys` | SSH 호스트 키 |
+| `/tmp` | `/opt/docker-homes/<서비스>/tmp` | 임시 파일 (Claude Code `claude-<UID>/` 등). 자동으로 비워지지 않음 → 호스트에서 `du -sh`로 보고 직접 정리 |
 
 **홈에 포함되는 것**
 - Claude Code·Codex 로그인과 대화 기록
@@ -228,8 +248,8 @@ docker compose up -d
 
 | 영역 | 구성 |
 |---|---|
-| 런타임 | Node.js LTS (nvm), Python 3.12, CUDA 12.6 |
-| 라이브러리 | NumPy, Numba, CuPy, Matplotlib |
+| 런타임 | Node.js LTS (nvm), Python 3.12, CUDA 13.4 |
+| 라이브러리 | NumPy, Numba(+`numba-cuda`), CuPy(`cupy-cuda13x`), Matplotlib |
 | 문서/미디어 | pandoc, latexdiff, poppler-utils, qpdf, ImageMagick, librsvg, ffmpeg |
 | GPU 모니터링 | nvitop, nvtop |
 | 도구 | Git, Claude Code, Codex, Gemini CLI, tmux, cmake, zip/unzip |
@@ -252,7 +272,7 @@ docker compose up -d
 ### 1) 컨테이너 sshd 설정 — 이미지에 포함, 작업 불필요
 
 - `sshd-hardening.conf` → 빌드 시 `/etc/ssh/sshd_config.d/50-hardening.conf`
-- sshd `-e` 옵션 → 로그가 `docker logs <컨테이너>`로 출력
+- sshd `-e` 옵션 → 로그가 `docker logs <컨테이너>`로 출력 (compose `logging`으로 컨테이너당 10MB × 3개 상한)
 
 | 항목 | 값 | 효과 |
 |---|---|---|

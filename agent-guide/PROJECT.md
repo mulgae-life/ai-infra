@@ -1,7 +1,7 @@
 ---
 name: project
 description: ai-infra 레포 핵심 요약. 서버·운영 구성 자산 모음으로 디렉토리 분리 원칙과 기술 스택 파악용.
-last-updated: 2026-10-08 (ai-research 레이어 신설)
+last-updated: 2026-10-23 (로컬 cfd CUDA 13.4 전환)
 ---
 
 # 프로젝트 개요
@@ -16,7 +16,7 @@ last-updated: 2026-10-08 (ai-research 레이어 신설)
 |------|------|
 | **프로젝트** | ai-infra (서버 세팅 & 운영 구성 모음). 2026-10-07에 `docker`에서 이름을 바꿨다 |
 | **목적** | 인프라(어디에 띄우는가) ↔ 서빙(무엇을 어떻게 띄우는가)을 한 레포에서 관리하면서 디렉토리로 책임 분리 |
-| **기술 스택** | Docker, Ubuntu 24.04, NVIDIA CUDA 12.6, AWS EC2 GPU, vLLM, Python 3.12 / Node.js LTS |
+| **기술 스택** | Docker, Ubuntu 24.04, NVIDIA CUDA 13.4, AWS EC2 GPU, vLLM, Python 3.12 / Node.js LTS |
 | **운영 자산** | `my-docker-server/` (로컬 dev/GPU) + `aws/` (EC2 GPU 인프라) + `on-prem/` (사내 H200 호스트 셋업) + `llm-serving/vllm/` (서빙) |
 | **작업 관리** | 별도 도구 없음 → `git log` + `SESSION.md` "다음 작업" |
 
@@ -50,7 +50,7 @@ ai-infra/
 │
 ├── my-docker-server/                 # 로컬 dev/GPU Docker 환경
 │   ├── Dockerfile.dev                # Ubuntu 24.04 + Node/Python/Playwright/CC
-│   ├── Dockerfile.gpu                # CUDA 12.6 + CuPy/Numba
+│   ├── Dockerfile.gpu                # CUDA 13.4 + CuPy/Numba
 │   ├── docker-compose.yml            # cfd + dev-fullstack 서비스
 │   ├── entrypoint.sh                 # 홈 디렉토리 초기화 + chown + SSH 호스트 키 보관/복원
 │   ├── .env.example                  # USERNAME/PASSWORD/UID=2000/GID=2000
@@ -135,7 +135,7 @@ ai-infra/
 | 영역 | 기술 |
 |------|------|
 | **컨테이너** | Docker, Docker Compose v2, Buildx |
-| **베이스 OS** | Ubuntu 24.04, NVIDIA CUDA 12.6.3-devel-ubuntu24.04 |
+| **베이스 OS** | Ubuntu 24.04, NVIDIA CUDA 13.4.3-devel-ubuntu24.04 (로컬 `cfd`, 호스트 드라이버 R615 이상) |
 | **GPU 호스트** | NVIDIA Open Driver, NVIDIA Container Toolkit, Fabric Manager (H100/H200/A100/B100/B200) |
 | **클라우드** | AWS EC2 (g6e/p4/p5), EBS, IAM/S3, SSM Session Manager |
 | **온프레미스** | RHEL 10, H200, 드라이버 580 LTSB 고정(`dnf versionlock`), Docker CE 저장소, 폐쇄망 대비 사전 pull |

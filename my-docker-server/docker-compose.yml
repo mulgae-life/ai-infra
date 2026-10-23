@@ -5,13 +5,15 @@ services:
       dockerfile: Dockerfile.gpu
       args:
         USERNAME: ${USERNAME}
-        PASSWORD: ${PASSWORD}
         UID: ${UID:-2000}
         GID: ${GID:-2000}
+      secrets:
+        - user_password        # 비밀번호는 빌드 인자가 아니라 비밀값으로 → 이미지 이력에 남지 않음
     image: cfd-gpu
     container_name: cfd
     hostname: cfd
     restart: unless-stopped
+    init: true                 # PID 1 을 tini 로 → sshd 가 거두지 않는 고아 프로세스(좀비) 정리
     security_opt:
       - apparmor=unconfined
       - seccomp=unconfined
@@ -22,6 +24,12 @@ services:
       - /workspace:/workspace
       - /opt/docker-homes/cfd/${USERNAME}:/home/${USERNAME}
       - /opt/docker-homes/cfd/ssh-hostkeys:/etc/ssh/hostkeys  # 재빌드 후에도 SSH 호스트 키 유지
+      - /opt/docker-homes/cfd/tmp:/tmp  # 쓰기 계층에 숨어 쌓이지 않게 호스트에 둔다 (권한은 entrypoint)
+    logging:                   # sshd -e 로그(봇 접속 시도 포함)가 무한히 쌓이지 않게 30MB 상한
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     deploy:
       resources:
         limits:
@@ -38,13 +46,16 @@ services:
       dockerfile: Dockerfile.dev
       args:
         USERNAME: ${USERNAME}
-        PASSWORD: ${PASSWORD}
         UID: ${UID:-2000}
         GID: ${GID:-2000}
+      secrets:
+        - user_password        # 비밀번호는 빌드 인자가 아니라 비밀값으로 → 이미지 이력에 남지 않음
     image: dev-fullstack
     container_name: dev-fullstack
     hostname: dev-fullstack
     restart: unless-stopped
+    init: true                 # PID 1 을 tini 로 → sshd 가 거두지 않는 고아 프로세스(좀비) 정리
+    shm_size: 2g               # 기본 64MB 는 Playwright Chromium 이 무거운 페이지에서 죽을 수 있음
     security_opt:
       - apparmor=unconfined
       - seccomp=unconfined
@@ -55,7 +66,17 @@ services:
       - /workspace:/workspace
       - /opt/docker-homes/dev/${USERNAME}:/home/${USERNAME}
       - /opt/docker-homes/dev/ssh-hostkeys:/etc/ssh/hostkeys  # 재빌드 후에도 SSH 호스트 키 유지
+      - /opt/docker-homes/dev/tmp:/tmp  # 쓰기 계층에 숨어 쌓이지 않게 호스트에 둔다 (권한은 entrypoint)
+    logging:                   # sshd -e 로그(봇 접속 시도 포함)가 무한히 쌓이지 않게 30MB 상한
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     deploy:
       resources:
         limits:
           memory: 24g
+
+secrets:
+  user_password:
+    environment: PASSWORD      # .env 의 PASSWORD 값을 빌드 때만 /run/secrets/user_password 로 전달

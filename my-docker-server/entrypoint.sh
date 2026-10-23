@@ -29,4 +29,9 @@ if [ -d "$HOSTKEY_DIR" ]; then
     chmod 644 /etc/ssh/ssh_host_*_key.pub
 fi
 
+# /tmp 권한 복원: compose 가 /tmp 를 호스트 디렉토리로 마운트하는데, 그 디렉토리가
+# 없으면 Docker 가 root 755 로 만들어 일반 계정이 /tmp 에 쓰지 못한다.
+# 원래 /tmp 권한(모두 쓰기 + 남의 파일 삭제 금지)으로 맞춘다.
+chmod 1777 /tmp
+
 exec "$@"

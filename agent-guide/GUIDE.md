@@ -1,7 +1,7 @@
 ---
 name: guide
 description: AI 에이전트 작업 원칙과 세션 시작 체크리스트. 세션 시작 시 가장 먼저 읽기.
-last-updated: 2026-10-07 (레포명 docker → ai-infra, 연구계 서빙 위치 정정)
+last-updated: 2026-10-23 (cfd 용어의 CUDA 버전 13.4로 갱신)
 ---
 
 # 에이전트 가이드
@@ -40,7 +40,7 @@ last-updated: 2026-10-07 (레포명 docker → ai-infra, 연구계 서빙 위치
 | 용어 | 설명 |
 |------|------|
 | **dev / prd 모드** | `aws/` 인스턴스 단위 모드. dev=개발(Claude Code/Codex 자동 설치), prd=운영(슬림화, USERNAME=root) |
-| **cfd** | `my-docker-server/`의 GPU 연산 컨테이너 서비스명 (CUDA 12.6 + CuPy/Numba) |
+| **cfd** | `my-docker-server/`의 GPU 연산 컨테이너 서비스명 (CUDA 13.4 + CuPy/Numba) |
 | **dev-fullstack** | `my-docker-server/`의 풀스택 개발 컨테이너 이름 (서비스명은 `dev`) |
 | **VOLUME_DEVICE** | `aws/.env`에서 지정하는 추가 EBS 디바이스 경로 (예: `/dev/nvme1n1`) |
 | **Phase 1 / Phase 2** | `aws/setup-ec2.sh`의 재부팅 전(드라이버/EBS/Docker) ↔ 재부팅 후(NVIDIA Container Toolkit/Fabric Manager/GPU 검증) 단계 |
