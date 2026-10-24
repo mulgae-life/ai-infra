@@ -41,6 +41,7 @@ RUN mkdir -p $NVM_DIR \
     && nvm install --lts \
     && nvm alias default lts/* \
     && ln -sf $(ls -td $NVM_DIR/versions/node/v* | head -1) $NVM_DIR/versions/node/default \
+    && npm install -g npm@latest \
     && npm install -g pnpm yarn typescript
 ENV PATH=$NVM_DIR/versions/node/default/bin:$PATH
 
@@ -49,8 +50,10 @@ ENV PATH=$NVM_DIR/versions/node/default/bin:$PATH
 # ============================================
 # CUDA 13 대응: CuPy 는 cuda13x 휠, Numba 의 CUDA 지원은 numba-cuda 패키지(cu13)가 맡는다
 # numpy<2.5: numba-cuda 0.30.4 가 NumPy 2.5 에서 제거된 np.row_stack 을 참조해 커널 컴파일이 실패한다
+# Numba·CuPy 판본 고정: 연구 코드와 홈(~/.local)의 AI 의존성이 이 조합으로 검증됐다.
+# 재빌드로 판이 말없이 바뀌지 않게 하고, 올릴 때는 홈 쪽과 함께 다시 검증한다
 RUN pip install --no-cache-dir \
-    "numpy<2.5" numba "numba-cuda[cu13]" cupy-cuda13x \
+    "numpy<2.5" numba==0.68.0 "numba-cuda[cu13]==0.30.4" cupy-cuda13x==14.2.0 \
     matplotlib pytest ipython nvitop
 
 # ============================================
