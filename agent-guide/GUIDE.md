@@ -1,7 +1,7 @@
 ---
 name: guide
 description: AI 에이전트 작업 원칙과 세션 시작 체크리스트. 세션 시작 시 가장 먼저 읽기.
-last-updated: 2026-10-23 (cfd 용어의 CUDA 버전 13.4로 갱신)
+last-updated: 2026-10-26 (vLLM 기동 명령의 무인자·up all 동작을 코드와 맞춤)
 ---
 
 # 에이전트 가이드
@@ -80,7 +80,7 @@ last-updated: 2026-10-23 (cfd 용어의 CUDA 버전 13.4로 갱신)
 | EC2에서 코드 동기화 | `cd ~/aws && ./start.sh pull` |
 | 서빙 코드 배포 (S3) | `cd llm-serving && ./start.sh push` / 운영계에서 `./start.sh pull` |
 | EC2 호스트 셋업 | `cd ~/aws && sudo ./setup-ec2.sh` |
-| vLLM 서버 기동 | `cd llm-serving/vllm && ./start.sh up <인스턴스명>` — 무인자는 도움말, `up all`은 전체 |
+| vLLM 서버 기동 | `cd llm-serving/vllm && ./start.sh up <인스턴스명>` — `./start.sh`만 치면 도움말, `up`만 치면 전체 기동 확인([y/N]), `up all`은 확인 없이 `instances/` 전체(연구·운영 6개)라 GPU가 겹친다 → 이름 명시 기동 |
 | 모델 최신 동기화 (증분) | `cd llm-serving/vllm && ./start.sh download <인스턴스명>` — 폐쇄망은 네트워크 개방 시점에 |
 
 ---

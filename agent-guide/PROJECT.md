@@ -1,7 +1,7 @@
 ---
 name: project
 description: ai-infra 레포 핵심 요약. 서버·운영 구성 자산 모음으로 디렉토리 분리 원칙과 기술 스택 파악용.
-last-updated: 2026-10-23 (로컬 cfd CUDA 13.4 전환)
+last-updated: 2026-10-26 (구조 트리·:5015 구성·빠른 시작을 실제 파일과 맞춤)
 ---
 
 # 프로젝트 개요
@@ -42,7 +42,9 @@ ai-infra/
 ├── README.md                         # 메타 진입점 (디렉토리 안내)
 ├── agent-guide/                      # AI 에이전트 가이드 (GUIDE/PROJECT/SESSION)
 │   ├── docs/slm_research/            # 모델 조사 (models/·topics/·sources/, 목록은 README) — 연구계 전용, S3 배포 범위 밖
-│   └── docs/embedding_research/      # 임베딩 모델 조사 (slm_research와 같은 구조) — 연구계 전용, S3 배포 범위 밖
+│   ├── docs/embedding_research/      # 임베딩 모델 조사 (slm_research와 같은 구조) — 연구계 전용, S3 배포 범위 밖
+│   ├── docs/Gemma4_API_초보자_가이드*.pptx  # Gemma 4 API 초보자 가이드 PPT 두 판 (10-16, AI Studio)
+│   └── plans/                        # 진행 중 계획서 (완료분은 루트 .archive/로 보관, git 제외)
 │
 ├── ai-research/                      # 연구·실험 실행 공간 — S3 배포 범위 밖. 프로젝트 목록과 git 추적 구분은 README
 │   ├── .gitignore                    # 프로젝트 바로 아래 data/·runs/·models/ 제외
@@ -65,11 +67,19 @@ ai-infra/
 │   ├── docker-compose.yml            # vLLM 베이스 컨테이너
 │   ├── Dockerfile.llm                # vLLM 베이스 + SSH (dev/prd)
 │   ├── entrypoint-llm.sh
-│   ├── requirements.txt              # 컨테이너 내 pip (transformers는 --no-deps)
+│   ├── requirements.txt              # 컨테이너 내 pip (베이스 핵심 패키지 제약을 걸어 설치)
+│   ├── gen-core-constraints.py       # 베이스의 vLLM·torch·transformers 등을 == 제약으로 출력
+│   ├── image-freeze-0.31.0.txt       # 시험을 통과한 0.31 이미지의 기준 해시
+│   ├── disk-usage.sh                 # 호스트 디스크 사용량 조회 (조회 전용)
 │   ├── .env.dev / .env.prd           # 환경별 원본 (S3만, git 제외) — 배포 후 cp .env.dev .env
 │   ├── .env                          # 각 서버 런타임 로드본 (S3 동기화 제외, git 제외)
 │   ├── ssh-config-sample
-│   └── README.md
+│   └── SETUP_GUIDE.md                # EC2 셋업·다중 사용자·dev/prd 모드
+│
+├── on-prem/                          # 사내 H200(RHEL 10) 호스트 셋업 — 컨테이너 계층은 ../aws/ 공유
+│   ├── setup-host.sh                 # setup-ec2.sh의 RHEL 10 판 (Phase 1 → reboot → Phase 2, 드라이버 versionlock)
+│   ├── start.sh                      # pull(git 동기화) / check(네트워크 끊기 전 준비 점검)
+│   └── SETUP_GUIDE.md
 │
 └── llm-serving/                      # LLM/STT 서빙 프레임워크 모음
     ├── start.sh                      # S3 코드 배포 (push/pull) — 하위 start.sh(서비스 제어)와 역할 다름
@@ -87,16 +97,15 @@ ai-infra/
     │   ├── instances/                # 인스턴스 yaml (키당 제목 한줄 슬림, 상세는 _SCHEMA.txt)
     │   │   ├── _SCHEMA.txt            #   인스턴스 키 레퍼런스 + 모델별 노하우(MTP·soft_tokens·GPU표)
     │   │   ├── gemma.yaml            #   ├ 연구 gemma 31B   gw 6015 → 외부 :5015 (PII 경유)
-    │   │   ├── gemma-26b.yaml        #   ├ 연구 gemma 26B-A4B gw 5015 → :5015 직접 (비PII, 31B와 GPU0·1 택일)
+    │   │   ├── gemma-26b.yaml        #   ├ 연구 gemma 26B-A4B gw 5015 → :5015 직접 (비PII, 연구 세 종은 GPU0·1 택일)
     │   │   ├── prd-gemma.yaml        #   ├ 운영 gemma  gw 5501 → :5501 직접 (PII 미경유)
     │   │   ├── prd-pii-gemma.yaml    #   ├ 운영 gemma  gw 6501 → :5501 (PII 경유)
-    │   │   ├── qwen.yaml             #   ├ 연구 qwen   gw 6016 → :5016 (PII 경유)
-    │   │   └── prd-pii-qwen.yaml     #   └ 운영 qwen   gw 6502 → :5502 (PII 경유)
+    │   │   └── qwen.yaml             #   └ 연구 qwen 27B gw 5015 → :5015 직접 (비PII)
     │   ├── gateways/                 # 게이트웨이 yaml (host/port만 차이, 상세는 _SCHEMA.txt)
     │   │   ├── _SCHEMA.txt            #   게이트웨이 키 레퍼런스
-    │   │   ├── 5015.yaml             #   외부 직접 (0.0.0.0, 비PII 연구 gemma-26b)
+    │   │   ├── 5015.yaml             #   외부 직접 (0.0.0.0, 비PII 연구 qwen 또는 gemma-26b)
     │   │   ├── 5501.yaml             #   외부 직접 (0.0.0.0, 비PII 운영 gemma)
-    │   │   └── 6015/6016/6501/6502.yaml  # 내부 전용 (외부 입구는 pii/ 프록시)
+    │   │   └── 6015/6501.yaml        #   내부 전용 (PII 모드, 외부 입구는 pii/ 프록시)
     │   ├── tests/                   # 테스트 코드/픽스처/결과 디렉토리
     │   │   ├── test_vllm_server.py  # 서버 헬스/추론 10 카테고리 QA (게이트웨이 계약 포함)
     │   │   ├── traffic_test_vllm.py # 동시 부하 시험 (429 방어·답변 점검)
@@ -110,12 +119,12 @@ ai-infra/
     │   │   └── results/             # speed_results.md, vllm-0.31-ab.md(버전업 판정표) 등 누적 리포트
     │   └── bugfix/                   # 운영 중 발견 이슈 기록
     ├── pii/                          # PII/DLP 가드 운영 중 (외부 포트 인수 → 게이트웨이 포워딩, enforcement)
-    │   ├── start.sh                  # NER(GPU3)+프록시 기동 (up/down/status [5015|5016|5501|5502|all])
-    │   ├── proxy.py                  # in/out PII 검사 프록시 (외부 5015/5016/5501/5502 인수)
+    │   ├── start.sh                  # NER(GPU3)+프록시 기동 (up/down/status [5015|5501|all])
+    │   ├── proxy.py                  # in/out PII 검사 프록시 (외부 5015/5501 인수)
     │   ├── ner_server.py             # 한국어 NER 서버 (transformers, GPU)
     │   ├── hooks.py/config.py/audit.py  # 통합 검사·설정·감사로그(평문 미저장 HMAC)
     │   ├── detectors/                # structured(regex+체크섬) + ner_client(LB) + normalize(NFKC)
-    │   ├── configs/                  # ner.yaml(NER 풀: gpu/동시성/백엔드) + proxy.{yaml(5015)/5501/5016/5502/e2e}.yaml + _SCHEMA.txt + audit.salt(시크릿, git·S3 제외)
+    │   ├── configs/                  # ner.yaml(NER 풀: gpu/동시성/백엔드) + proxy.{yaml(5015)/5501/e2e}.yaml + _SCHEMA.txt + audit.salt(시크릿, git·S3 제외)
     │   └── tests/                    # 단위 + e2e + eval_pii(합성 정확성) + recall_gate(실데이터 recall 게이트, data/ 라벨 JSONL)
     └── stt/                          # STT 운영 중 (vllm 페어 패턴 동일, launcher/gateway 본체 재사용)
         ├── README.md
@@ -139,7 +148,7 @@ ai-infra/
 | **GPU 호스트** | NVIDIA Open Driver, NVIDIA Container Toolkit, Fabric Manager (H100/H200/A100/B100/B200) |
 | **클라우드** | AWS EC2 (g6e/p4/p5), EBS, IAM/S3, SSM Session Manager |
 | **온프레미스** | RHEL 10, H200, 드라이버 580 LTSB 고정(`dnf versionlock`), Docker CE 저장소, 폐쇄망 대비 사전 pull |
-| **서빙** | vLLM (chat + audio + realtime), FastAPI 게이트웨이 (OpenAI 호환 + 대기열 기반 과부하 차단 + 모델 교체 호환 계층). LLM(:5015/:5016 — API 노출명은 백엔드 모델과 무관하게 `gemma-4` 고정) + STT(Voxtral :5018, 비교 PoC :5017). 향후 SGLang 추가 예정 |
+| **서빙** | vLLM (chat + audio + realtime), FastAPI 게이트웨이 (OpenAI 호환 + 대기열 기반 과부하 차단 + 모델 교체 호환 계층). LLM(연구계 :5015, 개발계·운영계 :5501 — API 노출명은 백엔드 모델과 무관하게 `gemma-4` 고정) + STT(Voxtral :5018, 비교 PoC :5017). 향후 SGLang 추가 예정 |
 | **런타임** | Python 3.12, Node.js LTS (nvm) |
 | **개발 도구** | Claude Code, OpenAI Codex, GitHub CLI, tmux, fzf, ripgrep |
 | **풀스택 SDK** | Next.js, FastAPI, LangChain, ChromaDB, Supabase CLI, Playwright |
@@ -171,7 +180,7 @@ ai-infra/
 | `llm-serving/vllm/tests/ab_regression_probe.py` | vLLM 버전업 회귀·품질 탐침(값 복사·도구 인자·JSON 스키마·이미지 반복·긴 입력). 옛·새 결과 파일을 `--compare`로 대조, 실패 시 종료 1 |
 | `llm-serving/vllm/tests/effort_thinking_matrix.py`·`gateway_compat_probe.py` | 게이트웨이 계약 확인 — effort × thinking 조합, 정체성 문구·developer 역할·`/v1/models` root 가림 |
 | `llm-serving/vllm/tests/mtp_known_bug_probe.py`·`mtp_prefix_cache_probe.py` | MTP 결함 재현 탐침 — 상류 문법·요청 혼합 결함(#38106·#46088), 접두 캐시 손상(#53912)과 수락률. 버전업 때 MTP 재활성 판단 근거 |
-| `llm-serving/pii/proxy.py` | PII 가드 프록시 — 외부 5015/5501 인수, in(주민·카드 차단/이름·주소·전화 마스킹)·out 검사 후 게이트웨이 포워딩 |
+| `llm-serving/pii/proxy.py` | PII 가드 프록시 — 외부 5015/5501 인수(포트별 `configs/proxy.*.yaml`), in(주민·카드 차단/이름·주소·전화 마스킹)·out 검사 후 게이트웨이 포워딩 |
 | `llm-serving/pii/start.sh` | NER+프록시 기동, 다중 포트 (`up/down/status [5015\|5501\|all]`), salt 자동주입. NER 풀 정의는 `configs/ner.yaml`(gpu/max_concurrency/backends, env `PII_GPU` 우선) |
 | `llm-serving/pii/tests/eval_pii.py` | PII 정확성 평가 (한국어 합성 케이스셋, 타입별 precision/recall + 과탐) |
 | `llm-serving/pii/tests/recall_gate.py` | 실데이터 recall 게이트 하버스 (라벨 JSONL span-겹침 매칭, person/address/org ≥0.95 미달 시 exit 1, 데이터 없으면 스킵) |
@@ -206,15 +215,15 @@ sudo ./user.sh up jin --password 1234 --gpus 0,1   # 추가 사용자
 
 # 3) vLLM 서빙 (LLM)
 cd llm-serving/vllm
-./start.sh download gemma-26b  # 모델+drafter 최신 동기화 (증분, 네트워크 개방 시점에)
-./start.sh up gemma-26b && ./start.sh up 5015   # 비PII 직접 모드 (:5015 = 26B)
+./start.sh download qwen   # 모델 최신 동기화 (증분, 네트워크 개방 시점에)
+./start.sh up qwen && ./start.sh up 5015   # 비PII 직접 모드 (:5015 = Qwen3.8-27B). up all은 연구·운영 인스턴스를 전부 올려 GPU가 겹친다
 ./start.sh status          # 인스턴스/게이트웨이 상태 확인
 python tests/test_vllm_server.py # 추론/스트리밍/툴콜 QA
 python tests/speed_test.py --base-url http://localhost:5015  # 모델 간 속도 매트릭스 누적
 
 # 4) STT 서빙 (Voxtral, vllm 페어 패턴 동일)
 cd ../stt
-./start.sh up              # instances/voxtral.yaml ↔ gateways/5018.yaml 페어 자동
+./start.sh up voxtral && ./start.sh up 5018   # instances/voxtral.yaml ↔ gateways/5018.yaml (무인자 up은 STT 세 종 전체 기동 확인)
 ./start.sh status          # voxtral(:7172) + Gateway 5018 (ready 1/1)
 curl http://localhost:5018/health   # 게이트웨이 health
 ```

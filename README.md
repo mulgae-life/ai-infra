@@ -9,7 +9,7 @@
 | [`my-docker-server/`](my-docker-server/) | 로컬 PC·사내 서버용 dev/GPU Docker 환경 (`Dockerfile.dev`, `Dockerfile.gpu`, `docker-compose.yml`) |
 | [`aws/`](aws/) | AWS EC2 GPU 인스턴스 셋업 + 다중 사용자 컨테이너 운영 인프라 (vLLM 베이스, SSH) |
 | [`on-prem/`](on-prem/) | 온프레미스 H200 서버(RHEL 10) 호스트 셋업 + 폐쇄망 준비 점검. 컨테이너 계층은 `aws/`를 그대로 실행 |
-| [`llm-serving/`](llm-serving/) | LLM/STT 서빙 프레임워크 운영 구성 (vLLM 기반 LLM :5015/:5016 + STT Voxtral :5018, 향후 SGLang 추가 예정) |
+| [`llm-serving/`](llm-serving/) | LLM/STT 서빙 프레임워크 운영 구성 (vLLM 기반 LLM 연구계 :5015·개발/운영계 :5501 + STT Voxtral :5018, 향후 SGLang 추가 예정) |
 | [`ai-research/`](ai-research/) | 모델 학습·실험 실행 공간 (보험 임베딩 파인튜닝). 데이터·실행 결과·가중치는 git 제외 |
 
 각 디렉토리는 자체 README/가이드를 포함합니다. 아래 진입점에서 시작하세요.
