@@ -118,7 +118,7 @@ ai-infra/
     │   │   ├── image.png            # 멀티모달 fixture
     │   │   └── results/             # speed_results.md, vllm-0.31-ab.md(버전업 판정표) 등 누적 리포트
     │   └── bugfix/                   # 운영 중 발견 이슈 기록
-    ├── pii/                          # PII/DLP 가드 운영 중 (외부 포트 인수 → 게이트웨이 포워딩, enforcement)
+    ├── pii/                          # PII/DLP 가드, 선택 모드 (외부 포트 인수 → 게이트웨이 포워딩, enforcement)
     │   ├── start.sh                  # NER(GPU3)+프록시 기동 (up/down/status [5015|5501|all])
     │   ├── proxy.py                  # in/out PII 검사 프록시 (외부 5015/5501 인수)
     │   ├── ner_server.py             # 한국어 NER 서버 (transformers, GPU)
@@ -126,7 +126,7 @@ ai-infra/
     │   ├── detectors/                # structured(regex+체크섬) + ner_client(LB) + normalize(NFKC)
     │   ├── configs/                  # ner.yaml(NER 풀: gpu/동시성/백엔드) + proxy.{yaml(5015)/5501/e2e}.yaml + _SCHEMA.txt + audit.salt(시크릿, git·S3 제외)
     │   └── tests/                    # 단위 + e2e + eval_pii(합성 정확성) + recall_gate(실데이터 recall 게이트, data/ 라벨 JSONL)
-    └── stt/                          # STT 운영 중 (vllm 페어 패턴 동일, launcher/gateway 본체 재사용)
+    └── stt/                          # STT 서빙 (vllm 페어 패턴 동일, launcher/gateway 본체 재사용)
         ├── README.md
         ├── MODEL_STUDY.md            # 후보 모델 비교 / 시나리오
         ├── start.sh                  # vllm/start.sh 패턴 풀 도입 (../vllm 코드 재사용)
