@@ -33,7 +33,6 @@ last-updated: 2026-10-26 (10-23~24 기록 보충, 서빙 문서 범용화)
 | P1 | `llm-serving/sglang/` 디렉토리 골격 (운영 가이드 + 런처 + 설정 + 테스트) | Todo |
 | P1 | **STT 한국어 실측**: Whisper-large-v3 1순위(+한국어 fine-tune 트랙) 채택. `test_stt.py`(WER/RTF/정성)로 실측 확정 | 의사결정 ✅, 실측 대기 |
 | P2 | **Jev 방식 후속**: 결과 `agent-guide/docs/slm_research/topics/jev-probe.md`(정확도는 같은 수준, 처리량이 초당 6~9건에서 막힘). ① TP1 A/B(서빙 설정 변경이라 대표님 결정) ② 업무 문항 600개를 Jev API로 풀기(외부 전송이라 대표님 확인) | 실측 ✅, 후속 결정 대기 |
-| P2 | **보험 임베딩 파인튜닝**: 실행 계획서 `agent-guide/plans/work-plan_261008_insurance-embedding/`(P0~P6, 결정 5건은 master "결정 요청" 표), 실행 공간 `ai-research/insurance-embedding/`. 다음은 계획서 확정 → P0 결정 요청서. 라이브러리 최신화 때 학습 환경은 서빙과 분리(vLLM 0.31.0이 torch 2.13.0 고정) | 계획 초안 ✅, 대표님 검토 대기 |
 | P2 | **Qwen3.8-Flash-Next 교체 (`nvidia/Qwen3.8-Flash-Next-NVFP4`)**: 조사 `.archive/2026-10-20_next-nvfp4-조사/`. thinking ON이면 Next 우세, OFF면 27B와 비슷, 한국어 근거 없음. L40S×2는 n-gram 임베딩 CPU 이관·MTP 끔 전제로 장당 가중치 37.4~37.9GiB라 256K 불가. 재개 조건: 디스크 133GB 여유(EBS 확장 불가, 대표님 10-20) | 보류 |
 | P2 | **26B-A4B MTP 튜닝**: acceptance 32~47%(31B 70~85%). 동시성 4+ 실측 후 낮으면 `num_speculative_tokens 4→2` 또는 MTP off A/B. 10-09 MTP를 껐으므로 다시 켤 때 한다 | 보류 |
 | P2 | **PII NER 고도화 (보류, PII 미사용 중)**: 재사용 전 필수 🚨 512 토큰 초과 청킹(현재 500 → fail-open 무검사/fail-closed 차단) · 마이크로 배칭 · replica 스케일아웃 | 보류 |
@@ -60,8 +59,8 @@ last-updated: 2026-10-26 (10-23~24 기록 보충, 서빙 문서 범용화)
 | **10-12** | 개발 서버 0.31 반영(대표님) · 공식 이미지의 NCCL 덮어쓰기로 `pip check`가 원래 실패해 설치 전후 비교로 `21c0c68`(시험장은 PyPI 설치라 못 잡음) · 절차서 `restart && test` 분리 `21c0c68` · 이미지 기준을 해시로 `e93b352`(개발 서버 S3 쓰기 불가) · 문서 정합. `max_num_seqs` 판정은 스케줄러가 자체 조절해 관문에서 뺌 |
 | **10-10** | 인스턴스 0.31 정렬·연구계 0.31 전환 `a7cf66c` · 게이트웨이 추론 규칙(effort를 주면 켬, `enable_thinking`이 우선, `none`은 끔) `0eee4cb`. "effort는 강도만"은 내 하위 호환 판단이라 대표님이 뒤집음 · P5 문서·휠 정리를 앞당김 `e9608b6` · 부하 시험이 빈 답 HTTP 200을 성공으로 세던 것 수정 `e9608b6`. 원인은 "약 250자" 지시로 글자를 세다 상한 도달(temperature 0 반복 가설은 틀림) · S3 push(대표님), push 제외 규칙이 최상위 캐시를 놓쳐 보강 `73ad777` |
 | **10-09** | vLLM 0.31 P2·P3: 정식 이미지 전환 `bbaae21` · A/B 도구·판정표 `f40fdfc` · 운영 Gemma MTP 끔 `89d4899` · env·빌드 확인·버전업 절차 `2ba83cb`·`ce56d2c` · 인스턴스 `fp8_per_tensor` 정렬 · 연구계 가상환경 `~/venvs/vllm-0.31` 전환(`~/.local` nightly는 임베딩 :8020용) · SSH 한글 로케일 `44722eb`. 연구계 Gemma `fp8` 유지 계획은 뒤집음, 옛 게이트웨이가 effort 수정 전 코드라 재기동, 공백 반복은 "모델 습관"이 아니라 "공통 출력 이상"으로 정정 |
-| **10-08** | vLLM 0.31 계획서 `db11b7e` · Qwen MTP 끔 `1d097b7` · 정체성 문구 기본값 비공개 `de23caf` · 시험장 0.31 예행 설치 · `ai-research/` 신설 + 보험 임베딩 골격 `00085cf`·계획서 v2 `efa102c`(협업 원본 `.archive/2026-10-08_insurance-ft-plan-collab/`). 하드 네거티브 채굴을 E1 앞에 두려던 안은 설계 7.1절과 어긋나 E2로 옮김 |
-| **10-07** | 레포명 `docker` → `ai-infra` `c009f48` · 안내 오류 2건 `cef33a0` · 임베딩 조사 문서 4건 정정 `9352b21` · 보험 임베딩 조사 `ccb18ed`(협업 원본 `.archive/2026-10-07_insurance-ft-collab/`). GUIDE의 "서빙은 네임스페이스 밖"은 틀려서 정정 |
+| **10-08** | vLLM 0.31 계획서 `db11b7e` · Qwen MTP 끔 `1d097b7` · 정체성 문구 기본값 비공개 `de23caf` · 시험장 0.31 예행 설치 |
+| **10-07** | 레포명 `docker` → `ai-infra` `c009f48` · 안내 오류 2건 `cef33a0`. GUIDE의 "서빙은 네임스페이스 밖"은 틀려서 정정 |
 | **10-06** | Jev 조사 + `slm_research/`를 `models/`·`topics/`·`sources/`로 개편 `5557317` · `slm_research/`를 `agent-guide/docs/`로 옮겨 배포 범위 밖에 두고 `start.sh` 제외 규칙 삭제 `11d7420` · Jev 방식 실측(Qwen3.8 FP8 대 Jev) `6f9550b` |
 | **09-15** | 운영 배포분 주석 어조 정리 + `slm_research/` S3 제외 `298b04c`. 보안 검토 범위는 GitHub 공개 여부가 아니라 운영 서버로 가는 것(대표님 확정) · 정체성 프롬프트는 유지 · `on-prem/`은 `aws/`보다 뒤처지지 않음 |
 | **09-14** | 데탑 수동 설치 도구를 Dockerfile에 고정 `c3a6976` · SSH 호스트 키 영속화 `d436e87` · `my-docker-server/SETUP_GUIDE.md` `6ffb11d`. 잔존: Tailscale로 옮기면 공유기 5000/5010 포워딩 폐쇄 가능, 컨테이너 `btmp` 수동 truncate |

@@ -29,9 +29,8 @@ last-updated: 2026-10-26 (구조 트리·:5015 구성·빠른 시작을 실제 �
 | **개발 환경** | 로컬 PC·사내 서버에 띄우는 컨테이너 (개발자 PC) | `my-docker-server/` | EC2 호스트 셋업, 모델 서빙 |
 | **인프라** | 호스트 셋업, 드라이버, 다중 사용자, 포트/볼륨 정책 | `aws/` (EC2, 컨테이너 계층 포함) / `on-prem/` (사내 RHEL 10 H200 — 호스트 계층만, `.env`·compose·`user.sh`는 `aws/` 공유) | 모델 추론 로직, 게이트웨이 라우팅 |
 | **서빙** | LLM 모델 서빙 프레임워크 설정·게이트웨이·운영 가이드 | `llm-serving/` | 어디에 띄울지 (인프라), 컨테이너 OS 설정 |
-| **연구** | 모델 학습·실험을 돌리는 코드·설정·데이터·실행 결과. 데이터·실행 결과·가중치는 git 제외 | `ai-research/` | 서빙 설정 (`llm-serving/`), 조사·설계 문서 (`agent-guide/docs/*_research/`) |
 
-> 신규 파일을 만들 때는 위 책임 표를 보고 디렉토리를 결정하세요. 예: vLLM의 새로운 멀티모달 설정은 `llm-serving/vllm/`, EC2 자동 스케일 정책은 `aws/`, 새로운 로컬 GPU 워크플로우는 `my-docker-server/`, 새 학습 실험은 `ai-research/<프로젝트>/`.
+> 신규 파일을 만들 때는 위 책임 표를 보고 디렉토리를 결정하세요. 예: vLLM의 새로운 멀티모달 설정은 `llm-serving/vllm/`, EC2 자동 스케일 정책은 `aws/`, 새로운 로컬 GPU 워크플로우는 `my-docker-server/`.
 
 ---
 
@@ -42,13 +41,8 @@ ai-infra/
 ├── README.md                         # 메타 진입점 (디렉토리 안내)
 ├── agent-guide/                      # AI 에이전트 가이드 (GUIDE/PROJECT/SESSION)
 │   ├── docs/slm_research/            # 모델 조사 (models/·topics/·sources/, 목록은 README) — 연구계 전용, S3 배포 범위 밖
-│   ├── docs/embedding_research/      # 임베딩 모델 조사 (slm_research와 같은 구조) — 연구계 전용, S3 배포 범위 밖
 │   ├── docs/Gemma4_API_초보자_가이드*.pptx  # Gemma 4 API 초보자 가이드 PPT 두 판 (10-16, AI Studio)
 │   └── plans/                        # 진행 중 계획서 (완료분은 루트 .archive/로 보관, git 제외)
-│
-├── ai-research/                      # 연구·실험 실행 공간 — S3 배포 범위 밖. 프로젝트 목록과 git 추적 구분은 README
-│   ├── .gitignore                    # 프로젝트 바로 아래 data/·runs/·models/ 제외
-│   └── insurance-embedding/          # 보험 임베딩 파인튜닝 (설계: docs/embedding_research/topics/insurance-finetuning.md)
 │
 ├── my-docker-server/                 # 로컬 dev/GPU Docker 환경
 │   ├── Dockerfile.dev                # Ubuntu 24.04 + Node/Python/Playwright/CC
