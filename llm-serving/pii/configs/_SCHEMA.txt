@@ -17,11 +17,11 @@ ner_require_all_backends(연구 false/운영 true) · audit_log_path(포트 태�
 
 ── 환경별로 다른 값 ─────────────────────────────────────────────────
 
-  키                          연구 gemma      운영 gemma      연구 qwen       운영 qwen
-  port                        5015            5501            5016            5502
-  upstream_url 포트           6015            6501            6016            6502
-  ner_require_all_backends    false           true            false           true
-  audit_log_path              pii_audit.log   .5501.log       .5016.log       .5502.log
+  키                          연구            운영
+  port                        5015            5501
+  upstream_url 포트           6015            6501
+  ner_require_all_backends    false           true
+  audit_log_path              pii_audit.log   .5501.log
 
 운영계는 컴플라이언스 우선이라 ner_require_all_backends: true(NER 모델 그룹
 하나라도 죽으면 fail-closed). 연구계는 가용성 우선 false.

@@ -21,14 +21,13 @@ PII 프록시(proxy.py)        in/out 검사 · 마스킹 · 차단(422) · 감�
 vLLM                       추론
 ```
 
-**진입점 (PII 적용 LLM — gemma·qwen 모두 경유):**
+**진입점 (PII 적용 LLM):**
 
 | 모델 | 외부 진입점(연구/운영) | 내부 게이트웨이 | vLLM |
 |------|----------------------|----------------|------|
 | gemma | `:5015` / `:5501` | `:6015` / `:6501` | `:7070` |
-| qwen | `:5016` / `:5502` | `:6016` / `:6502` | `:7080` |
 
-**연구계·운영계는 격리된 별도 서버**다. 각 서버가 자기 localhost의 NER(GPU3, `:8911`/`:8901`)+프록시만 띄운다 — 같은 서버의 gemma·qwen 프록시는 이 NER 풀을 공유한다(NER은 한 번만 기동). 연구↔운영 NER은 물리 분리(공유 아님). yaml의 `127.0.0.1`은 "각 서버 자체 localhost"를 뜻한다.
+**연구계·운영계는 격리된 별도 서버**다. 각 서버가 자기 localhost의 NER(GPU3, `:8911`/`:8901`)+프록시만 띄운다 — 같은 서버에 프록시를 더 띄워도 이 NER 풀을 공유한다(NER은 한 번만 기동). 연구↔운영 NER은 물리 분리(공유 아님). yaml의 `127.0.0.1`은 "각 서버 자체 localhost"를 뜻한다.
 
 ## 검출 2-track
 
@@ -53,31 +52,28 @@ NER 모델은 token-classification이라 vLLM 비대상 → transformers로 GPU3
 | NER 부분 장애 | `ner_require_all_backends` | `false` | true=fail-closed(컴플라이언스) / false=살아있는 모델 union |
 | 우회 | `allow_bypass` | `true` | 헤더 `X-PII-Mode: bypass`로 검사 생략(감사로그 `action=bypass`). `bypass_token`/`PII_BYPASS_TOKEN`으로 2차 가드 |
 
-설정은 gemma `configs/proxy.yaml`(5015)·`proxy.5501.yaml`(5501), qwen `proxy.5016.yaml`·`proxy.5502.yaml`. 감사로그는 HMAC 지문만 남기고 **평문 미저장**(salt=`configs/audit.salt`, 권한 600 자동생성, S3 동기화 제외).
+설정은 `configs/proxy.yaml`(5015)·`proxy.5501.yaml`(5501). 감사로그는 HMAC 지문만 남기고 **평문 미저장**(salt=`configs/audit.salt`, 권한 600 자동생성, S3 동기화 제외).
 
 ## 기동
 
 PII는 **안쪽부터** 올린다(프록시가 외부 입구를 인수하므로 게이트웨이·vLLM이 먼저 떠 있어야 함).
 
 ```bash
-# ── 운영계 서버 (gemma :5501 / qwen :5502) ──
+# ── 운영계 서버 (:5501) ──
 cd /workspace/llm-serving/vllm
 ./start.sh up prd-pii-gemma  # gemma vLLM (GPU0)  →  ./start.sh up 6501  (게이트웨이)
-./start.sh up prd-pii-qwen   # qwen  vLLM (GPU0)  →  ./start.sh up 6502  (게이트웨이)
 cd ../pii
-bash start.sh up 5501        # gemma 프록시 (외부 :5501 인수, NER 동반 기동)
-bash start.sh up 5502        # qwen  프록시 (외부 :5502 인수, NER 공유)
+bash start.sh up 5501        # 프록시 (외부 :5501 인수, NER 동반 기동)
 
-# ── 연구계 서버 (gemma :5015 / qwen :5016) ──
-#   gemma: up gemma → up 6015 → bash start.sh up        (인자 없으면 5015)
-#   qwen : up qwen  → up 6016 → bash start.sh up 5016
+# ── 연구계 서버 (:5015) ──
+#   up gemma → up 6015 → bash start.sh up        (인자 없으면 5015)
 
 bash start.sh status         # NER + 프록시 health
-bash start.sh down 5502      # 특정 프록시만 중지 (NER은 로딩 비용이 커 유지)
+bash start.sh down 5501      # 특정 프록시만 중지 (NER은 로딩 비용이 커 유지)
 bash start.sh down all       # 프록시 전부 + NER 중지
 ```
 
-> 🔒 외부엔 **프록시(:5015·:5016/:5501·:5502)만** 열고 게이트웨이(:6015·:6016/:6501·:6502)·vLLM(:7070/:7080)·NER(:8911/:8901)은 외부 차단해야 우회 불가. 인스턴스 yaml이 `host: 0.0.0.0`이면 특히 주의.
+> 🔒 외부엔 **프록시(:5015/:5501)만** 열고 게이트웨이(:6015/:6501)·vLLM(:7070/:7080)·NER(:8911/:8901)은 외부 차단해야 우회 불가. 인스턴스 yaml이 `host: 0.0.0.0`이면 특히 주의.
 
 ## 정확성 평가
 
@@ -97,6 +93,6 @@ cd pii && python tests/eval_pii.py      # 한국어 합성 케이스셋, 타입�
 | `detectors/structured.py` | 구조화 PII regex + 체크섬 |
 | `detectors/ner_client.py` | NER LB union 클라이언트 |
 | `detectors/normalize.py` | 전각→반각(NFKC) 정규화 (전각 숫자 등 우회 차단) |
-| `configs/` | NER 풀 `ner.yaml`(gpu/models_dir/backends/max_concurrency) · gemma `proxy.yaml`(5015)·`proxy.5501.yaml`(5501) · qwen `proxy.5016.yaml`·`proxy.5502.yaml` · `proxy.e2e.yaml`(테스트) · 키 상세 `_SCHEMA.txt` |
+| `configs/` | NER 풀 `ner.yaml`(gpu/models_dir/backends/max_concurrency) · 포트별 프록시 설정 `proxy.yaml`(5015)·`proxy.5501.yaml`(5501) · `proxy.e2e.yaml`(테스트) · 키 상세 `_SCHEMA.txt` |
 | `NOTICE.md` | NER 모델 라이선스 고지 |
 | `pii_model_research.md` | 한국어 PII 모델 조사·실측 평가 |

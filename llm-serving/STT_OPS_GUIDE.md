@@ -52,7 +52,7 @@ Gateway :5017            stt/gateways/5017.yaml  (비교 PoC — model 필드로
 
 | 레이어 | 디렉토리 | 책임 |
 |--------|---------|------|
-| LLM 서빙 | `llm-serving/vllm/` | Gemma/Qwen 등 chat 모델 (게이트웨이 :5015 / :5016) |
+| LLM 서빙 | `llm-serving/vllm/` | Gemma/Qwen 등 chat 모델 (연구계 :5015 / 개발계·운영계 :5501) |
 | STT 서빙 | `llm-serving/stt/` | Voxtral 등 음성 모델 (게이트웨이 :5018 메인 / :5017 비교 PoC) |
 | 공용 코드 | `llm-serving/vllm/{start.sh, logging.sh, vllm_server_launcher.py, vllm_gateway.py}` | STT는 `start.sh` / `logging.sh`도 vllm 본체를 호출하는 thin wrapper (옵션 A, 2026-05-12). launcher/gateway는 같은 파이썬 모듈 재사용. |
 

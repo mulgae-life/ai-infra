@@ -39,7 +39,7 @@ LLM 서빙 프레임워크 운영 구성 모음. 서버 인프라(EC2/Docker)와
 
 ## 🔒 PII/DLP 가드 (선택 모드 — 현재 미운용)
 
-LLM 앞단에서 개인정보를 검사하는 보안 레이어. **PII 모드** 적용 시 외부 단일 포트를 프록시가 인수해 in(주민·카드 차단 / 이름·주소·전화 마스킹)·out(응답 마스킹) 검사 후 내부 게이트웨이로 포워딩한다 — gemma(연구 `:5015`→`:6015` / 운영 `:5501`→`:6501`), qwen(연구 `:5016`→`:6016` / 운영 `:5502`→`:6502`). **현재는 연구·운영 모두 비PII 모드**(게이트웨이가 외부 포트에 직접, PII 스택 미기동)로 운용하며, 포트당 모드는 택일이다. **연구계/운영계는 격리된 별도 서버**이며, PII 모드 시 각 서버가 자기 NER(GPU3, `:8911`/`:8901`)+프록시만 띄운다(공유 아님).
+LLM 앞단에서 개인정보를 검사하는 보안 레이어. **PII 모드** 적용 시 외부 단일 포트를 프록시가 인수해 in(주민·카드 차단 / 이름·주소·전화 마스킹)·out(응답 마스킹) 검사 후 내부 게이트웨이로 포워딩한다 — 연구 `:5015`→`:6015` / 운영 `:5501`→`:6501`. **현재는 연구·운영 모두 비PII 모드**(게이트웨이가 외부 포트에 직접, PII 스택 미기동)로 운용하며, 포트당 모드는 택일이다. **연구계/운영계는 격리된 별도 서버**이며, PII 모드 시 각 서버가 자기 NER(GPU3, `:8911`/`:8901`)+프록시만 띄운다(공유 아님).
 
 | 파일 / 디렉토리 | 역할 |
 |------|------|
@@ -47,8 +47,8 @@ LLM 앞단에서 개인정보를 검사하는 보안 레이어. **PII 모드** �
 | [`pii/proxy.py`](pii/proxy.py) | 외부 포트 인수 프록시 (in/out 검사 → 게이트웨이 포워딩, 스트리밍 post 검사) |
 | [`pii/ner_server.py`](pii/ner_server.py) | 비정형 PII NER 서버 (token-classification, GPU3, transformers 서빙) |
 | [`pii/detectors/`](pii/detectors/) | `structured.py`(구조화 regex+체크섬) · `ner_client.py`(NER LB union) · `normalize.py` |
-| [`pii/configs/`](pii/configs/) | NER 풀 설정 `ner.yaml`(gpu/모델경로/backends/max_concurrency) · gemma `proxy.yaml`(5015)·`proxy.5501.yaml`(5501) · qwen `proxy.5016.yaml`·`proxy.5502.yaml` · `proxy.e2e.yaml`(테스트) · 키 상세 [`_SCHEMA.txt`](pii/configs/_SCHEMA.txt) |
-| [`pii/start.sh`](pii/start.sh) | NER + 프록시 기동 (`up [5015\|5016\|5501\|5502\|all]` / `down` / `status`) |
+| [`pii/configs/`](pii/configs/) | NER 풀 설정 `ner.yaml`(gpu/모델경로/backends/max_concurrency) · 포트별 프록시 설정 `proxy.yaml`(5015)·`proxy.5501.yaml`(5501) · `proxy.e2e.yaml`(테스트) · 키 상세 [`_SCHEMA.txt`](pii/configs/_SCHEMA.txt) |
+| [`pii/start.sh`](pii/start.sh) | NER + 프록시 기동 (`up [5015\|5501\|all]` / `down` / `status`) |
 | [`pii/tests/`](pii/tests/) | E2E + 한국어 합성 케이스셋 회귀 평가(`eval_pii.py`) |
 | [`pii/NOTICE.md`](pii/NOTICE.md) | NER 모델 서드파티 출처·라이선스 고지 |
 | [`pii/pii_model_research.md`](pii/pii_model_research.md) | 한국어 PII 모델 조사·3종 실측 평가 리포트 |

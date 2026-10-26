@@ -23,20 +23,18 @@
 
 ```
 ── 비PII 모드 (현재 기본) — 게이트웨이가 곧 외부 입구 ──
- :5015  gemma 연구   →  게이트웨이 → vLLM :7071  (gemma-26b, GPU 0,1)
+ :5015  LLM 연구     →  게이트웨이 → vLLM :7080  (qwen, GPU 0,1 — gemma-26b :7071과 택일)
  :5501  gemma 운영   →  게이트웨이 → vLLM :7070  (prd-gemma, GPU 0)   · 운영=별도 서버
  :5018  voxtral STT  →  게이트웨이 → vLLM :7172  (GPU 2)              · 모드 무관 항상 이 구조
  :5017  STT 비교 PoC →  게이트웨이 → qwen3_asr :7170 / whisper_v3 :7171 (model 필드 라우팅)
 
 ── PII 모드 (선택 — 프록시가 같은 외부 포트를 인수) ──
  :5015  gemma 연구   →  PII 프록시 → 게이트웨이 :6015 → vLLM :7070  (gemma, GPU 0,1)
- :5016  qwen  연구   →  PII 프록시 → 게이트웨이 :6016 → vLLM :7080  (GPU 0,1)
  :5501  gemma 운영   →  PII 프록시 → 게이트웨이 :6501 → vLLM :7070  (prd-pii-gemma, GPU 0)
- :5502  qwen  운영   →  PII 프록시 → 게이트웨이 :6502 → vLLM :7080  (prd-pii-qwen, GPU 0)
  :8911 / :8901  NER (vmaca123 / townboy, GPU 3)  ←  PII 프록시가 호출
 ```
 
-> 외부 호출 주소는 모드와 무관하게 불변이고, **포트당 모드는 택일**이다. PII 모드에서는 **게이트웨이가 내부 포트로 한 칸 물러나고 외부 입구를 PII 프록시가 인수**하므로 기동 순서가 달라진다([§3](#3-기동)). qwen은 비PII 게이트웨이가 아직 없어 PII 모드 구성만 있다. 깊은 토폴로지는 [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md) §6.
+> 외부 호출 주소는 모드와 무관하게 불변이고, **포트당 모드는 택일**이다. PII 모드에서는 **게이트웨이가 내부 포트로 한 칸 물러나고 외부 입구를 PII 프록시가 인수**하므로 기동 순서가 달라진다([§3](#3-기동)). 깊은 토폴로지는 [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md) §6.
 
 ---
 
@@ -78,12 +76,10 @@ sudo chmod +x /workspace/llm-serving/start.sh /workspace/llm-serving/*/start.sh
 
 | 외부 진입점 | 서비스 | 모드 | 내부 경로 | 기동 단위 |
 |------------|--------|:---:|-----------|-----------|
-| `:5015` | LLM gemma (연구) | 비PII (현재) | 게이트웨이 → vLLM `:7071` | `gemma-26b` + `5015` |
+| `:5015` | LLM (연구) | 비PII (현재) | 게이트웨이 → vLLM `:7080` | `qwen`(또는 `gemma-26b`) + `5015` |
 | `:5015` | LLM gemma (연구) | PII | 프록시 → 게이트웨이 `:6015` → vLLM `:7070` | `gemma` + `6015` + `pii up` |
-| `:5016` | LLM qwen (연구) | PII만 | 프록시 → 게이트웨이 `:6016` → vLLM `:7080` | `qwen` + `6016` + `pii up 5016` |
 | `:5501` | LLM gemma (운영) | 비PII (현재) | 게이트웨이 → vLLM `:7070` | `prd-gemma` + `5501` |
 | `:5501` | LLM gemma (운영) | PII | 프록시 → 게이트웨이 `:6501` → vLLM `:7070` | `prd-pii-gemma` + `6501` + `pii up 5501` |
-| `:5502` | LLM qwen (운영) | PII만 | 프록시 → 게이트웨이 `:6502` → vLLM `:7080` | `prd-pii-qwen` + `6502` + `pii up 5502` |
 | `:5018` | STT voxtral | — | 게이트웨이 → vLLM `:7172` | `voxtral` + `5018` |
 | `:5017` | STT 비교 PoC | — | 게이트웨이 → `:7170`/`:7171` | `qwen3_asr`/`whisper_v3` + `5017` |
 
@@ -93,13 +89,13 @@ sudo chmod +x /workspace/llm-serving/start.sh /workspace/llm-serving/*/start.sh
 
 ### 3.2 gemma 기동 (비PII 기본 / PII 모드)
 
-운영계(`:5501`) 기준. 연구계(`:5015`)는 괄호 안 값으로 치환한다. (qwen은 [§3.4](#34-qwen-llm-옵션-pii-모드-구성만))
+운영계(`:5501`) 기준. 연구계(`:5015`)는 괄호 안 값으로 치환한다.
 
 **비PII 모드 (현재 기본)** — 게이트웨이가 곧 외부 입구, 두 단계로 끝:
 
 ```bash
 cd /workspace/llm-serving/vllm
-./start.sh up prd-gemma      # ① vLLM (연구: gemma-26b) — 모델 미보유 시 자동 다운로드(→ /models/LLM/), UP까지 1~5분
+./start.sh up prd-gemma      # ① vLLM (연구: qwen 또는 gemma-26b) — 모델 미보유 시 자동 다운로드(→ /models/LLM/), UP까지 1~5분
 ./start.sh up 5501           # ② 게이트웨이 = 외부 입구 (연구: 5015)
 ./start.sh status            # UP 확인
 ```
@@ -121,7 +117,7 @@ bash start.sh up 5501        # (연구: 인자 없이 `bash start.sh up` = 5015)
 bash start.sh status         # NER + 프록시 health
 ```
 
-> 🔒 **방화벽 전제**: 외부엔 **PII 프록시(gemma `:5015`/`:5501`, qwen `:5016`/`:5502`)만** 열고, 게이트웨이(`:6015`/`:6016`/`:6501`/`:6502`)·vLLM(`:7070`/`:7080`)·NER(`:8911`/`:8901`)은 외부 차단해야 enforcement가 성립한다(인스턴스 yaml `host: 0.0.0.0`이면 특히 주의). 하나라도 외부에서 닿으면 검사를 건너뛰는 직행 경로가 생긴다.
+> 🔒 **방화벽 전제**: 외부엔 **PII 프록시(`:5015`/`:5501`)만** 열고, 게이트웨이(`:6015`/`:6501`)·vLLM(`:7070`/`:7080`)·NER(`:8911`/`:8901`)은 외부 차단해야 enforcement가 성립한다(인스턴스 yaml `host: 0.0.0.0`이면 특히 주의). 하나라도 외부에서 닿으면 검사를 건너뛰는 직행 경로가 생긴다.
 > 🔑 **감사 salt**: `pii/start.sh`가 `configs/audit.salt`(없으면 권한 600으로 자동 생성)에서 읽어 `PII_AUDIT_SALT`로 주입한다. 환경별 시크릿이라 S3 동기화에서 제외된다.
 > 📋 기동·정책(차단 타입·마스킹·bypass) 상세는 [`pii/README.md`](pii/README.md), [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md) §7.9.
 
@@ -140,22 +136,6 @@ cd /workspace/llm-serving/stt
 > ⚠️ **Voxtral 의존성**: `soundfile`·`soxr`·`librosa`·`av`·`mistral_common[audio]`는 `aws/requirements.txt`로 이미지 빌드 때 들어간다(vLLM 0.31.0 이미지부터 따로 설치하지 않는다). 옛 이미지에서 빠져 있으면 vLLM 기동 직후 `EngineCore failed to start` + `ImportError: soundfile` 로 fail.
 > ⚠️ **GPU 충돌**: voxtral(GPU 2)은 LLM(GPU 0·1)과 충돌 없음. 비교용 `qwen3_asr`(GPU 0)는 LLM과, `whisper_v3`(GPU 2)는 voxtral과 겹침 → 충돌 대상 먼저 stop(`./start.sh down <name>` — 이름 명시 권장). 상세는 [`stt/README.md`](stt/README.md) "운영 주의".
 
-### 3.4 Qwen (LLM 옵션, PII 모드 구성만)
-
-Qwen은 현재 **PII 모드 구성만** 있다(비PII 게이트웨이 미구성 — 필요 시 `gateways/5016.yaml` 신설). PII 프록시 뒤에서 안쪽부터 기동하며(연구 `:5016` / 운영 `:5502`), NER은 같은 서버의 gemma 프록시와 공유한다.
-
-```bash
-# 연구계 (외부 :5016)
-cd /workspace/llm-serving/vllm
-./start.sh up qwen           # ① 인스턴스(:7080, GPU 0,1)
-./start.sh up 6016           # ② 게이트웨이(내부 127.0.0.1:6016)
-cd ../pii
-bash start.sh up 5016        # ③ PII 프록시(외부 :5016 인수)
-
-# 운영계 (외부 :5502) — prd-pii-qwen=GPU0
-#   up prd-pii-qwen → up 6502 → bash start.sh up 5502
-```
-
 ---
 
 ## 4. 동작 확인 (테스트 / 로그)
@@ -170,8 +150,7 @@ python tests/test_vllm_server.py --base-url http://localhost:5015 --category inf
 python tests/test_vllm_server.py --list                                                         # 카테고리 목록
 
 # 속도 비교 테스트 (게이트웨이별로 호출 — 같은 results 파일에 모델명 자동 추출하여 누적 append)
-python tests/speed_test.py --base-url http://localhost:5015                  # Gemma 진입점
-python tests/speed_test.py --base-url http://localhost:5016                  # Qwen 게이트웨이 (같은 파일에 이어 쌓임)
+python tests/speed_test.py --base-url http://localhost:5015                  # 연구계 진입점
 python tests/speed_test.py --base-url http://localhost:5015 --quick          # 빠른 검증 (동시성 1, max_tokens 512)
 
 # 로그 — 매 실행마다 tests/logs/test_YYYYMMDD_HHMMSS.log에 자동 저장 (ANSI 색 제거)
