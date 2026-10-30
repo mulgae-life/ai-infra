@@ -479,10 +479,10 @@ resp = client.chat.completions.create(
 
 | 증상 | 원인 | 조치 |
 |------|------|------|
-| 기동 중 `No available memory for the cache blocks` | 가중치만으로 메모리가 꽉 참 | TP로 GPU 늘리기, 양자화 모델 사용, 같은 GPU의 다른 프로세스 확인 |
+| 기동 중 `No available memory for the cache blocks` | 가중치와 활성화만으로 할당 비율(`gpu-memory-utilization`)이 꽉 참 | TP로 GPU 늘리기, 양자화 모델 사용, `gpu-memory-utilization` 소폭 올리기 |
 | 기동 중 `... KV cache is needed, which is larger than the available KV cache memory` | `max-model-len` 한 건을 담을 KV 공간도 없음 | 오류 문구의 `estimated maximum model length` 이하로 `max-model-len` 줄이기, 또는 `kv-cache-dtype: fp8`, TP 증가 |
 | 운영 중 `CUDA out of memory`로 크래시 | 큰 배치·이미지 입력의 활성화 메모리 부족, 메모리 단편화 | `gpu-memory-utilization` 낮추기(예: 0.90→0.85), `max-num-batched-tokens` 줄이기, `expandable_segments:True` 확인 |
-| 재시작하자마자 OOM | 이전 프로세스가 GPU를 쥐고 남아 있음 | `nvidia-smi`로 PID 확인 → `kill` → 안 죽으면 `kill -9` |
+| 기동 직후 `Free memory on device ... is less than desired GPU memory utilization` | 이전 프로세스가 GPU를 쥐고 남아 있거나, 다른 프로세스가 같은 GPU를 씀 | `nvidia-smi`로 PID 확인 → `kill` → 안 죽으면 `kill -9`. 함께 써야 하면 `gpu-memory-utilization`을 그만큼 낮추기 |
 | 404 `model ... does not exist` | 요청의 `model` ≠ `served-model-name` | `/v1/models`로 이름 확인 |
 | 응답에 사고 과정이 섞여 나옴 | `reasoning-parser` 미설정 | 모델 카드의 파서 이름으로 설정 |
 | 도구 호출이 일반 텍스트로 옴 | 도구 호출 옵션 미설정 | `enable-auto-tool-choice` + `tool-call-parser` 설정 |
