@@ -287,11 +287,13 @@ docker compose up -d
 **규칙** (`DOCKER-USER` 체인 — Docker 공개 포트는 `INPUT`을 거치지 않음)
 - Tailscale `100.64.0.0/10` → 무조건 통과
 - 집 LAN `192.168.75.0/24` → 무조건 통과
+- `MOBILE_ONLY_PORTS`(기본 5000=cfd) → 폰 모바일망 `MOBILE_NET`(기본 `211.234.0.0/15`) 밖이면 즉시 차단
+  - IP 수백 개짜리 분산 공격은 아래 IP당 제한만으로 못 막음 (`xt_recent` 목록 기본 상한 100개가 넘쳐 계속 밀려남)
 - 그 외 → IP 당 10분에 새 연결 20회 초과 시 차단
 - 컨테이너 재시작 불필요
 
 ```bash
-# 사전 확인: 스크립트의 LAN 대역·PORTS가 내 환경과 맞는지,
+# 사전 확인: 스크립트의 LAN 대역·PORTS·MOBILE_NET이 내 환경과 맞는지,
 #           ssh-guard.service의 ExecStart가 실제 클론 위치를 가리키는지
 #           (기본값 /workspace/ai-infra/my-docker-server/ssh-guard.sh — 다른 곳에 클론했다면 고친 뒤 복사)
 chmod +x ssh-guard.sh
@@ -303,7 +305,9 @@ sudo iptables -L DOCKER-USER -v -n                   # 차단 카운터 확인
 
 **운영 팁**
 - 임계값 변경 → 스크립트 `--hitcount` 수정 → 기존 규칙 삭제 → 재실행
+- 폰 모바일망 대역 확인 → `docker exec cfd last -i` 의 출처 IP
 - 원천 차단 → 모든 기기를 Tailscale로 전환 + 공유기 포트포워딩 닫기
+  - 공유기를 못 건드릴 때 → 스크립트의 모바일망 차단 규칙에서 `! -s $MOBILE_NET` 제거 → 기존 규칙 삭제 → 재실행
 
 ---
 
