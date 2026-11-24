@@ -1,7 +1,7 @@
 ---
 name: project
 description: ai-infra 레포 핵심 요약. 서버·운영 구성 자산 모음으로 디렉토리 분리 원칙과 기술 스택 파악용.
-last-updated: 2026-10-26 (구조 트리·:5015 구성·빠른 시작을 실제 파일과 맞춤)
+last-updated: 2026-11-24 (aws/·on-prem/을 server-setup/으로 통합)
 ---
 
 # 프로젝트 개요
@@ -66,7 +66,7 @@ ai-infra/
 │   ├── gen-core-constraints.py       # 베이스의 vLLM·torch·transformers 등을 == 제약으로 출력
 │   ├── image-freeze-0.31.0.txt       # 시험을 통과한 0.31 이미지의 기준 해시
 │   ├── disk-usage.sh                 # 호스트 디스크 사용량 조회 (조회 전용)
-│   ├── .env.dev / .env.prd           # AWS 환경별 원본 (S3만, git 제외) — 배포 후 cp .env.dev .env
+│   ├── .env.research / .env.prd      # AWS 원본: 연구계 / 개발계·운영계 (S3만, git 제외) — 배포 후 cp .env.<환경> .env
 │   ├── .env.onprem                   # 온프레미스 원본 (scp로 전달, S3·git 제외)
 │   ├── .env.*.example                # 위 원본 3개의 양식 (PASSWORD·HF_TOKEN만 비움, git 추적)
 │   ├── .env                          # 각 서버 런타임 로드본 (S3 동기화 제외, git 제외)
@@ -198,9 +198,9 @@ docker compose up -d --build       # GPU 미보유 시: docker compose up -d --b
 ssh <USERNAME>@localhost -p 5010   # dev
 ssh <USERNAME>@localhost -p 5000   # cfd
 
-# 2) AWS EC2 GPU 인프라 (Amazon Linux 2023)
-cd aws
-cp .env.dev .env           # 또는 .env.prd (S3에서 받은 환경별 원본)
+# 2) AWS EC2 GPU 인프라 (Amazon Linux 2023). 온프레미스는 server-setup/SETUP_GUIDE_ONPREM.md
+cd server-setup
+cp .env.prd .env           # 연구계는 .env.research (S3에서 받은 환경별 원본)
 vim .env                   # VOLUME_DEVICE 등 서버 고유값 확인
 sudo ./setup-ec2.sh        # Phase 1 → 자동 reboot → Phase 2
 docker compose up -d --build

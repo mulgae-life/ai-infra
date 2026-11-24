@@ -3,7 +3,7 @@
 사내 H200 서버에 vLLM 기반 LLM 환경을 띄우는 가이드. AWS EC2와 같은 `server-setup/` 폴더를 씁니다.
 
 - 호스트 셋업만 서버 종류별로 다릅니다: AWS는 `setup-ec2.sh`, 온프레미스는 `setup-host.sh`
-- 컨테이너 계층(`docker-compose.yml`, `user.sh`, `Dockerfile.llm` 등)과 `start.sh`는 공용입니다. 사용법은 [`SETUP_GUIDE.md`](SETUP_GUIDE.md)
+- 컨테이너 계층(`docker-compose.yml`, `user.sh`, `Dockerfile.llm` 등)은 공용이고 사용법은 [`SETUP_GUIDE.md`](SETUP_GUIDE.md) §3입니다. `start.sh`도 공용이지만 온프레미스의 `pull`·`check`는 이 문서 §3-3, §7-1을 봅니다
 - 어느 서버인지는 `.env`의 `PLATFORM`(`aws` | `onprem`)으로 구분합니다. 온프레미스 원본은 `.env.onprem`
 
 AWS와 다른 점입니다.
@@ -12,7 +12,7 @@ AWS와 다른 점입니다.
 |------|------|------|
 | 호스트 OS | Amazon Linux 2023 | RHEL 9.8 (스크립트는 RHEL 10도 지원) |
 | 호스트 셋업 | `setup-ec2.sh` | `setup-host.sh` |
-| `.env` 원본 | `.env.dev`, `.env.prd` (`PLATFORM=aws`) | `.env.onprem` (`PLATFORM=onprem`) |
+| `.env` 원본 | `.env.research`, `.env.prd` (`PLATFORM=aws`) | `.env.onprem` (`PLATFORM=onprem`) |
 | 코드 전달 | S3 sync (`start.sh push/pull`) | git clone/pull(`start.sh pull`) + `.env`는 scp |
 | 디스크 | `/volume` 하나 | 설치팀이 만든 `/appdata`, `/data`, `/model`을 나눠 씀 (§4) |
 | 네트워크 | 상시 | **세팅 시점만 개방, 이후 끊길 수 있음** → 끊기 전 `start.sh check` |
@@ -92,7 +92,7 @@ tail -f /var/log/onprem-setup.log    # 진행 확인 (다른 터미널)
 #     컨테이너 안에서 /workspace/ai-infra 로 보이는 위치라 연구계와 경로가 같다. ~/ai-infra 는 이제 안 쓴다.
 cd /appdata/workspace/root/ai-infra/server-setup
 
-# (5) 이미지 빌드 + 검증 + 기동 (vLLM은 베이스 이미지 v0.31.0 정식 빌드를 쓴다 — 따로 전달할 휠 없음)
+# (5) 이미지 빌드 + 검증 + 기동
 docker compose build
 docker run --rm -i --entrypoint sha256sum llm-prd -c - < image-freeze-0.31.0.txt   # 세 줄 모두 OK
 docker compose up -d
@@ -144,8 +144,8 @@ cd /appdata/workspace/root/ai-infra/server-setup && ./start.sh check
 | 3 | `VOLUME_DEVICE`가 있을 때만 xfs 포맷 + 마운트 + fstab (루트 디스크 오지정 가드 동일). 비우면 디렉토리만 | EBS→NVMe, 로직 동일 |
 | 4 | `${VOLUME_PATH}/{workspace,homes,root-homes}` + `MODELS_PATH`·`DATA_PATH` + 소유권 + **SELinux `container_file_t` 라벨**. 모델·데이터 경로가 마운트포인트가 아니면 경고 | 라벨·경로 분리 신규 |
 | 5 | 시스템 업데이트(커널 제외) + git/gcc/dkms + `kernel-devel-matched` + versionlock 플러그인 + nvitop | 커널 패키지명 |
-| 6 | **작업 사본 배치**: `${VOLUME_PATH}/workspace/root/ai-infra`에 clone + `server-setup/.env` 복사 (git 설치 뒤라 최소 설치 RHEL에서도 동작) | 신규 (S3 없음) |
-| 7 | **Docker CE 공식 저장소** (podman·runc 충돌 패키지 제거 후) — compose·buildx 플러그인 동봉. `DOCKER_VERSION`이 있으면 그 버전 + versionlock | AL2023 dnf docker 아님 |
+| 6 | **작업 사본 배치**: `${VOLUME_PATH}/workspace/root/ai-infra`에 clone + `server-setup/.env` 복사 | 신규 (S3 없음) |
+| 7 | **Docker CE 공식 저장소** (podman·runc 충돌 패키지 제거 후) — compose·buildx 플러그인 동봉. `DOCKER_VERSION`이 있으면 그 버전 + versionlock. sudo로 실행한 호스트 계정을 docker 그룹에 추가 | AL2023 dnf docker 아님 |
 | 8 | Claude Code (dev 모드만) | 동일 |
 | 9 | NVIDIA rhel9/rhel10 저장소 등록. **RHEL 9는 `nvidia-driver:<브랜치>-open` 모듈 스트림 활성화** | repo 경로 |
 | 10 | `nvidia-open-<버전>` 설치 + **`dnf versionlock`** + `nvidia-persistenced` → 자동 reboot | 버전 고정 신규 |
@@ -166,7 +166,7 @@ cd /appdata/workspace/root/ai-infra/server-setup && ./start.sh check
 
 - **RHEL 9**: 저장소가 브랜치를 **모듈 스트림**으로 나눕니다. 기본 스트림(`open-dkms`)은 최신 브랜치를 따라가므로, 스크립트가 `dnf module enable nvidia-driver:580-open`으로 580 브랜치를 켠 뒤 설치합니다. 스트림은 브랜치만 막고 같은 브랜치 안의 새 버전(580.x)으로는 올라가므로 버전도 잠급니다.
 - **RHEL 10**: 스트림이 없고 580·595·610이 한 저장소에 나란히 있어, 잠그지 않으면 `dnf update`가 가장 높은 브랜치로 올려버립니다.
-- 두 경우 모두 설치 직후 `dnf versionlock add 'nvidia-*' 'kmod-nvidia-*'`를 걸고, `start.sh check`가 잠금 여부를 확인합니다.
+- 두 경우 모두 설치 직후 `dnf versionlock add 'nvidia-*' 'kmod-nvidia-*' 'libnvidia-*' 'libnvsdm*'`를 걸고, `start.sh check`가 잠금 여부를 확인합니다.
 
 의도적으로 올릴 때는 `dnf versionlock delete 'nvidia-*'` 후 `.env NVIDIA_DRIVER_VERSION`을 바꾸고 재설치합니다. RHEL 9에서 브랜치를 바꾸면 `dnf module switch-to nvidia-driver:<새 브랜치>-open`도 필요합니다.
 
@@ -176,7 +176,7 @@ AWS용 `setup-ec2.sh`는 GPU 이름(H100/H200…)으로 판단했는데, 온프�
 
 ### 5-3. 런타임 pip 오프라인 처리
 
-> vLLM 0.31.0 전환부터 `.env.prd`의 `EXTRA_REQUIREMENTS`는 비어 있습니다. 서빙 의존성은 이미지 빌드 때 들어가므로 이 절은 값을 따로 넣은 경우에만 필요합니다. 값을 넣으면 진입점이 빌드 때의 핵심 패키지 제약을 걸어 설치합니다.
+> `.env.onprem`의 `EXTRA_REQUIREMENTS`는 비어 있습니다. 서빙 의존성은 이미지 빌드 때 들어가므로 이 절은 값을 따로 넣은 경우에만 필요합니다. 값을 넣으면 진입점이 빌드 때의 핵심 패키지 제약을 걸어 설치합니다.
 
 `entrypoint-llm.sh`는 **컨테이너가 뜰 때마다** `EXTRA_REQUIREMENTS`(값이 있을 때)를 `pip install`합니다. 폐쇄망에서는 PyPI에 못 나가 `set -e`로 컨테이너가 죽습니다. 컨테이너 스크립트를 고치지 않고 해결하는 방법은 pip 설정을 root 홈에 두는 것입니다 — 운영 컨테이너의 `/root`는 호스트 `/appdata/root`에 영속되므로 한 번 만들면 재생성돼도 남습니다.
 
@@ -229,14 +229,16 @@ exit
 
 ```bash
 # 네트워크 개방 시
-cd /appdata/workspace/root/ai-infra/server-setup && ./start.sh pull
+cd /appdata/workspace/root/ai-infra/server-setup && sudo ./start.sh pull   # 작업 사본이 root 소유라 sudo
 docker compose build --no-cache && docker compose up -d     # 메인 컨테이너
 sudo ./user.sh rebuild                                       # user.sh 컨테이너 전부
 
 # 네트워크 폐쇄 시 — 개발 머신에서 밀어 넣기 (.git 제외, .env 보존)
-rsync -av --delete --exclude .git --exclude .env --exclude .archive --exclude logs \
+rsync -av --delete --exclude .git --exclude '.env*' --exclude .archive --exclude .claude --exclude logs \
       /workspace/ai-infra/ <server>:/appdata/workspace/root/ai-infra/
 ```
+
+rsync로 밀어 넣은 뒤에는 작업 트리가 git과 달라 다음 `pull`이 거부될 수 있습니다. 네트워크가 열리면 `sudo git fetch && sudo git reset --hard origin/main`으로 맞춥니다(`.env`는 git 밖이라 남습니다).
 
 `.env`는 git 밖이라 `pull`로 안 따라옵니다. 바뀌었으면 scp로 따로 옮깁니다.
 
@@ -264,7 +266,7 @@ sudo ./user.sh rebuild                  # user.sh 컨테이너 전부. 하나만
 | SSH 재시작 후 접속 불가 | SELinux가 `SSH_PORT` 바인딩 거부. 콘솔에서 `semanage port -a -t ssh_port_t -p tcp <포트>` (스크립트가 하지만 `policycoreutils-python-utils` 설치 실패 시 누락) |
 | 외부에서 컨테이너 포트 안 보임 | firewalld. `firewall-cmd --list-ports`에 `5000-5499/tcp` 있는지, 없으면 `--permanent --add-port` |
 | `docker compose build`가 `vllm/vllm-openai` pull에서 멈춤 | 폐쇄망인데 Phase 2 pull이 안 된 경우. 네트워크 개방 후 `docker pull <VLLM_IMAGE>` |
-| 빌드 중 `베이스 이미지의 vLLM X != 0.31.0` | `.env`의 `VLLM_IMAGE`가 옛 값. `.env.prd`의 값으로 고침 |
+| 빌드 중 `베이스 이미지의 vLLM X != 0.31.0` | `.env`의 `VLLM_IMAGE`가 옛 값. `.env.onprem`의 값으로 고침 |
 | pip `ResolutionImpossible` / `Cannot install` | `requirements.txt`의 패키지가 베이스의 핵심 패키지(vLLM, torch, transformers 등) 버전을 바꾸려 함. 목록은 `gen-core-constraints.py`. 그 패키지를 베이스와 맞는 버전으로 고침 |
 | 컨테이너가 기동 직후 죽고 로그에 `pip install` 에러 | 폐쇄망에서 `EXTRA_REQUIREMENTS` 설치 실패(§5-3), 또는 핵심 패키지 버전을 바꾸려 함. `.env`에서 비우고 `user.sh rebuild <이름>` |
 | `user.sh up` 때 포트 범위 초과 | 일반 사용자 컨테이너가 49개. 쓰지 않는 컨테이너를 `down` |

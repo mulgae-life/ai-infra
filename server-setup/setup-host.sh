@@ -200,7 +200,7 @@ $(echo "$child_parts" | sed 's/^/    /')
 # 이 레포를 둔다. 그래야 컨테이너 안에서 /workspace/ai-infra/llm-serving 경로가 연구계와 같아진다.
 # — 이 스크립트가 이미 그 안에서 실행 중이면(최초부터 거기 clone) 아무것도 하지 않는다.
 # — 밖(예: ~/ai-infra 부트스트랩 사본)에서 실행 중이면 같은 origin으로 clone하고 .env를 옮긴다.
-#   데이터 디스크를 /volume에 마운트한 뒤에 clone해야 하므로 mount_data_volume 이후에 호출한다.
+#   데이터 디스크를 ${VOLUME_PATH}에 마운트한 뒤에 clone해야 하므로 mount_data_volume 이후에 호출한다.
 place_working_copy() {
     local repo_root target
     repo_root=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || true)
@@ -235,7 +235,6 @@ place_working_copy() {
     fi
     chmod +x "$target"/server-setup/*.sh 2>/dev/null || true
     log "  작업 사본 배치 완료. 이후 명령은 ${target}/server-setup 에서 실행"
-    log "  vLLM은 베이스 이미지(v0.31.0) 정식 빌드를 쓴다 — 따로 전달할 휠 없음 (SETUP_GUIDE_ONPREM.md §3-2 (5))"
 }
 
 # ============================================
@@ -397,11 +396,11 @@ JAIL
         chown -R "$USERNAME":"$USERNAME" \
             "${VOLUME_PATH}/workspace/${USERNAME}" \
             "${VOLUME_PATH}/homes/${USERNAME}"
-        log "  ${VOLUME_PATH}/{workspace,homes}/${USERNAME} + {data,models} 생성/소유권 설정 완료"
+        log "  ${VOLUME_PATH}/{workspace,homes}/${USERNAME}, ${MODELS_PATH}, ${DATA_PATH} 생성/소유권 설정 완료"
     elif [ "$USERNAME" = "root" ]; then
-        log "  ${VOLUME_PATH}/{data,models,root-homes} 생성/소유권 설정 완료 (root 모드)"
+        log "  ${VOLUME_PATH}/root-homes, ${MODELS_PATH}, ${DATA_PATH} 생성/소유권 설정 완료 (root 모드)"
     else
-        log "  ${VOLUME_PATH}/{data,models,root-homes} 생성/소유권 설정 완료 (USERNAME 미설정)"
+        log "  ${VOLUME_PATH}/root-homes, ${MODELS_PATH}, ${DATA_PATH} 생성/소유권 설정 완료 (USERNAME 미설정)"
     fi
 
     # SELinux: 컨테이너 bind mount 대상은 container_file_t 라벨을 준다. Docker 데몬 기본값은
@@ -475,10 +474,14 @@ JAIL
         systemctl enable --now docker
         log "  Docker 설치 완료: $(docker --version)"
     fi
-    # 사용자를 docker 그룹에 추가
-    if [ -n "$USERNAME" ] && [ "$USERNAME" != "root" ] && id "$USERNAME" &>/dev/null; then
-        usermod -aG docker "$USERNAME" 2>/dev/null || true
-    fi
+    # 사용자를 docker 그룹에 추가. USERNAME=root(운영)이면 sudo로 실행한 호스트 계정을 넣어
+    # 가이드의 docker compose·start.sh check를 sudo 없이 쓰게 한다 (재부팅 후 적용)
+    local u
+    for u in "$USERNAME" "${SUDO_USER:-}"; do
+        if [ -n "$u" ] && [ "$u" != "root" ] && id "$u" &>/dev/null; then
+            usermod -aG docker "$u" 2>/dev/null || true
+        fi
+    done
     log "  Compose: $(docker compose version --short 2>/dev/null || echo '?') / Buildx: $(docker buildx version 2>/dev/null | grep -oE 'v[0-9.]+' | head -1 || echo '?')"
 
     # --- Claude Code (dev 전용 호스트 도구) ---
@@ -752,8 +755,8 @@ main() {
     else
         log "⚠️ ${ENV_FILE} 없음 — 기본값으로 진행. 먼저 cp .env.onprem .env 를 권장"
     fi
-    # AWS용 .env(.env.dev/.env.prd)를 잘못 복사한 경우를 막는다
-    if [ -n "${PLATFORM:-}" ] && [ "$PLATFORM" != "onprem" ]; then
+    # AWS용 .env(.env.research/.env.prd)를 잘못 복사한 경우를 막는다
+    if [ -f "$ENV_FILE" ] && [ "${PLATFORM:-}" != "onprem" ]; then
         error_exit ".env PLATFORM=${PLATFORM} — 온프레미스는 cp .env.onprem .env 후 실행"
     fi
     # VOLUME_PATH에 기대는 기본값은 .env를 읽은 뒤에 정한다

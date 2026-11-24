@@ -1,9 +1,6 @@
-.env
-.env.example
-.env.dev.example
-.env.prd.example
+# 이미지는 설정 파일을 쓰지 않는다 (.env는 컨테이너 기동 때 compose가 읽음)
+.env*
 setup-ec2.sh
 setup-host.sh
 *.log
-# vLLM 0.31.0 전환으로 빌드에 쓰지 않는 nightly 휠(246MB) — 빌드 컨텍스트로 보내지 않는다
 wheels/

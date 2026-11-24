@@ -33,12 +33,10 @@ esac
 S3_URI="${AWS_INFRA_S3_URI:-s3://hgi-ai-res/hjjo/aws/}"
 
 # push(로컬→S3) / pull(S3→로컬) 공통 제외 목록.
-# ※ wheels/ 는 vLLM 0.31.0 전환으로 Dockerfile.llm이 더는 쓰지 않는다(nightly 휠 덮어쓰기 제거).
-#    2026-10-10 레포 루트 .archive/로 옮겼다. 되돌리기는 휠이 아니라 pre-0.31 태그 이미지로 한다.
-# ※ .env(각 서버의 런타임 로드본)는 제외한다 — 환경별 .env.dev/.env.prd만 S3에 보관하고
+# ※ .env(각 서버의 런타임 로드본)는 제외한다 — 환경별 .env.research/.env.prd만 S3에 보관하고
 #    각 서버가 배포 후 알맞은 것을 .env로 복사한다. 제외하지 않으면 pull 한 번에
 #    그 서버의 .env가 다른 환경 값으로 덮어써진다(MODE·USERNAME·GPU 배정까지 뒤바뀜).
-#    .env.dev/.env.prd는 '.env' 정확매칭에 걸리지 않아 그대로 동기화된다.
+#    .env.research/.env.prd는 '.env' 정확매칭에 걸리지 않아 그대로 동기화된다.
 #    두 파일은 토큰·비밀번호를 담고 있어 git에는 올리지 않는다(내부망 전용 정책, S3로만 전달).
 # ※ .env.onprem은 온프레미스 전용이라 S3에 올리지 않는다(scp로 전달).
 SYNC_EXCLUDES=(
@@ -93,7 +91,7 @@ cmd_push() {
         echo "[push] S3 업로드 실패 — 프리픽스가 비워진 상태이니 반드시 push를 재실행할 것"
         exit 1
     fi
-    echo "[push] 업로드 완료 (.env.dev·.env.prd 포함, .env 런타임본은 제외)"
+    echo "[push] 업로드 완료 (.env.research·.env.prd 포함, .env 런타임본은 제외)"
     echo "[push] 운영계 적용: ./start.sh pull 후 docker compose build && ./user.sh rebuild <name>"
 }
 
@@ -129,7 +127,7 @@ cmd_pull() {
     # 빈 변수로 뜨면서 원인이 드러나지 않는 실패를 낸다.
     if [ ! -f "$SCRIPT_DIR/.env" ]; then
         echo "[pull] .env가 없습니다. 최초 1회 환경에 맞는 설정을 복사하세요:"
-        echo "         cp .env.dev .env   (개발계)   또는   cp .env.prd .env   (운영계)"
+        echo "         cp .env.prd .env   (개발계·운영계)   또는   cp .env.research .env   (연구계)"
     fi
     echo "[pull] 다음 단계: docker compose build && ./user.sh rebuild <name>"
 }
@@ -228,8 +226,7 @@ cmd_check() {
     fi
     echo
 
-    echo "빌드 재료 (git 미추적 — scp로 가져와야 함)"
-    # vLLM 0.31.0 전환으로 nightly 휠은 빌드 재료가 아니다 — 베이스 이미지의 정식 빌드를 쓴다
+    echo "설정 (.env는 git 밖 — scp로 가져와야 함)"
     [ -f "$ENV_FILE" ] && ok ".env" || fail ".env 없음 → cp .env.onprem .env"
     echo
 

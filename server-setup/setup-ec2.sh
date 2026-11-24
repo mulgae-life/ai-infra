@@ -562,7 +562,7 @@ main() {
     fi
     # 온프레미스용 .env(.env.onprem)를 잘못 복사한 경우를 막는다
     if [ "${PLATFORM:-aws}" != "aws" ]; then
-        error_exit ".env PLATFORM=${PLATFORM} — EC2는 cp .env.dev .env 또는 cp .env.prd .env 후 실행"
+        error_exit ".env PLATFORM=${PLATFORM} — EC2는 cp .env.prd .env(연구계는 .env.research) 후 실행"
     fi
 
     case "${1:-}" in

@@ -4,7 +4,7 @@ Amazon Linux 2023 + NVIDIA GPU EC2에 vLLM 서빙 이미지를 빌드하고 컨�
 
 - 서버 하나는 한 가지 모드로만 씁니다. 개발(`MODE=dev`) 또는 운영(`MODE=prd`)입니다.
 - 사용자·서비스마다 컨테이너를 따로 만듭니다(`user.sh`).
-- 온프레미스(RHEL) 서버는 같은 폴더의 [`SETUP_GUIDE_ONPREM.md`](SETUP_GUIDE_ONPREM.md)를 봅니다. 컨테이너 계층(이 문서 §3·§4)은 같고 호스트 셋업만 다릅니다. 서버 종류는 `.env`의 `PLATFORM`으로 구분합니다.
+- 온프레미스(RHEL) 서버는 같은 폴더의 [`SETUP_GUIDE_ONPREM.md`](SETUP_GUIDE_ONPREM.md)를 봅니다. 컨테이너 관리(이 문서 §3)와 `.env` 공용 키(§5-1)는 같고 호스트 셋업과 코드 받기 방식이 다릅니다. 서버 종류는 `.env`의 `PLATFORM`으로 구분합니다.
 - 모델 서빙 코드(`llm-serving/`)의 배포와 기동은 [`../llm-serving/DEPLOY_GUIDE.md`](../llm-serving/DEPLOY_GUIDE.md)에서 다룹니다.
 
 ## 한눈에 보기
@@ -66,11 +66,11 @@ Amazon Linux 2023 + NVIDIA GPU EC2에 vLLM 서빙 이미지를 빌드하고 컨�
 
 **`.env`**
 
-- `.env`는 주고받지 않고 서버마다 따로 둡니다. S3로 오가는 것은 원본인 `.env.dev`, `.env.prd`입니다.
-- 서버에서는 원본을 복사해 씁니다: `cp .env.prd .env`(개발 서버는 `.env.dev`).
+- `.env`는 주고받지 않고 서버마다 따로 둡니다. S3로 오가는 것은 원본인 `.env.research`(연구계), `.env.prd`(개발계·운영계)입니다. 개발계와 운영계는 IP만 다르고 구성이 같아 원본 하나를 씁니다.
+- 서버에서는 원본을 복사해 씁니다: `cp .env.prd .env`(연구계는 `.env.research`).
 - 값을 바꿀 때는 로컬 원본을 고쳐 `push`하고, 서버에서 다시 `cp`합니다.
 - 원본에는 토큰과 비밀번호가 들어 있어 git에 올리지 않습니다. 내부망 전용이라 S3에는 그대로 둡니다.
-- git에는 양식 `.env.dev.example`, `.env.prd.example`, `.env.onprem.example`이 있습니다. 원본에서 `PASSWORD`, `HF_TOKEN`만 비운 파일입니다. 원본이 없으면 양식을 복사해 두 값을 채웁니다. 원본의 키를 바꾸면 양식도 같이 고칩니다.
+- git에는 양식 `.env.research.example`, `.env.prd.example`, `.env.onprem.example`이 있습니다. 원본에서 `PASSWORD`, `HF_TOKEN`만 비운 파일입니다. 원본이 없으면 양식을 복사해 두 값을 채웁니다. 원본의 키를 바꾸면 양식도 같이 고칩니다.
 
 ---
 
@@ -82,7 +82,7 @@ mkdir -p ~/aws && aws s3 sync s3://hgi-ai-res/hjjo/aws/ ~/aws/
 cd ~/aws && chmod +x *.sh          # S3는 실행 권한을 보존하지 않는다
 
 # 2) .env 만들기
-cp .env.prd .env                   # 운영 서버. 개발 서버는 cp .env.dev .env
+cp .env.prd .env                   # 개발계·운영계. 연구계는 cp .env.research .env
 vim .env                           # 이 서버에만 쓰는 값(VOLUME_DEVICE 등) 확인
 
 # 3) 호스트 셋업 — 1단계가 끝나면 자동 재부팅, 2단계는 재부팅 뒤 자동 실행
@@ -235,7 +235,7 @@ cd vllm && ./start.sh restart 5501
 
 ```bash
 cd ~/aws && ./start.sh pull
-cp .env.prd .env                     # 개발 서버는 .env.dev
+cp .env.prd .env                     # 연구계는 .env.research
 grep -E '^(VLLM_IMAGE|EXTRA_REQUIREMENTS)=' .env
 #   VLLM_IMAGE=vllm/vllm-openai:v0.31.0@sha256:c1c9f6fd5c109ba7f0546a59f5b2f15fb87f64c77782e90a27b648b42a8e67c3
 #   EXTRA_REQUIREMENTS=              ← 비어 있어야 한다
@@ -314,7 +314,7 @@ sudo ./user.sh rebuild <서빙 컨테이너>     # 또는 5)에서 쓴 방법으
 
 ### 5-1. `.env` 주요 키
 
-전체 키와 기본값은 `.env.dev`, `.env.prd`에 있습니다. (필수) 표시가 없는 키는 기본값을 써도 됩니다.
+전체 키와 기본값은 `.env.research`, `.env.prd`에 있습니다. (필수) 표시가 없는 키는 기본값을 써도 됩니다.
 
 | 구분 | 키 | 설명 |
 |---|---|---|
@@ -335,7 +335,7 @@ sudo ./user.sh rebuild <서빙 컨테이너>     # 또는 5)에서 쓴 방법으
 | 메인 컨테이너 | `LLM_SSH_PORT` | SSH 포트 (기본 5000) |
 | | `LLM_EXTRA_PORTS` | 서비스 포트. 단일(`5031`) 또는 구간(`5001-5009`) |
 | | `LLM_GPUS` | 쓸 GPU. `all` 또는 `0,1` |
-| | `LLM_MEMORY` | 메모리 한도 (`.env.dev` 48g, `.env.prd` 128g) |
+| | `LLM_MEMORY` | 메모리 한도 (`.env.research` 48g, `.env.prd` 128g) |
 | | `SHM_SIZE` | 공유 메모리. GPU 여러 장 사이 통신용 (기본 16g) |
 
 ### 5-2. `setup-ec2.sh` 단계
@@ -404,7 +404,7 @@ sudo ./user.sh rebuild <서빙 컨테이너>     # 또는 5)에서 쓴 방법으
 | 증상 | 원인 | 해결 |
 |---|---|---|
 | `buildx` 버전 오류 | AL2023 기본 buildx가 0.17.0 미만 | `setup-ec2.sh`를 다시 실행하면 0.21.2로 바꿈. 직접: `curl -fsSL https://github.com/docker/buildx/releases/download/v0.21.2/buildx-v0.21.2.linux-amd64 -o /usr/libexec/docker/cli-plugins/docker-buildx && chmod +x $_` |
-| `베이스 이미지의 vLLM X != 0.31.0` | `.env`의 `VLLM_IMAGE`가 옛 값 | `cp .env.prd .env`(개발 서버는 `.env.dev`)를 다시 하거나 `VLLM_IMAGE`, `EXTRA_REQUIREMENTS` 두 줄을 [4-3](#4-3-vllm-0310-버전업-이미-셋업된-서버) 값으로 고침 |
+| `베이스 이미지의 vLLM X != 0.31.0` | `.env`의 `VLLM_IMAGE`가 옛 값 | `cp .env.prd .env`(연구계는 `.env.research`)를 다시 하거나 `VLLM_IMAGE`, `EXTRA_REQUIREMENTS` 두 줄을 [4-3](#4-3-vllm-0310-버전업-이미-셋업된-서버) 값으로 고침 |
 | `[pip check] 위 충돌은 requirements.txt 설치가 새로 만든 것` | `requirements.txt` 설치가 베이스에 없던 의존성 충돌을 만듦. 베이스에 원래 있는 충돌(NCCL 2.30.7 등)은 바로 위에 따로 출력되고 통과함 | 출력된 줄의 패키지를 충돌이 없는 버전으로 고침 |
 | pip `ResolutionImpossible` / `Cannot install` | `requirements.txt`의 패키지가 베이스의 핵심 패키지(vLLM, torch, transformers, FlashInfer 등) 버전을 바꾸려 함. 목록은 `gen-core-constraints.py` | 그 패키지를 베이스와 맞는 버전으로 고침. 핵심 패키지 버전은 베이스 이미지가 정하므로 requirements에서 바꾸지 않음 |
 
