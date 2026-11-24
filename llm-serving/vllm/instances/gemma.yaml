@@ -4,7 +4,7 @@
 #   speculative_config, mm_processor_kwargs, tool_call_parser, reasoning_parser.
 
 # 게이트웨이 매칭 키 (vLLM 비전달, discover_from이 이 값으로 backends 등록)
-gateway_port: 6015
+gateway_port: 5015
 
 # 모델
 model: google/gemma-4-31B-it     # HF 모델 ID (런처가 download_dir과 조합해 경로 해석)
