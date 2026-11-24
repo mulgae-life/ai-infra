@@ -28,8 +28,8 @@ last-updated: 2026-10-26 (vLLM 기동 명령의 무인자·up all 동작을 코�
 - 모든 커뮤니케이션은 **한국어**로
 - **최소 변경**: 꼭 필요한 범위만 수정. 인접 파일 리포맷/리네이밍 금지
 - **근본 원인 해결** 우선, 우회 패치 지양 (특히 셋업 스크립트의 안전성/가드)
-- **디렉토리 분리 원칙 유지**: `my-docker-server` ↔ `aws` ↔ `llm-serving` 책임이 섞이지 않도록 신규 파일을 적절한 디렉토리에 둡니다 (자세한 분리 기준은 `PROJECT.md` "디렉토리 분리 원칙" 참조)
-- **정합 우선**: 환경 파일(`my-docker-server/.env.example`, `aws/.env.dev`·`.env.prd`) ↔ Dockerfile ARG ↔ compose 기본값은 항상 같은 값으로 맞춥니다 (UID/GID, 포트 등)
+- **디렉토리 분리 원칙 유지**: `my-docker-server` ↔ `server-setup` ↔ `llm-serving` 책임이 섞이지 않도록 신규 파일을 적절한 디렉토리에 둡니다 (자세한 분리 기준은 `PROJECT.md` "디렉토리 분리 원칙" 참조)
+- **정합 우선**: 환경 파일(`my-docker-server/.env.example`, `server-setup/.env.dev`·`.env.prd`·`.env.onprem`) ↔ Dockerfile ARG ↔ compose 기본값은 항상 같은 값으로 맞춥니다 (UID/GID, 포트 등)
 - **민감 정보 절대 금지**: HF_TOKEN, PASSWORD, AWS 자격증명 등은 코드/README에 직접 쓰지 않고 `.env` 또는 IAM Role
 - 커밋 메시지: `feat/fix/docs/refactor/chore/aws/repo` 등 prefix + 한국어 본문
 
@@ -39,12 +39,12 @@ last-updated: 2026-10-26 (vLLM 기동 명령의 무인자·up all 동작을 코�
 
 | 용어 | 설명 |
 |------|------|
-| **dev / prd 모드** | `aws/` 인스턴스 단위 모드. dev=개발(Claude Code/Codex 자동 설치), prd=운영(슬림화, USERNAME=root) |
+| **dev / prd 모드** | `server-setup/` 인스턴스 단위 모드. dev=개발(Claude Code/Codex 자동 설치), prd=운영(슬림화, USERNAME=root) |
 | **cfd** | `my-docker-server/`의 GPU 연산 컨테이너 서비스명 (CUDA 13.4 + CuPy/Numba) |
 | **dev-fullstack** | `my-docker-server/`의 풀스택 개발 컨테이너 이름 (서비스명은 `dev`) |
-| **VOLUME_DEVICE** | `aws/.env`에서 지정하는 추가 EBS 디바이스 경로 (예: `/dev/nvme1n1`) |
-| **Phase 1 / Phase 2** | `aws/setup-ec2.sh`의 재부팅 전(드라이버/EBS/Docker) ↔ 재부팅 후(NVIDIA Container Toolkit/Fabric Manager/GPU 검증) 단계 |
-| **user.sh** | `aws/`의 다중 사용자 컨테이너 관리 스크립트 (포트 5010~5499 자동 할당) |
+| **VOLUME_DEVICE** | `server-setup/.env`에서 지정하는 추가 EBS 디바이스 경로 (예: `/dev/nvme1n1`) |
+| **Phase 1 / Phase 2** | `server-setup/setup-ec2.sh`의 재부팅 전(드라이버/EBS/Docker) ↔ 재부팅 후(NVIDIA Container Toolkit/Fabric Manager/GPU 검증) 단계 |
+| **user.sh** | `server-setup/`의 다중 사용자 컨테이너 관리 스크립트 (포트 5010~5499 자동 할당) |
 | **vLLM Gateway** | `llm-serving/vllm/vllm_gateway.py`. OpenAI 호환 + 모델 라우팅 (다중 vLLM 서버 라우팅) |
 | **SLM** | Small Language Model. `agent-guide/docs/slm_research/`에 비교 자료 (Gemma, Qwen) |
 | **SSM Session Manager** | AWS Systems Manager로 폐쇄망 EC2 호스트 셸 접근 |

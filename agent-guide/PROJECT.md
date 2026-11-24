@@ -17,7 +17,7 @@ last-updated: 2026-10-26 (구조 트리·:5015 구성·빠른 시작을 실제 �
 | **프로젝트** | ai-infra (서버 세팅 & 운영 구성 모음). 2026-10-07에 `docker`에서 이름을 바꿨다 |
 | **목적** | 인프라(어디에 띄우는가) ↔ 서빙(무엇을 어떻게 띄우는가)을 한 레포에서 관리하면서 디렉토리로 책임 분리 |
 | **기술 스택** | Docker, Ubuntu 24.04, NVIDIA CUDA 13.4, AWS EC2 GPU, vLLM, Python 3.12 / Node.js LTS |
-| **운영 자산** | `my-docker-server/` (로컬 dev/GPU) + `aws/` (EC2 GPU 인프라) + `on-prem/` (사내 H200 호스트 셋업) + `llm-serving/vllm/` (서빙) |
+| **운영 자산** | `my-docker-server/` (로컬 dev/GPU) + `server-setup/` (EC2·사내 H200 GPU 인프라) + `llm-serving/vllm/` (서빙) |
 | **작업 관리** | 별도 도구 없음 → `git log` + `SESSION.md` "다음 작업" |
 
 ---
@@ -27,10 +27,10 @@ last-updated: 2026-10-26 (구조 트리·:5015 구성·빠른 시작을 실제 �
 | 레이어 | 책임 | 위치 | 안 다루는 것 |
 |--------|------|------|------------|
 | **개발 환경** | 로컬 PC·사내 서버에 띄우는 컨테이너 (개발자 PC) | `my-docker-server/` | EC2 호스트 셋업, 모델 서빙 |
-| **인프라** | 호스트 셋업, 드라이버, 다중 사용자, 포트/볼륨 정책 | `aws/` (EC2, 컨테이너 계층 포함) / `on-prem/` (사내 RHEL 9.8 H200 — 호스트 계층만, `.env`·compose·`user.sh`는 `aws/` 공유) | 모델 추론 로직, 게이트웨이 라우팅 |
+| **인프라** | 호스트 셋업, 드라이버, 다중 사용자, 포트/볼륨 정책 | `server-setup/` (EC2·사내 RHEL 9.8 H200 공용. 호스트 셋업만 서버별 스크립트, 컨테이너 계층은 한 벌) | 모델 추론 로직, 게이트웨이 라우팅 |
 | **서빙** | LLM 모델 서빙 프레임워크 설정·게이트웨이·운영 가이드 | `llm-serving/` | 어디에 띄울지 (인프라), 컨테이너 OS 설정 |
 
-> 신규 파일을 만들 때는 위 책임 표를 보고 디렉토리를 결정하세요. 예: vLLM의 새로운 멀티모달 설정은 `llm-serving/vllm/`, EC2 자동 스케일 정책은 `aws/`, 새로운 로컬 GPU 워크플로우는 `my-docker-server/`.
+> 신규 파일을 만들 때는 위 책임 표를 보고 디렉토리를 결정하세요. 예: vLLM의 새로운 멀티모달 설정은 `llm-serving/vllm/`, EC2 자동 스케일 정책은 `server-setup/`, 새로운 로컬 GPU 워크플로우는 `my-docker-server/`.
 
 ---
 
@@ -52,11 +52,12 @@ ai-infra/
 │   ├── .env.example                  # USERNAME/PASSWORD/UID=2000/GID=2000
 │   ├── sshd-hardening.conf           # 컨테이너 sshd 브루트포스 대응 (이미지에 COPY)
 │   ├── ssh-guard.sh / .service       # 호스트 DOCKER-USER 방화벽 (Tailscale·LAN 통과, 그 외 rate-limit)
-│   └── SETUP_GUIDE.md                # 설치·접속·운영·문제 해결 가이드 (aws/on-prem 과 같은 이름 규칙)
+│   └── SETUP_GUIDE.md                # 설치·접속·운영·문제 해결 가이드 (server-setup 과 같은 이름 규칙)
 │
-├── aws/                              # AWS EC2 GPU 인프라
-│   ├── start.sh                      # S3 코드 배포 (push=전체 교체 / pull=--delete 받기)
-│   ├── setup-ec2.sh                  # Phase 1 → reboot → Phase 2 자동
+├── server-setup/                     # GPU 서버 인프라 (AWS EC2 + 온프레미스 H200, .env PLATFORM으로 구분)
+│   ├── start.sh                      # push(S3) / pull(aws=S3 --delete, onprem=git) / check(폐쇄망 준비 점검)
+│   ├── setup-ec2.sh                  # EC2(Amazon Linux 2023) 호스트. Phase 1 → reboot → Phase 2 자동
+│   ├── setup-host.sh                 # 온프레미스(RHEL 9·10) 호스트. Phase 1 → reboot → Phase 2, 드라이버 versionlock
 │   ├── user.sh                       # 다중 사용자 컨테이너 (포트 자동 할당)
 │   ├── docker-compose.yml            # vLLM 베이스 컨테이너
 │   ├── Dockerfile.llm                # vLLM 베이스 + SSH (dev/prd)
@@ -65,15 +66,12 @@ ai-infra/
 │   ├── gen-core-constraints.py       # 베이스의 vLLM·torch·transformers 등을 == 제약으로 출력
 │   ├── image-freeze-0.31.0.txt       # 시험을 통과한 0.31 이미지의 기준 해시
 │   ├── disk-usage.sh                 # 호스트 디스크 사용량 조회 (조회 전용)
-│   ├── .env.dev / .env.prd           # 환경별 원본 (S3만, git 제외) — 배포 후 cp .env.dev .env
+│   ├── .env.dev / .env.prd           # AWS 환경별 원본 (S3만, git 제외) — 배포 후 cp .env.dev .env
+│   ├── .env.onprem                   # 온프레미스 원본 (scp로 전달, S3·git 제외)
 │   ├── .env                          # 각 서버 런타임 로드본 (S3 동기화 제외, git 제외)
 │   ├── ssh-config-sample
-│   └── SETUP_GUIDE.md                # EC2 셋업·다중 사용자·dev/prd 모드
-│
-├── on-prem/                          # 사내 H200 × 4(RHEL 9.8) 호스트 셋업 — 컨테이너 계층은 ../aws/ 공유
-│   ├── setup-host.sh                 # setup-ec2.sh의 RHEL 9·10 판 (Phase 1 → reboot → Phase 2, 드라이버 versionlock)
-│   ├── start.sh                      # pull(git 동기화) / check(네트워크 끊기 전 준비 점검)
-│   └── SETUP_GUIDE.md
+│   ├── SETUP_GUIDE.md                # EC2 셋업·다중 사용자·dev/prd 모드 (컨테이너 계층 공용 설명)
+│   └── SETUP_GUIDE_ONPREM.md         # 사내 H200 × 4(RHEL 9.8) 호스트 셋업·폐쇄망 대비
 │
 └── llm-serving/                      # LLM/STT 서빙 프레임워크 모음
     ├── start.sh                      # S3 코드 배포 (push/pull) — 하위 start.sh(서비스 제어)와 역할 다름
@@ -157,15 +155,15 @@ ai-infra/
 | 파일 | 역할 |
 |------|------|
 | `my-docker-server/docker-compose.yml` | `cfd`(GPU) + `dev`(풀스택) 서비스 정의, 호스트 홈 영속화 |
-| `aws/start.sh` | S3 코드 배포 (`push` 전체 교체 / `pull` `--delete` 받기). 구 `sync.sh` |
+| `server-setup/start.sh` | 코드 배포. `push` S3 전체 교체 / `pull`은 `PLATFORM=aws`면 S3 `--delete` 받기, `onprem`이면 git pull / `check` 폐쇄망 준비 점검 |
 | `llm-serving/start.sh` | S3 코드 배포 (`push`/`pull`). 구 `sync.sh` — 하위 `vllm/`·`stt/`·`pii/`의 `start.sh`는 서비스 제어라 역할이 다름 |
-| `aws/setup-ec2.sh` | Amazon Linux 2023 호스트 1회 셋업 (사용자/SSH/EBS/Docker/NVIDIA, Phase 1↔2 자동 전환) |
-| `aws/user.sh` | 사용자별 독립 컨테이너 + 포트 자동 할당(`up`/`down`/`list`/`rebuild`) |
-| `aws/Dockerfile.llm` | vLLM 베이스(v0.31.0 정식 이미지) + SSH. dev/prd 모드 분기. 첫 단계에서 베이스 vLLM 버전을 `ARG VLLM_VERSION`과 대조(다르면 중단), 핵심 패키지 조합을 제약(`/opt/vllm-core-constraints.txt`)으로 고정해 requirements를 설치. `pip check`는 설치 전후를 비교해 새 충돌만 막는다(공식 베이스가 NCCL을 덮어써 원래 실패) |
-| `aws/image-freeze-0.31.0.txt` | 개발 서버에서 시험을 통과한 0.31 이미지의 기준 해시(`/opt` 세 파일). 운영 빌드 뒤 `sha256sum -c`로 대조 |
-| `aws/entrypoint-llm.sh` | 컨테이너 시작 시 사용자·홈·SSH 준비. `EXTRA_REQUIREMENTS`가 있으면 빌드 때 제약을 걸어 추가 설치(기본은 비움) |
-| `aws/gen-core-constraints.py` | 베이스 이미지의 vLLM·torch·transformers·FlashInfer 등을 `==` 제약으로 출력(기본) / 최종 서빙 조합 확인(`--final`, 누락 시 빌드 실패) |
-| `aws/docker-compose.yml` | 메인 컨테이너 정의 (`.env`로 GPU/메모리/포트 제어) |
+| `server-setup/setup-ec2.sh` | Amazon Linux 2023 호스트 1회 셋업 (사용자/SSH/EBS/Docker/NVIDIA, Phase 1↔2 자동 전환) |
+| `server-setup/user.sh` | 사용자별 독립 컨테이너 + 포트 자동 할당(`up`/`down`/`list`/`rebuild`) |
+| `server-setup/Dockerfile.llm` | vLLM 베이스(v0.31.0 정식 이미지) + SSH. dev/prd 모드 분기. 첫 단계에서 베이스 vLLM 버전을 `ARG VLLM_VERSION`과 대조(다르면 중단), 핵심 패키지 조합을 제약(`/opt/vllm-core-constraints.txt`)으로 고정해 requirements를 설치. `pip check`는 설치 전후를 비교해 새 충돌만 막는다(공식 베이스가 NCCL을 덮어써 원래 실패) |
+| `server-setup/image-freeze-0.31.0.txt` | 개발 서버에서 시험을 통과한 0.31 이미지의 기준 해시(`/opt` 세 파일). 운영 빌드 뒤 `sha256sum -c`로 대조 |
+| `server-setup/entrypoint-llm.sh` | 컨테이너 시작 시 사용자·홈·SSH 준비. `EXTRA_REQUIREMENTS`가 있으면 빌드 때 제약을 걸어 추가 설치(기본은 비움) |
+| `server-setup/gen-core-constraints.py` | 베이스 이미지의 vLLM·torch·transformers·FlashInfer 등을 `==` 제약으로 출력(기본) / 최종 서빙 조합 확인(`--final`, 누락 시 빌드 실패) |
+| `server-setup/docker-compose.yml` | 메인 컨테이너 정의 (`.env`로 GPU/메모리/포트 제어) |
 | `llm-serving/vllm/vllm_server_launcher.py` | 다중 vLLM 서버 기동 (GPU 분할, yaml-relative runtime json) — LLM/STT 공용. `--download-only`로 모델+drafter 증분 동기화(서빙 경로는 네트워크 미접근), `speculative_config.model`의 `${model}` 치환 `SERVING_VLLM_BIN`이 있으면 그 `vllm`으로 띄움(연구계 0.31 가상환경용) |
 | `llm-serving/vllm/vllm_gateway.py` | OpenAI 호환 게이트웨이 (chat/completions + audio/transcriptions + realtime WebSocket) — LLM/STT 공용. 모델 교체 호환 계층 포함(`reasoning_effort` 번역과 effort를 주면 추론 켜기, `/v1/models`의 `root` 마스킹 — `compat` 설정) |
 | `llm-serving/vllm/tests/test_vllm_server.py` | 서버 헬스/추론 10 카테고리 QA(마지막 `gateway`는 게이트웨이 대상일 때만) — 진입점 `./start.sh test [name\|all\|URL]` |
@@ -234,7 +232,8 @@ curl http://localhost:5018/health   # 게이트웨이 health
 | [GUIDE.md](GUIDE.md) | 작업 원칙, 용어, 체크리스트 |
 | [../README.md](../README.md) | 레포 메타 안내 (디렉토리 진입점) |
 | [../my-docker-server/SETUP_GUIDE.md](../my-docker-server/SETUP_GUIDE.md) | 로컬 dev/GPU 환경 설치·접속·운영·문제 해결 |
-| [../aws/SETUP_GUIDE.md](../aws/SETUP_GUIDE.md) | EC2 셋업·다중 사용자·dev/prd 모드 |
+| [../server-setup/SETUP_GUIDE.md](../server-setup/SETUP_GUIDE.md) | EC2 셋업·다중 사용자·dev/prd 모드 |
+| [../server-setup/SETUP_GUIDE_ONPREM.md](../server-setup/SETUP_GUIDE_ONPREM.md) | 온프레미스 H200 호스트 셋업·폐쇄망 대비 |
 | [../llm-serving/README.md](../llm-serving/README.md) | 서빙 프레임워크 인덱스 |
 | [../llm-serving/VLLM_API_GUIDE_research.md](../llm-serving/VLLM_API_GUIDE_research.md) | vLLM 사용자용 API 가이드 (연구계) |
 | [../llm-serving/VLLM_API_GUIDE_dev_prd.md](../llm-serving/VLLM_API_GUIDE_dev_prd.md) | vLLM 사용자용 API 가이드 (개발계·운영계) |

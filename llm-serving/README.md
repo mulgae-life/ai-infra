@@ -2,7 +2,7 @@
 
 LLM 서빙 프레임워크 운영 구성 모음. 서버 인프라(EC2/Docker)와 분리된, **서빙 레이어 전용** 디렉토리.
 
-> 인프라(EC2 + Docker)는 [`../aws/`](../aws/), 컨테이너 환경은 [`../my-docker-server/`](../my-docker-server/) 참조.
+> 인프라(EC2 + Docker)는 [`../server-setup/`](../server-setup/), 컨테이너 환경은 [`../my-docker-server/`](../my-docker-server/) 참조.
 > 코드/모델 이관(로컬 → S3 → EC2 → 컨테이너) 절차는 [`DEPLOY_GUIDE.md`](DEPLOY_GUIDE.md) 참조.
 
 ## 📦 구성

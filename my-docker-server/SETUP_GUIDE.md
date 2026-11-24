@@ -10,7 +10,7 @@ PC·사내 서버 한 대에 개발용·GPU용 컨테이너를 띄우고 SSH(VSC
 - SSH 브루트포스 대응 (컨테이너 sshd 설정 + 호스트 방화벽)
 
 **관련 문서**
-- AWS EC2 운영 인프라 → [`../aws/SETUP_GUIDE.md`](../aws/SETUP_GUIDE.md)
+- AWS EC2 운영 인프라 → [`../server-setup/SETUP_GUIDE.md`](../server-setup/SETUP_GUIDE.md)
 - LLM 서빙 → [`../llm-serving/`](../llm-serving/)
 
 ---

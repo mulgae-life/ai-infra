@@ -16,7 +16,7 @@ last-updated: 2026-10-26 (10-23~24 기록 보충, 서빙 문서 범용화)
 |------|------|
 | **이슈 트래커** | 별도 도구 없음 (git history + 본 SESSION.md "다음 작업" 표) |
 | **원격 레포** | `https://github.com/mulgae-life/ai-infra.git` (`origin/main`) |
-| **배포 채널** | `aws/start.sh push`·`llm-serving/start.sh push` (S3 전체 교체) → 대상 서버에서 `./start.sh pull` |
+| **배포 채널** | `server-setup/start.sh push`·`llm-serving/start.sh push` (S3 전체 교체, S3 경로와 EC2 `~/aws`는 예전 이름) → 대상 서버에서 `./start.sh pull`. 온프레미스는 `PLATFORM=onprem`이라 `pull`이 git |
 
 ---
 
@@ -25,7 +25,7 @@ last-updated: 2026-10-26 (10-23~24 기록 보충, 서빙 문서 범용화)
 | 우선순위 | 작업 | 상태 |
 |---------|------|------|
 | P1 | **vLLM 0.31 버전업**: 계획서 `.archive/2026-10-19_vllm-upgrade/`(10-19 보관). 개발 서버 빌드·`test 5501` 통과(10-12). 개발계 통과를 운영계와 같게 본다(대표님 10-19). 잔존: S3 `.ruff_cache/`(다음 llm-serving push가 지움), 연쇄 4판 자동 판정 두 경로, 실패 주입 모의 | **완료** |
-| P1 | **온프레미스 H200 셋업 (`on-prem/`)**: 골격 `f9c1012`. 잔존: 설치팀 회신(HGX/PCIe, `VOLUME_DEVICE`, RAM), 실서버 `setup-host.sh` 첫 실행, RHEL Docker의 `apparmor=unconfined` 무시 여부, §5-3 pip 오프라인 실측, `start.sh check` drafter 경로(대표님 결정) | 골격 ✅, 실서버 대기 |
+| P1 | **온프레미스 H200 셋업**: 11-24 서버 구성 요청서(RHEL 9.8, H200 × 4, `/appdata`·`/model`·`/data`) 반영, `aws/`·`on-prem/`을 `server-setup/`으로 통합(`.env` `PLATFORM`). 잔존: GPU 구성(HGX/PCIe) 확인, 실서버 `setup-host.sh` 첫 실행, RHEL Docker의 `apparmor=unconfined` 무시 여부, pip 오프라인 실측 | 스크립트 ✅, 실서버 대기 |
 | P1 | **운영계 반영 (`gemma-4` 별칭·정체성 프롬프트 + 31B 전환)**: 31B 본체 S3 반입 → `push` → 운영계 `pull` → 인스턴스·게이트웨이 **둘 다** 재기동(별칭·fingerprint 반영). MTP를 꺼서 drafter는 불필요. 10-12 개발 서버에서 `prd-gemma`(31B) 기동·`test 5501` 통과로 완료 처리(10-19). `/v1/models`의 `gemma-4` 별칭을 따로 본 기록은 없음 | **완료** |
 | P1 | **:5015 게이트웨이 프로파일**: 뒤는 Qwen3.8-27B-FP8 TP2·gmu 0.9·max_len 262144(10-19 65536에서 상향), overload 20/40. 장문 실측 완료(25.6만 토큰 비스트리밍 167초, 정답). 부하 초과 시 대기 300초 뒤 429(`queue_timeout`/`queue_full`, "서버가 바쁩니다")는 설계대로의 혼잡 거절로 정리(대표님 10-20, vLLM 오류 0건). 잔존: 채팅 서비스가 429 JSON을 화면에 띄우는지·클라이언트 타임아웃 > 300초인지 | **완료** |
 | P1 | **MTP 벤치**: 모든 Gemma·Qwen 인스턴스 MTP 끔(10-08·10-09). 다시 켜는 조건은 #46088 수정 확인. 잔존: acceptance/TPOT 사내 벤치(`agent-guide/docs/slm_research/topics/mtp.md` §5) | 벤치 잔존 |

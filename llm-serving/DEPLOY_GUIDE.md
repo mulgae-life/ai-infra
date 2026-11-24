@@ -2,7 +2,7 @@
 
 `llm-serving/` 코드를 **로컬 → S3 → 운영계 컨테이너**로 옮기고, 모델 서버를 **안쪽(vLLM)부터 바깥(진입점)** 순으로 띄우는 절차.
 
-> 인프라 셋업(EC2/Docker/컨테이너 기동)은 [`../aws/SETUP_GUIDE.md`](../aws/SETUP_GUIDE.md). 본 문서는 그 위에서 **서빙 코드/모델만** 다룹니다.
+> 인프라 셋업(EC2/Docker/컨테이너 기동)은 [`../server-setup/SETUP_GUIDE.md`](../server-setup/SETUP_GUIDE.md). 본 문서는 그 위에서 **서빙 코드/모델만** 다룹니다.
 
 ---
 
@@ -133,7 +133,7 @@ cd /workspace/llm-serving/stt
 # 비교 PoC: ./start.sh up qwen3_asr(또는 whisper_v3) → ./start.sh up 5017
 ```
 
-> ⚠️ **Voxtral 의존성**: `soundfile`·`soxr`·`librosa`·`av`·`mistral_common[audio]`는 `aws/requirements.txt`로 이미지 빌드 때 들어간다(vLLM 0.31.0 이미지부터 따로 설치하지 않는다). 옛 이미지에서 빠져 있으면 vLLM 기동 직후 `EngineCore failed to start` + `ImportError: soundfile` 로 fail.
+> ⚠️ **Voxtral 의존성**: `soundfile`·`soxr`·`librosa`·`av`·`mistral_common[audio]`는 `server-setup/requirements.txt`로 이미지 빌드 때 들어간다(vLLM 0.31.0 이미지부터 따로 설치하지 않는다). 옛 이미지에서 빠져 있으면 vLLM 기동 직후 `EngineCore failed to start` + `ImportError: soundfile` 로 fail.
 > ⚠️ **GPU 충돌**: voxtral(GPU 2)은 LLM(GPU 0·1)과 충돌 없음. 비교용 `qwen3_asr`(GPU 0)는 LLM과, `whisper_v3`(GPU 2)는 voxtral과 겹침 → 충돌 대상 먼저 stop(`./start.sh down <name>` — 이름 명시 권장). 상세는 [`stt/README.md`](stt/README.md) "운영 주의".
 
 ---
@@ -207,7 +207,7 @@ cd /workspace/llm-serving/pii && bash start.sh down 5501 && bash start.sh up 550
 
 ## 참고
 
-- 인프라/컨테이너: [`../aws/SETUP_GUIDE.md`](../aws/SETUP_GUIDE.md)
+- 인프라/컨테이너: [`../server-setup/SETUP_GUIDE.md`](../server-setup/SETUP_GUIDE.md)
 - vLLM API 호출 (사용자): 연구계 [`VLLM_API_GUIDE_research.md`](VLLM_API_GUIDE_research.md) · 개발계·운영계 [`VLLM_API_GUIDE_dev_prd.md`](VLLM_API_GUIDE_dev_prd.md)
 - vLLM 운영 상세 (토폴로지·모델 교체·메모리 표): [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md)
 - PII 가드 개요·기동·정책: [`pii/README.md`](pii/README.md), [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md) §7.9

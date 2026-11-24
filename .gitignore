@@ -1,15 +1,17 @@
 # .env는 각 서버의 런타임 로드본이라 git에도 S3에도 올리지 않는다.
-# .env.dev/.env.prd는 환경별 원본(토큰·비밀번호 포함) — git 대신 S3로만 전달하고,
-# 배포 후 각 서버에서 `cp .env.prd .env`로 골라 쓴다.
+# .env.dev/.env.prd/.env.onprem은 환경별 원본(토큰·비밀번호 포함) — git에 올리지 않는다.
+# AWS용 .env.dev/.env.prd는 S3로, 온프레미스용 .env.onprem은 scp로 전달하고
+# 각 서버에서 `cp .env.<환경> .env`로 골라 쓴다.
 .env
 .env.dev
 .env.prd
+.env.onprem
 
 .vllm_serve_*
 
 # 옛 vLLM nightly wheel 자리. 0.31.0 전환으로 쓰지 않고 2026-10-10 .archive/로 옮겼다.
 # 큰 바이너리가 다시 생겨도 git에 들어가지 않게 제외 규칙은 남긴다.
-aws/wheels/
+server-setup/wheels/
 
 # Claude Code 세션 로컬 파일 (에이전트 메모리·스크래치) — 어느 하위 디렉토리에서 생기든 제외
 .claude/

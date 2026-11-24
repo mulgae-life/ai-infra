@@ -4,12 +4,13 @@ Amazon Linux 2023 + NVIDIA GPU EC2에 vLLM 서빙 이미지를 빌드하고 컨�
 
 - 서버 하나는 한 가지 모드로만 씁니다. 개발(`MODE=dev`) 또는 운영(`MODE=prd`)입니다.
 - 사용자·서비스마다 컨테이너를 따로 만듭니다(`user.sh`).
+- 온프레미스(RHEL) 서버는 같은 폴더의 [`SETUP_GUIDE_ONPREM.md`](SETUP_GUIDE_ONPREM.md)를 봅니다. 컨테이너 계층(이 문서 §3·§4)은 같고 호스트 셋업만 다릅니다. 서버 종류는 `.env`의 `PLATFORM`으로 구분합니다.
 - 모델 서빙 코드(`llm-serving/`)의 배포와 기동은 [`../llm-serving/DEPLOY_GUIDE.md`](../llm-serving/DEPLOY_GUIDE.md)에서 다룹니다.
 
 ## 한눈에 보기
 
 ```
-로컬 (/workspace/ai-infra/aws) ──push──▶ S3 ──pull──▶ EC2 호스트 (~/aws)
+로컬 (/workspace/ai-infra/server-setup) ──push──▶ S3 ──pull──▶ EC2 호스트 (~/aws)
                                                        ├─ docker compose build → 이미지 llm-dev / llm-prd
                                                        ├─ docker compose up    → 메인 컨테이너 llm-<USERNAME>
                                                        └─ user.sh up           → 사용자·서비스 컨테이너
@@ -58,7 +59,7 @@ Amazon Linux 2023 + NVIDIA GPU EC2에 vLLM 서빙 이미지를 빌드하고 컨�
 
 **push / pull**
 
-- 로컬에서 `./start.sh push`, 서버에서 `./start.sh pull`을 씁니다. S3 경로는 `s3://hgi-ai-res/hjjo/aws/`입니다.
+- 로컬에서 `./start.sh push`, 서버에서 `./start.sh pull`을 씁니다. S3 경로는 `s3://hgi-ai-res/hjjo/aws/`입니다. 로컬 폴더 이름은 `server-setup/`이지만 S3 경로와 EC2의 `~/aws`는 예전 이름 그대로입니다.
 - `push`는 S3 경로를 비운 뒤 다시 올립니다. 업로드 중에 실패하면 S3가 빈 채로 남으니 바로 다시 실행합니다.
 - 올릴 내용을 미리 보려면 `./start.sh push --dryrun`을 씁니다. 삭제 단계도 미리보기로만 실행됩니다.
 - `pull`은 서버를 S3와 같게 맞춥니다. S3에 없는 파일은 지우고 `*.sh`에 실행 권한을 다시 줍니다. 받기 전에 `~/aws`를 지울 필요는 없습니다.
@@ -171,7 +172,7 @@ sudo ~/aws/user.sh rebuild           # user.sh 컨테이너 전부 다시 만들
 
 ```bash
 # 로컬
-cd /workspace/ai-infra/aws && ./start.sh push
+cd /workspace/ai-infra/server-setup && ./start.sh push
 
 # 서버
 cd ~/aws && ./start.sh pull
@@ -211,7 +212,7 @@ sudo ~/aws/user.sh up jin --password new_pw --gpus 0,1
 **1) 로컬 → S3**
 
 ```bash
-cd /workspace/ai-infra/aws && ./start.sh push
+cd /workspace/ai-infra/server-setup && ./start.sh push
 cd /workspace/ai-infra/llm-serving && ./start.sh push
 ```
 
@@ -316,7 +317,8 @@ sudo ./user.sh rebuild <서빙 컨테이너>     # 또는 5)에서 쓴 방법으
 
 | 구분 | 키 | 설명 |
 |---|---|---|
-| 계정 | `MODE` | `dev` 또는 `prd` (필수) |
+| 계정 | `PLATFORM` | 서버 종류. `aws`(비우면 기본) 또는 `onprem`. `start.sh pull` 방식을 고르고, 다른 종류의 셋업 스크립트 실행을 막음 |
+| | `MODE` | `dev` 또는 `prd` (필수) |
 | | `USERNAME` | 컨테이너 OS 계정. 운영은 `root` (필수) |
 | | `PASSWORD` | SSH 비밀번호 (필수) |
 | | `CONTAINER_UID` / `GID` | 컨테이너 사용자 UID/GID (기본 2000). 호스트의 같은 사용자가 다른 UID면 그 값으로 맞춤 |

@@ -11,7 +11,7 @@
 >   - 운영계 PII: `:5501`(프록시) → gw `:6501` ← `prd-pii-gemma.yaml`
 >   - 📌 **아래 기동·테스트 명령 예시는 연구계 비PII(`:5015`/`gemma-26b.yaml`) 기준**입니다. 운영계는 `:5501` / `prd-gemma` 등으로 치환하세요.
 > **인프라**: AWS L40S 46GB × 4장.
-> **vLLM 버전**: 0.31.0 (운영 이미지 `aws/Dockerfile.llm`, 연구계 :5015 가상환경). 2026-10 이전은 0.20.2 + nightly(dev251)였고, 버전업 시험 기록은 [`vllm/tests/results/vllm-0.31-ab.md`](vllm/tests/results/vllm-0.31-ab.md)에 있습니다. 본문에 "0.19.0 기준"으로 남은 설명은 그때 소스로 확인한 것입니다.
+> **vLLM 버전**: 0.31.0 (운영 이미지 `server-setup/Dockerfile.llm`, 연구계 :5015 가상환경). 2026-10 이전은 0.20.2 + nightly(dev251)였고, 버전업 시험 기록은 [`vllm/tests/results/vllm-0.31-ab.md`](vllm/tests/results/vllm-0.31-ab.md)에 있습니다. 본문에 "0.19.0 기준"으로 남은 설명은 그때 소스로 확인한 것입니다.
 
 > 🆕 **2026-04-30 구조 변경**: 단일 `vllm_config.yaml` + `vllm_gateway_config.yaml` → **인스턴스 단위 `instances/<name>.yaml`** + **게이트웨이 단위 `gateways/<port>.yaml`**. 게이트웨이는 인스턴스 yaml의 `gateway_port` 메타 키로 backends를 자동 매칭(`discover_from`). 구식 yaml은 `agent-guide/.archive/2026-04-30_vllm-config-migration/`에 보존.
 >

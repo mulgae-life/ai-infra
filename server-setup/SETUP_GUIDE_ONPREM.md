@@ -1,21 +1,28 @@
 # 온프레미스 H200 서버 (RHEL 9 + vLLM)
 
-사내 H200 서버에 vLLM 기반 LLM 환경을 띄우는 호스트 셋업 가이드. [`../aws/`](../aws/)의 EC2 구성을 온프레미스로 옮긴 것으로, **호스트 계층(드라이버·Docker·디스크·방화벽)만 여기서 다루고 컨테이너 계층(`docker compose`, `user.sh`, `Dockerfile.llm`)은 `../aws/`를 그대로 실행합니다.** 컨테이너 계층은 호스트 OS와 무관하고 두 벌로 나누면 고칠 때마다 어긋나기 때문입니다.
+사내 H200 서버에 vLLM 기반 LLM 환경을 띄우는 가이드. AWS EC2와 같은 `server-setup/` 폴더를 씁니다.
+
+- 호스트 셋업만 서버 종류별로 다릅니다: AWS는 `setup-ec2.sh`, 온프레미스는 `setup-host.sh`
+- 컨테이너 계층(`docker-compose.yml`, `user.sh`, `Dockerfile.llm` 등)과 `start.sh`는 공용입니다. 사용법은 [`SETUP_GUIDE.md`](SETUP_GUIDE.md)
+- 어느 서버인지는 `.env`의 `PLATFORM`(`aws` | `onprem`)으로 구분합니다. 온프레미스 원본은 `.env.onprem`
 
 AWS와 다른 점입니다.
 
-| 항목 | AWS (`aws/`) | 온프레미스 (`on-prem/`) |
+| 항목 | AWS | 온프레미스 |
 |------|------|------|
 | 호스트 OS | Amazon Linux 2023 | RHEL 9.8 (스크립트는 RHEL 10도 지원) |
-| 코드 전달 | S3 sync (`start.sh push/pull`) | git clone/pull + `.env`는 scp |
+| 호스트 셋업 | `setup-ec2.sh` | `setup-host.sh` |
+| `.env` 원본 | `.env.dev`, `.env.prd` (`PLATFORM=aws`) | `.env.onprem` (`PLATFORM=onprem`) |
+| 코드 전달 | S3 sync (`start.sh push/pull`) | git clone/pull(`start.sh pull`) + `.env`는 scp |
 | 디스크 | `/volume` 하나 | 설치팀이 만든 `/appdata`, `/data`, `/model`을 나눠 씀 (§4) |
 | 네트워크 | 상시 | **세팅 시점만 개방, 이후 끊길 수 있음** → 끊기 전 `start.sh check` |
+| 호스트 접속 | SSM | 호스트 SSH (`SSH_PORT`) |
 
 ---
 
 ## 1. 서버 사양 (서버 구성 요청서 기준)
 
-요청 원본은 [`../agent-guide/docs/서버구성요청서_AI연구서버.docx`](../agent-guide/docs/서버구성요청서_AI연구서버.docx)(2026-11-06, 호스트명 `honp-rn-ai-airap01`)입니다.
+요청 원본은 `서버구성요청서_AI연구서버.docx`(2026-11-06, 호스트명 `honp-rn-ai-airap01`)입니다.
 
 | 항목 | 값 | 비고 |
 |------|------|------|
@@ -35,7 +42,7 @@ AWS와 다른 점입니다.
 | `/model` | `/data`와 같은 파일시스템 공유 | 모델 (`MODELS_PATH`) |
 | `/var/lib/docker` | 400GB | Docker 이미지·컨테이너 |
 
-설치팀이 드라이버·Docker·Toolkit을 먼저 깔아 두면 `setup-host.sh`는 이미 설치된 항목을 감지해 건너뜁니다. 단, 드라이버 버전이 `.env`의 고정값과 다르면 교체하지 않고 경고만 냅니다(§7).
+설치팀이 드라이버·Docker·Toolkit을 먼저 깔아 두면 `setup-host.sh`는 이미 설치된 항목을 감지해 건너뜁니다. 단, 드라이버 버전이 `.env`의 고정값과 다르면 교체하지 않고 경고만 냅니다(§8).
 
 세팅 기간에는 GitHub·PyPI·HuggingFace·NVIDIA/Docker 저장소·EPEL이 열려 있어야 합니다. 이미지·모델·휠을 이때 다 받습니다.
 
@@ -50,7 +57,7 @@ AWS와 다른 점입니다.
 | 서버 | RHEL 9.8, NVIDIA 드라이버 580.196.07 설치(또는 미설치 — 스크립트가 설치), 구독 등록 완료(`dnf repolist`에 BaseOS), 파일시스템 `/appdata`·`/data`·`/model` 생성 완료 |
 | 권한 | `sudo` 가능한 OS 계정 |
 | 네트워크 | 세팅 중 개방 (§1) |
-| 개발 머신에서 가져갈 것 | `on-prem/.env.prd` (git 미추적) |
+| 개발 머신에서 가져갈 것 | `server-setup/.env.onprem` (git 미추적) |
 
 > 💡 본 인프라는 **내부망 전용**입니다. `.env`의 `HF_TOKEN`/`PASSWORD`는 내부 정책으로 보호되므로 별도 마스킹하지 않습니다.
 
@@ -61,8 +68,8 @@ AWS와 다른 점입니다.
 ### 3-1. 개발 머신에서 준비
 
 ```bash
-# on-prem/.env.prd 의 서버 고유값 확인 (VOLUME_DEVICE는 비워 둔다 — 파일시스템은 설치팀이 만든다)
-vim /workspace/ai-infra/on-prem/.env.prd
+# .env.onprem 의 서버 고유값 확인 (VOLUME_DEVICE는 비워 둔다 — 파일시스템은 설치팀이 만든다)
+vim /workspace/ai-infra/server-setup/.env.onprem
 ```
 
 ### 3-2. 서버 최초 셋업
@@ -70,48 +77,50 @@ vim /workspace/ai-infra/on-prem/.env.prd
 ```bash
 # (1) 부트스트랩 clone — 셋업 스크립트를 꺼내기 위한 임시 사본
 git clone https://github.com/mulgae-life/ai-infra.git ~/ai-infra
-cd ~/ai-infra
+cd ~/ai-infra/server-setup
 
-# (2) 개발 머신에서 .env 전달 → aws/.env 로 (setup-host.sh·compose·user.sh 가 모두 이 경로를 읽는다)
-#     개발 머신에서: scp /workspace/ai-infra/on-prem/.env.prd <server>:~/ai-infra/aws/.env
-vim aws/.env                         # VOLUME_PATH·MODELS_PATH·DATA_PATH, SSH_PORT 등 서버 고유값 최종 확인
+# (2) 개발 머신에서 .env 전달 → server-setup/.env 로 (setup-host.sh·compose·user.sh 가 모두 이 파일을 읽는다)
+#     개발 머신에서: scp /workspace/ai-infra/server-setup/.env.onprem <server>:~/ai-infra/server-setup/.env
+vim .env                             # VOLUME_PATH·MODELS_PATH·DATA_PATH, SSH_PORT 등 서버 고유값 최종 확인
 
 # (3) 호스트 셋업 (Phase 1 → 자동 reboot → Phase 2 자동 실행)
-chmod +x on-prem/setup-host.sh
-sudo ./on-prem/setup-host.sh
+chmod +x setup-host.sh
+sudo ./setup-host.sh
 tail -f /var/log/onprem-setup.log    # 진행 확인 (다른 터미널)
 
 # (4) 완료 후 작업 사본으로 이동 — Phase 1이 ${VOLUME_PATH}/workspace/root/ai-infra 에 clone하고 .env를 옮겨 둔다.
 #     컨테이너 안에서 /workspace/ai-infra 로 보이는 위치라 연구계와 경로가 같다. ~/ai-infra 는 이제 안 쓴다.
-cd /appdata/workspace/root/ai-infra/aws
+cd /appdata/workspace/root/ai-infra/server-setup
 
-# (5) 컨테이너 빌드 + 기동 (vLLM은 베이스 이미지 v0.31.0 정식 빌드를 쓴다 — 따로 전달할 휠 없음)
+# (5) 이미지 빌드 + 검증 + 기동 (vLLM은 베이스 이미지 v0.31.0 정식 빌드를 쓴다 — 따로 전달할 휠 없음)
 docker compose build
+docker run --rm -i --entrypoint sha256sum llm-prd -c - < image-freeze-0.31.0.txt   # 세 줄 모두 OK
 docker compose up -d
 docker compose logs -f llm
 ```
 
+- 빌드 첫 단계에서 베이스 이미지의 vLLM 버전을 확인합니다. `.env`의 `VLLM_IMAGE`가 옛 값이면 여기서 멈춥니다.
+- `sha256sum` 검증은 새 이미지가 시험을 통과한 이미지와 같은 패키지 조합인지 대조합니다. `FAILED`가 나오면 서빙을 올리지 않고 멈춥니다. 다른 부분은 `docker run --rm --entrypoint cat llm-prd /opt/image-core-final.txt`로 출력해 `image-freeze-0.31.0.txt` 안의 목록과 비교합니다.
+
 ### 3-3. 네트워크 끊기 전 (반드시)
 
-```bash
-# 모델 가중치 — 컨테이너 안에서
-sudo docker exec -it llm-root bash
-cd /workspace/ai-infra/llm-serving/vllm && ./start.sh download all
-exit
+- 모델 가중치: LLM 서빙 쪽 다운로드 명령으로 `/model` 아래에 모두 받아 둡니다. 폐쇄망에서는 새로 받을 수 없습니다.
+- 런타임 pip 휠: `EXTRA_REQUIREMENTS`를 쓸 때만 §5-3.
+- 마지막으로 점검합니다. 전부 ✅여야 끊어도 됩니다.
 
-# 런타임 pip 휠 — §5-3
-# 점검 — 전부 ✅ 여야 끊어도 된다
-/appdata/workspace/root/ai-infra/on-prem/start.sh check
+```bash
+cd /appdata/workspace/root/ai-infra/server-setup && ./start.sh check
 ```
 
 ---
 
 ## 4. `.env` 주요 키
 
-`aws/.env.prd`와 같은 키에 아래가 추가됐습니다. 나머지는 [`../aws/SETUP_GUIDE.md` §5-1](../aws/SETUP_GUIDE.md#5-1-env-주요-키) 참조.
+공용 키(계정·이미지·메인 컨테이너)는 [`SETUP_GUIDE.md` §5-1](SETUP_GUIDE.md#5-1-env-주요-키)과 같습니다. 온프레미스에서 따로 정하는 키입니다. 전체 값은 `.env.onprem`에 있습니다.
 
 | 키 | 설명 | 값 |
 |----|------|------|
+| `PLATFORM` | 서버 종류. `start.sh pull`이 git으로 동작하고, `setup-ec2.sh`는 실행을 거부한다 | `onprem` |
 | `NVIDIA_DRIVER_VERSION` | 설치·고정할 드라이버. 설치 후 `dnf versionlock`. RHEL 9는 이 값의 브랜치로 `nvidia-driver:<브랜치>-open` 스트림을 켠다 | `580.196.07` |
 | `NVIDIA_CONTAINER_TOOLKIT_VERSION` | Toolkit 4개 패키지 공통 버전 (`-1`은 rpm 릴리스 번호) | `1.20.1-1` |
 | `DOCKER_VERSION` | Docker CE 버전 고정. 값이 있으면 설치 후 `dnf versionlock`. 비우면 저장소 최신 | `29.9.3` |
@@ -135,7 +144,7 @@ exit
 | 3 | `VOLUME_DEVICE`가 있을 때만 xfs 포맷 + 마운트 + fstab (루트 디스크 오지정 가드 동일). 비우면 디렉토리만 | EBS→NVMe, 로직 동일 |
 | 4 | `${VOLUME_PATH}/{workspace,homes,root-homes}` + `MODELS_PATH`·`DATA_PATH` + 소유권 + **SELinux `container_file_t` 라벨**. 모델·데이터 경로가 마운트포인트가 아니면 경고 | 라벨·경로 분리 신규 |
 | 5 | 시스템 업데이트(커널 제외) + git/gcc/dkms + `kernel-devel-matched` + versionlock 플러그인 + nvitop | 커널 패키지명 |
-| 6 | **작업 사본 배치**: `${VOLUME_PATH}/workspace/root/ai-infra`에 clone + `.env` 복사 (git 설치 뒤라 최소 설치 RHEL에서도 동작) | 신규 (S3 없음) |
+| 6 | **작업 사본 배치**: `${VOLUME_PATH}/workspace/root/ai-infra`에 clone + `server-setup/.env` 복사 (git 설치 뒤라 최소 설치 RHEL에서도 동작) | 신규 (S3 없음) |
 | 7 | **Docker CE 공식 저장소** (podman·runc 충돌 패키지 제거 후) — compose·buildx 플러그인 동봉. `DOCKER_VERSION`이 있으면 그 버전 + versionlock | AL2023 dnf docker 아님 |
 | 8 | Claude Code (dev 모드만) | 동일 |
 | 9 | NVIDIA rhel9/rhel10 저장소 등록. **RHEL 9는 `nvidia-driver:<브랜치>-open` 모듈 스트림 활성화** | repo 경로 |
@@ -163,13 +172,13 @@ exit
 
 ### 5-2. Fabric Manager 판단 기준
 
-`aws/setup-ec2.sh`는 GPU 이름(H100/H200…)으로 판단했는데, 온프레미스는 **H200 NVL(PCIe 카드)** 구성도 있어 이름만으로는 NVSwitch 유무를 모릅니다. 드라이버가 NVSwitch를 잡으면 `/dev/nvidia-nvswitch0…`이 생기므로 그걸 봅니다. HGX 보드인데 감지가 안 되면 `lspci -d 10de: | grep -i bridge`로 확인하고 §7대로 수동 설치합니다.
+AWS용 `setup-ec2.sh`는 GPU 이름(H100/H200…)으로 판단했는데, 온프레미스는 **H200 NVL(PCIe 카드)** 구성도 있어 이름만으로는 NVSwitch 유무를 모릅니다. 드라이버가 NVSwitch를 잡으면 `/dev/nvidia-nvswitch0…`이 생기므로 그걸 봅니다. HGX 보드인데 감지가 안 되면 `lspci -d 10de: | grep -i bridge`로 확인하고 §8대로 수동 설치합니다.
 
 ### 5-3. 런타임 pip 오프라인 처리
 
 > vLLM 0.31.0 전환부터 `.env.prd`의 `EXTRA_REQUIREMENTS`는 비어 있습니다. 서빙 의존성은 이미지 빌드 때 들어가므로 이 절은 값을 따로 넣은 경우에만 필요합니다. 값을 넣으면 진입점이 빌드 때의 핵심 패키지 제약을 걸어 설치합니다.
 
-`aws/entrypoint-llm.sh`는 **컨테이너가 뜰 때마다** `EXTRA_REQUIREMENTS`(값이 있을 때)를 `pip install`합니다. 폐쇄망에서는 PyPI에 못 나가 `set -e`로 컨테이너가 죽습니다. 컨테이너 스크립트를 고치지 않고 해결하는 방법은 pip 설정을 root 홈에 두는 것입니다 — 운영 컨테이너의 `/root`는 호스트 `/volume/root`에 영속되므로 한 번 만들면 재생성돼도 남습니다.
+`entrypoint-llm.sh`는 **컨테이너가 뜰 때마다** `EXTRA_REQUIREMENTS`(값이 있을 때)를 `pip install`합니다. 폐쇄망에서는 PyPI에 못 나가 `set -e`로 컨테이너가 죽습니다. 컨테이너 스크립트를 고치지 않고 해결하는 방법은 pip 설정을 root 홈에 두는 것입니다 — 운영 컨테이너의 `/root`는 호스트 `/appdata/root`에 영속되므로 한 번 만들면 재생성돼도 남습니다.
 
 ```bash
 # 네트워크가 열려 있을 때, 컨테이너 안에서
@@ -190,15 +199,39 @@ exit
 
 ---
 
-## 6. 유지보수
+## 6. 컨테이너 관리 (`user.sh`)
 
-### 6-1. 코드 변경 반영
+명령·포트 할당·접속은 [`SETUP_GUIDE.md` §3](SETUP_GUIDE.md#3-컨테이너-관리-usersh)과 같습니다. 온프레미스에서 다른 점입니다.
+
+- 명령은 작업 사본에서 실행합니다: `cd /appdata/workspace/root/ai-infra/server-setup && sudo ./user.sh ...`
+- 호스트 접속은 SSM 대신 호스트 SSH입니다: `ssh -p <SSH_PORT> <계정>@<호스트>`
+- firewalld는 `CONTAINER_PORT_RANGE`(5000-5499)만 엽니다. 이 밖의 포트를 쓰면 직접 열어야 합니다.
+
+디렉토리는 [`SETUP_GUIDE.md` §5-3](SETUP_GUIDE.md#5-3-volume-구조)의 `/volume`이 `/appdata`이고, `models`·`data`만 따로 나뉩니다.
+
+```
+/appdata/                # VOLUME_PATH
+├── workspace/<name>     # 컨테이너의 /workspace (작업 사본은 workspace/root/ai-infra)
+├── homes/<user>         # 일반 사용자 컨테이너의 /home/<user>
+├── root-homes/<name>    # user.sh --root 컨테이너의 /root
+└── root                 # 메인 컨테이너의 /root
+/model                   # MODELS_PATH → 컨테이너 /models (모든 컨테이너 공유)
+/data                    # DATA_PATH   → 컨테이너 /data   (모든 컨테이너 공유)
+```
+
+- `setup-host.sh`가 `/appdata`를 `root:root 0775`로 맞춥니다. 설치팀이 정한 권한과 다르면 확인합니다.
+
+---
+
+## 7. 유지보수
+
+### 7-1. 코드 변경 반영
 
 ```bash
 # 네트워크 개방 시
-cd /appdata/workspace/root/ai-infra && on-prem/start.sh pull
-cd aws && docker compose build --no-cache && docker compose up -d
-sudo ./user.sh rebuild
+cd /appdata/workspace/root/ai-infra/server-setup && ./start.sh pull
+docker compose build --no-cache && docker compose up -d     # 메인 컨테이너
+sudo ./user.sh rebuild                                       # user.sh 컨테이너 전부
 
 # 네트워크 폐쇄 시 — 개발 머신에서 밀어 넣기 (.git 제외, .env 보존)
 rsync -av --delete --exclude .git --exclude .env --exclude .archive --exclude logs \
@@ -207,17 +240,20 @@ rsync -av --delete --exclude .git --exclude .env --exclude .archive --exclude lo
 
 `.env`는 git 밖이라 `pull`로 안 따라옵니다. 바뀌었으면 scp로 따로 옮깁니다.
 
-### 6-2. `.env`만 수정한 경우
+### 7-2. `.env`만 수정한 경우
 
-[`../aws/SETUP_GUIDE.md` §4-2](../aws/SETUP_GUIDE.md#4-2-env만-변경)와 같습니다. `NVIDIA_*`·`DOCKER_VERSION`·`VOLUME_DEVICE`·`SSH_PORT`는 호스트 값이라 `setup-host.sh`를 다시 돌려야 반영됩니다(멱등).
+이미지는 다시 빌드하지 않습니다.
 
-### 6-3. 다중 사용자·접속·디렉토리 구조
+```bash
+docker compose up -d --force-recreate   # 메인 컨테이너
+sudo ./user.sh rebuild                  # user.sh 컨테이너 전부. 하나만이면 이름을 붙인다
+```
 
-컨테이너 계층은 AWS와 동일합니다 — [`../aws/SETUP_GUIDE.md`](../aws/SETUP_GUIDE.md) §3(`user.sh`), §3-3(접속), §5-3(`/volume` 구조). 온프레미스는 그 구조의 `/volume`이 `/appdata`이고, `models`·`data`만 `/model`·`/data`로 나뉩니다. SSM 대신 호스트 SSH(`SSH_PORT`)로 들어갑니다.
+`NVIDIA_*`·`DOCKER_VERSION`·`VOLUME_DEVICE`·`SSH_PORT`는 호스트 값이라 `setup-host.sh`를 다시 돌려야 반영됩니다(멱등).
 
 ---
 
-## 7. 트러블슈팅
+## 8. 트러블슈팅
 
 | 증상 | 원인 / 해결 |
 |------|-------------|
@@ -228,8 +264,11 @@ rsync -av --delete --exclude .git --exclude .env --exclude .archive --exclude lo
 | SSH 재시작 후 접속 불가 | SELinux가 `SSH_PORT` 바인딩 거부. 콘솔에서 `semanage port -a -t ssh_port_t -p tcp <포트>` (스크립트가 하지만 `policycoreutils-python-utils` 설치 실패 시 누락) |
 | 외부에서 컨테이너 포트 안 보임 | firewalld. `firewall-cmd --list-ports`에 `5000-5499/tcp` 있는지, 없으면 `--permanent --add-port` |
 | `docker compose build`가 `vllm/vllm-openai` pull에서 멈춤 | 폐쇄망인데 Phase 2 pull이 안 된 경우. 네트워크 개방 후 `docker pull <VLLM_IMAGE>` |
-| 컨테이너가 기동 직후 죽고 로그에 `pip install` 에러 | 폐쇄망에서 `EXTRA_REQUIREMENTS` 설치 실패. §5-3 |
-| `tensor_parallel_size: 8` 기동 시 NCCL 에러 | HGX인데 Fabric Manager 미기동. `systemctl status nvidia-fabricmanager`, `ls /dev/nvidia-nvswitch*`. 수동: `dnf install -y nvidia-fabricmanager-<드라이버버전> libnvidia-nscq libnvsdm nvidia-imex && systemctl enable --now nvidia-fabricmanager` |
+| 빌드 중 `베이스 이미지의 vLLM X != 0.31.0` | `.env`의 `VLLM_IMAGE`가 옛 값. `.env.prd`의 값으로 고침 |
+| pip `ResolutionImpossible` / `Cannot install` | `requirements.txt`의 패키지가 베이스의 핵심 패키지(vLLM, torch, transformers 등) 버전을 바꾸려 함. 목록은 `gen-core-constraints.py`. 그 패키지를 베이스와 맞는 버전으로 고침 |
+| 컨테이너가 기동 직후 죽고 로그에 `pip install` 에러 | 폐쇄망에서 `EXTRA_REQUIREMENTS` 설치 실패(§5-3), 또는 핵심 패키지 버전을 바꾸려 함. `.env`에서 비우고 `user.sh rebuild <이름>` |
+| `user.sh up` 때 포트 범위 초과 | 일반 사용자 컨테이너가 49개. 쓰지 않는 컨테이너를 `down` |
+| `tensor_parallel_size: 4` 기동 시 NCCL 에러 | HGX인데 Fabric Manager 미기동. `systemctl status nvidia-fabricmanager`, `ls /dev/nvidia-nvswitch*`. 수동: `dnf install -y nvidia-fabricmanager-<드라이버버전> libnvidia-nscq libnvsdm nvidia-imex && systemctl enable --now nvidia-fabricmanager` |
 | `nvidia-smi`는 되는데 `docker run --gpus all` 실패 | `nvidia-ctk runtime configure --runtime=docker && systemctl restart docker` 후 `sudo ./setup-host.sh --phase2` |
 | `dnf update` 후 `nvidia-smi` 버전이 바뀜 | versionlock 누락. `dnf versionlock list \| grep nvidia`가 비어 있으면 `setup-host.sh` 재실행(잠금만 다시 건다) |
 | `docker-compose.yml`의 `apparmor=unconfined` 경고 | RHEL은 AppArmor가 없다. Docker가 해당 옵션을 무시하는지는 **실기동에서 확인 필요** — 에러가 나면 compose에서 그 줄을 빼야 한다 |

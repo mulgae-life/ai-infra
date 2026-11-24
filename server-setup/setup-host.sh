@@ -5,7 +5,7 @@ set -euo pipefail
 # 온프레미스 GPU 서버 초기 세팅 스크립트
 # 대상: RHEL 9 또는 10 + NVIDIA H200 (HGX 또는 PCIe)
 #
-# aws/setup-ec2.sh(Amazon Linux 2023)를 RHEL 기준으로 옮긴 것이다. 두 스크립트의
+# 같은 폴더의 setup-ec2.sh(Amazon Linux 2023)를 RHEL 기준으로 옮긴 것이다. 두 스크립트의
 # Phase 구조·디렉토리 정책·안전 가드는 같고, 다음만 다르다:
 #   - 저장소: NVIDIA rhel9/rhel10 repo + Docker CE 공식 repo (AL2023 dnf docker 아님)
 #   - 드라이버 버전 고정: .env NVIDIA_DRIVER_VERSION + dnf versionlock
@@ -29,9 +29,8 @@ SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 PHASE_FILE="/var/tmp/onprem-setup-phase"
 LOG_FILE="/var/log/onprem-setup.log"
 
-# .env는 ../aws/.env 하나만 쓴다. docker-compose.yml과 user.sh가 그 경로를 읽으므로
-# 여기서 별도 .env를 두면 USERNAME·VOLUME_PATH·포트가 두 벌로 갈라진다.
-ENV_FILE="${SCRIPT_DIR}/../aws/.env"
+# .env는 이 폴더의 .env 하나만 쓴다. 같은 폴더의 docker-compose.yml과 user.sh도 이 파일을 읽는다.
+ENV_FILE="${SCRIPT_DIR}/.env"
 
 # 기본 설정 (.env 파일 또는 환경변수로 오버라이드 가능)
 USERNAME="${USERNAME:-}"
@@ -47,13 +46,13 @@ VOLUME_DEVICE="${VOLUME_DEVICE:-}"         # 예: /dev/nvme1n1
 CUDA_TEST_IMAGE="${CUDA_TEST_IMAGE:-nvidia/cuda:12.8.1-base-ubuntu24.04}"
 VLLM_IMAGE="${VLLM_IMAGE:-}"
 
-# NVIDIA 버전 고정값. 브랜치 선택 근거는 SETUP_GUIDE.md §1 참조.
+# NVIDIA 버전 고정값. 브랜치 선택 근거는 SETUP_GUIDE_ONPREM.md §1 참조.
 NVIDIA_DRIVER_VERSION="${NVIDIA_DRIVER_VERSION:-580.196.07}"
 NVIDIA_CONTAINER_TOOLKIT_VERSION="${NVIDIA_CONTAINER_TOOLKIT_VERSION:-1.20.1-1}"
 # Docker CE 버전 고정 (예: 29.9.3). 비우면 저장소 최신
 DOCKER_VERSION="${DOCKER_VERSION:-}"
 
-# 컨테이너 포트 정책 (aws/user.sh: compose 5000-5009, user.sh 5010-5499). firewalld 개방 범위.
+# 컨테이너 포트 정책 (user.sh: compose 5000-5009, user.sh 5010-5499). firewalld 개방 범위.
 CONTAINER_PORT_RANGE="${CONTAINER_PORT_RANGE:-5000-5499}"
 
 # 저장소 주소의 RHEL 주 버전은 check_os가 감지해 채운다
@@ -206,7 +205,7 @@ place_working_copy() {
     local repo_root target
     repo_root=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || true)
     if [ -z "$repo_root" ]; then
-        log "  ⚠️ 이 스크립트가 git 저장소 안에 없습니다. 작업 사본 배치 건너뜀 — SETUP_GUIDE.md §3-2 (4)의 작업 사본(clone + .env 복사)을 수동으로 배치하세요."
+        log "  ⚠️ 이 스크립트가 git 저장소 안에 없습니다. 작업 사본 배치 건너뜀 — SETUP_GUIDE_ONPREM.md §3-2 (4)의 작업 사본(clone + .env 복사)을 수동으로 배치하세요."
         return
     fi
     target="${VOLUME_PATH}/workspace/root/ai-infra"
@@ -216,7 +215,7 @@ place_working_copy() {
         return
     fi
     if [ -d "$target/.git" ]; then
-        log "  ${target}에 기존 작업 사본 존재. 건너뜀 (갱신은 그 안에서 on-prem/start.sh pull)."
+        log "  ${target}에 기존 작업 사본 존재. 건너뜀 (갱신은 그 안에서 server-setup/start.sh pull)."
         return
     fi
 
@@ -231,12 +230,12 @@ place_working_copy() {
     git clone --quiet "$origin" "$target"
     # 부트스트랩 사본의 .env를 작업 사본으로 옮긴다 (.env는 git 추적 밖이라 clone에 안 실려온다).
     if [ -f "$ENV_FILE" ]; then
-        cp "$ENV_FILE" "$target/aws/.env"
-        log "  .env → ${target}/aws/.env 복사"
+        cp "$ENV_FILE" "$target/server-setup/.env"
+        log "  .env → ${target}/server-setup/.env 복사"
     fi
-    chmod +x "$target"/aws/*.sh "$target"/on-prem/*.sh 2>/dev/null || true
-    log "  작업 사본 배치 완료. 이후 명령은 ${target}/aws 에서 실행"
-    log "  vLLM은 베이스 이미지(v0.31.0) 정식 빌드를 쓴다 — 따로 전달할 휠 없음 (SETUP_GUIDE.md §3-2 (5))"
+    chmod +x "$target"/server-setup/*.sh 2>/dev/null || true
+    log "  작업 사본 배치 완료. 이후 명령은 ${target}/server-setup 에서 실행"
+    log "  vLLM은 베이스 이미지(v0.31.0) 정식 빌드를 쓴다 — 따로 전달할 휠 없음 (SETUP_GUIDE_ONPREM.md §3-2 (5))"
 }
 
 # ============================================
@@ -644,8 +643,8 @@ phase2() {
 
     # --- 폐쇄망 대비: 베이스 이미지 미리 pull ---
     # 세팅 후 네트워크가 끊길 수 있다. docker compose build가 FROM에서 당기는 vLLM 이미지와
-    # GPU 테스트 이미지는 지금 받아 둔다. 모델 가중치와 pip 휠은 컨테이너 안에서 받으므로
-    # on-prem/start.sh check 가 점검한다 (SETUP_GUIDE.md §5).
+    # GPU 테스트 이미지는 지금 받아 둔다. 모델 가중치와 pip 휠은 컨테이너 안에서 받는다
+    # (SETUP_GUIDE_ONPREM.md §3-3). pip 휠은 start.sh check 가 점검한다.
     log "[4/5] 베이스 이미지 pull (폐쇄망 대비)"
     if [ -n "$VLLM_IMAGE" ]; then
         if docker image inspect "$VLLM_IMAGE" &>/dev/null; then
@@ -655,7 +654,7 @@ phase2() {
                 || log "  ⚠️ ${VLLM_IMAGE} pull 실패 — 네트워크 개방 상태에서 docker pull 재시도"
         fi
     else
-        log "  ⚠️ VLLM_IMAGE 미설정 — aws/.env 확인. 미리 받지 못하면 폐쇄망에서 build가 실패한다."
+        log "  ⚠️ VLLM_IMAGE 미설정 — server-setup/.env 확인. 미리 받지 못하면 폐쇄망에서 build가 실패한다."
     fi
     docker image inspect "$CUDA_TEST_IMAGE" &>/dev/null || docker pull "$CUDA_TEST_IMAGE" \
         || log "  ⚠️ ${CUDA_TEST_IMAGE} pull 실패"
@@ -675,8 +674,8 @@ phase2() {
     rm -f "$PHASE_FILE"
     trap - EXIT
 
-    local work_dir="${VOLUME_PATH}/workspace/root/ai-infra/aws"
-    [ -d "$work_dir" ] || work_dir="${SCRIPT_DIR}/../aws"
+    local work_dir="${VOLUME_PATH}/workspace/root/ai-infra/server-setup"
+    [ -d "$work_dir" ] || work_dir="$SCRIPT_DIR"
 
     log ""
     log "============================================"
@@ -696,7 +695,7 @@ phase2() {
     log "  다음 단계:"
     log "    cd $(realpath "$work_dir")"
     log "    docker compose build && docker compose up -d"
-    log "    네트워크 끊기 전: ../on-prem/start.sh check"
+    log "    네트워크 끊기 전: ./start.sh check"
     log ""
     log "  로그: $LOG_FILE"
     log "============================================"
@@ -751,7 +750,11 @@ main() {
         source "$ENV_FILE"
         set +a
     else
-        log "⚠️ ${ENV_FILE} 없음 — 기본값으로 진행. 먼저 cp on-prem/.env.prd aws/.env 를 권장"
+        log "⚠️ ${ENV_FILE} 없음 — 기본값으로 진행. 먼저 cp .env.onprem .env 를 권장"
+    fi
+    # AWS용 .env(.env.dev/.env.prd)를 잘못 복사한 경우를 막는다
+    if [ -n "${PLATFORM:-}" ] && [ "$PLATFORM" != "onprem" ]; then
+        error_exit ".env PLATFORM=${PLATFORM} — 온프레미스는 cp .env.onprem .env 후 실행"
     fi
     # VOLUME_PATH에 기대는 기본값은 .env를 읽은 뒤에 정한다
     MODELS_PATH="${MODELS_PATH:-${VOLUME_PATH}/models}"
