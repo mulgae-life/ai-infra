@@ -57,7 +57,7 @@ AWS와 다른 점입니다.
 | 서버 | RHEL 9.8, NVIDIA 드라이버 580.196.07 설치(또는 미설치 — 스크립트가 설치), 구독 등록 완료(`dnf repolist`에 BaseOS), 파일시스템 `/appdata`·`/data`·`/model` 생성 완료 |
 | 권한 | `sudo` 가능한 OS 계정 |
 | 네트워크 | 세팅 중 개방 (§1) |
-| 개발 머신에서 가져갈 것 | `server-setup/.env.onprem` (git 미추적) |
+| 개발 머신에서 가져갈 것 | `server-setup/.env.onprem` (git 미추적). 없으면 `.env.onprem.example`을 복사해 `PASSWORD`, `HF_TOKEN`을 채움 |
 
 > 💡 본 인프라는 **내부망 전용**입니다. `.env`의 `HF_TOKEN`/`PASSWORD`는 내부 정책으로 보호되므로 별도 마스킹하지 않습니다.
 

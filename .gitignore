@@ -1,7 +1,7 @@
 # .env는 각 서버의 런타임 로드본이라 git에도 S3에도 올리지 않는다.
 # .env.dev/.env.prd/.env.onprem은 환경별 원본(토큰·비밀번호 포함) — git에 올리지 않는다.
 # AWS용 .env.dev/.env.prd는 S3로, 온프레미스용 .env.onprem은 scp로 전달하고
-# 각 서버에서 `cp .env.<환경> .env`로 골라 쓴다.
+# 각 서버에서 `cp .env.<환경> .env`로 골라 쓴다. 양식은 git에 있는 .env.<환경>.example.
 .env
 .env.dev
 .env.prd

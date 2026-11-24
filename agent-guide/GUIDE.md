@@ -29,7 +29,7 @@ last-updated: 2026-10-26 (vLLM 기동 명령의 무인자·up all 동작을 코�
 - **최소 변경**: 꼭 필요한 범위만 수정. 인접 파일 리포맷/리네이밍 금지
 - **근본 원인 해결** 우선, 우회 패치 지양 (특히 셋업 스크립트의 안전성/가드)
 - **디렉토리 분리 원칙 유지**: `my-docker-server` ↔ `server-setup` ↔ `llm-serving` 책임이 섞이지 않도록 신규 파일을 적절한 디렉토리에 둡니다 (자세한 분리 기준은 `PROJECT.md` "디렉토리 분리 원칙" 참조)
-- **정합 우선**: 환경 파일(`my-docker-server/.env.example`, `server-setup/.env.dev`·`.env.prd`·`.env.onprem`) ↔ Dockerfile ARG ↔ compose 기본값은 항상 같은 값으로 맞춥니다 (UID/GID, 포트 등)
+- **정합 우선**: 환경 파일(`my-docker-server/.env.example`, `server-setup/.env.dev`·`.env.prd`·`.env.onprem`과 각 `.example` 양식) ↔ Dockerfile ARG ↔ compose 기본값은 항상 같은 값으로 맞춥니다 (UID/GID, 포트 등)
 - **민감 정보 절대 금지**: HF_TOKEN, PASSWORD, AWS 자격증명 등은 코드/README에 직접 쓰지 않고 `.env` 또는 IAM Role
 - 커밋 메시지: `feat/fix/docs/refactor/chore/aws/repo` 등 prefix + 한국어 본문
 

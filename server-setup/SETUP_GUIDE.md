@@ -70,6 +70,7 @@ Amazon Linux 2023 + NVIDIA GPU EC2에 vLLM 서빙 이미지를 빌드하고 컨�
 - 서버에서는 원본을 복사해 씁니다: `cp .env.prd .env`(개발 서버는 `.env.dev`).
 - 값을 바꿀 때는 로컬 원본을 고쳐 `push`하고, 서버에서 다시 `cp`합니다.
 - 원본에는 토큰과 비밀번호가 들어 있어 git에 올리지 않습니다. 내부망 전용이라 S3에는 그대로 둡니다.
+- git에는 양식 `.env.dev.example`, `.env.prd.example`, `.env.onprem.example`이 있습니다. 원본에서 `PASSWORD`, `HF_TOKEN`만 비운 파일입니다. 원본이 없으면 양식을 복사해 두 값을 채웁니다. 원본의 키를 바꾸면 양식도 같이 고칩니다.
 
 ---
 

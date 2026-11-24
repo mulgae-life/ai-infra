@@ -68,6 +68,7 @@ ai-infra/
 │   ├── disk-usage.sh                 # 호스트 디스크 사용량 조회 (조회 전용)
 │   ├── .env.dev / .env.prd           # AWS 환경별 원본 (S3만, git 제외) — 배포 후 cp .env.dev .env
 │   ├── .env.onprem                   # 온프레미스 원본 (scp로 전달, S3·git 제외)
+│   ├── .env.*.example                # 위 원본 3개의 양식 (PASSWORD·HF_TOKEN만 비움, git 추적)
 │   ├── .env                          # 각 서버 런타임 로드본 (S3 동기화 제외, git 제외)
 │   ├── ssh-config-sample
 │   ├── SETUP_GUIDE.md                # EC2 셋업·다중 사용자·dev/prd 모드 (컨테이너 계층 공용 설명)
