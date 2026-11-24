@@ -2,7 +2,7 @@
 
 Amazon Linux 2023 + NVIDIA GPU EC2에 vLLM 서빙 이미지를 빌드하고 컨테이너를 띄우는 절차입니다.
 
-- 서버 하나는 한 가지 모드로만 씁니다. 개발(`MODE=dev`) 또는 운영(`MODE=prd`)입니다.
+- 서버 하나는 한 가지 모드로만 씁니다. `MODE=dev`(연구계) 또는 `MODE=prd`(개발계·운영계)입니다.
 - 사용자·서비스마다 컨테이너를 따로 만듭니다(`user.sh`).
 - 온프레미스(RHEL) 서버는 같은 폴더의 [`SETUP_GUIDE_ONPREM.md`](SETUP_GUIDE_ONPREM.md)를 봅니다. 컨테이너 관리(이 문서 §3)와 `.env` 공용 키(§5-1)는 같고 호스트 셋업과 코드 받기 방식이 다릅니다. 서버 종류는 `.env`의 `PLATFORM`으로 구분합니다.
 - 모델 서빙 코드(`llm-serving/`)의 배포와 기동은 [`../llm-serving/DEPLOY_GUIDE.md`](../llm-serving/DEPLOY_GUIDE.md)에서 다룹니다.

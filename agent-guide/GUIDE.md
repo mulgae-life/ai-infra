@@ -39,7 +39,7 @@ last-updated: 2026-11-24 (server-setup 경로 반영)
 
 | 용어 | 설명 |
 |------|------|
-| **dev / prd 모드** | `server-setup/` 인스턴스 단위 모드. dev=개발(Claude Code/Codex 자동 설치), prd=운영(슬림화, USERNAME=root) |
+| **dev / prd 모드** | `server-setup/` 인스턴스 단위 모드. dev=연구계(Claude Code/Codex 자동 설치), prd=개발계·운영계·온프레미스(슬림화, USERNAME=root) |
 | **cfd** | `my-docker-server/`의 GPU 연산 컨테이너 서비스명 (CUDA 13.4 + CuPy/Numba) |
 | **dev-fullstack** | `my-docker-server/`의 풀스택 개발 컨테이너 이름 (서비스명은 `dev`) |
 | **VOLUME_DEVICE** | `server-setup/.env`에서 지정하는 추가 EBS 디바이스 경로 (예: `/dev/nvme1n1`) |
