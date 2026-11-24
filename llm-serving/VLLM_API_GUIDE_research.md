@@ -2,7 +2,7 @@
 
 > **대상**: 연구계 서버를 호출하는 API 사용자 (개발자, 챗봇/RAG 통합)
 > **모델명**: `gemma-4` — 요청의 `model` 필드에 항상 이 값을 씁니다. 뒤에서 어떤 모델이 돌든 이 이름은 바뀌지 않습니다.
-> **Base URL**: `http://43.203.142.247:5015/v1` (외부, 연구계). 개발계·운영계 호출은 [`VLLM_API_GUIDE_dev_prd.md`](VLLM_API_GUIDE_dev_prd.md)를 보세요.
+> **Base URL**: `http://54.116.51.233:5015/v1` (외부, 연구계). 개발계·운영계 호출은 [`VLLM_API_GUIDE_dev_prd.md`](VLLM_API_GUIDE_dev_prd.md)를 보세요.
 > **API 호환**: OpenAI Chat Completions 100% — 기존 OpenAI SDK · LangChain `ChatOpenAI` · `curl` 그대로
 > **인증**: 불필요 (`Authorization` 헤더 생략 가능)
 
@@ -30,7 +30,7 @@
 
 | 항목 | 값 |
 |------|-----|
-| Base URL | `http://43.203.142.247:5015/v1` (연구계) |
+| Base URL | `http://54.116.51.233:5015/v1` (연구계) |
 | 모델명 (`model` 필드) | **`gemma-4`** — 고정 |
 | API 키 | 불필요 |
 | 멀티모달 (이미지) | ✅ |
@@ -72,12 +72,12 @@
 
 ## 2. 첫 호출
 
-> 호출 전 살아있는지 확인: `curl http://43.203.142.247:5015/health` → `200 OK`.
+> 호출 전 살아있는지 확인: `curl http://54.116.51.233:5015/health` → `200 OK`.
 
 ### 2.1 curl
 
 ```bash
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemma-4",
@@ -111,7 +111,7 @@ curl http://43.203.142.247:5015/v1/chat/completions \
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="http://43.203.142.247:5015/v1",
+    base_url="http://54.116.51.233:5015/v1",
     api_key="not-needed",   # vLLM 기본 인증 없음. 빈 문자열은 SDK가 거부하므로 더미값.
 )
 
@@ -133,7 +133,7 @@ print(resp.choices[0].message.content)
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(
-    base_url="http://43.203.142.247:5015/v1",
+    base_url="http://54.116.51.233:5015/v1",
     model="gemma-4",
     api_key="not-needed",
     temperature=0.7,
@@ -149,7 +149,7 @@ print(llm.invoke("대한민국의 수도는?").content)
 import OpenAI from "openai";
 
 const client = new OpenAI({
-  baseURL: "http://43.203.142.247:5015/v1",
+  baseURL: "http://54.116.51.233:5015/v1",
   apiKey: "not-needed",
 });
 
@@ -165,7 +165,7 @@ console.log(resp.choices[0].message.content);
 ### 2.5 모델 목록 확인
 
 ```bash
-curl http://43.203.142.247:5015/v1/models
+curl http://54.116.51.233:5015/v1/models
 ```
 
 ```json
@@ -192,7 +192,7 @@ curl http://43.203.142.247:5015/v1/models
 **curl**:
 
 ```bash
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemma-4",
@@ -250,7 +250,7 @@ for chunk in stream:
 **읽는 법** — 응답 메시지의 `reasoning` 필드를 봅니다. Thinking을 끈 응답에서는 `null`입니다.
 
 ```bash
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemma-4",
@@ -311,7 +311,7 @@ Thinking을 켠 상태에서 **얼마나 오래 생각할지**를 조절합니�
 | (생략) | 서버 기본값 | 특별한 이유가 없으면 |
 
 ```bash
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemma-4",
@@ -355,7 +355,7 @@ curl http://43.203.142.247:5015/v1/chat/completions \
 **curl — URL 입력**:
 
 ```bash
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemma-4",
@@ -378,7 +378,7 @@ B64=$(base64 -w0 ./screenshot.png)
 # macOS (BSD base64 — `-w0` 미지원, 기본이 한 줄 출력)
 # B64=$(base64 -i ./screenshot.png | tr -d '\n')
 
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d "{
     \"model\": \"gemma-4\",
@@ -399,7 +399,7 @@ curl http://43.203.142.247:5015/v1/chat/completions \
 import base64
 from openai import OpenAI
 
-client = OpenAI(base_url="http://43.203.142.247:5015/v1", api_key="not-needed")
+client = OpenAI(base_url="http://54.116.51.233:5015/v1", api_key="not-needed")
 
 with open("./document.png", "rb") as f:
     b64 = base64.b64encode(f.read()).decode()
@@ -455,7 +455,7 @@ print("답변:", resp.choices[0].message.content)
 **1단계 — 툴 정의 + 사용자 질문**:
 
 ```bash
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemma-4",
@@ -503,7 +503,7 @@ curl http://43.203.142.247:5015/v1/chat/completions \
 **2단계 — 함수 실행 결과를 다시 전달**:
 
 ```bash
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gemma-4",
@@ -554,7 +554,7 @@ def get_weather(city: str) -> str:
     return f"{city}: 22°C, 맑음"
 
 llm = ChatOpenAI(
-    base_url="http://43.203.142.247:5015/v1",
+    base_url="http://54.116.51.233:5015/v1",
     model="gemma-4",
     api_key="not-needed",
 )
@@ -618,7 +618,7 @@ PII 모드의 `:5015`는 이름·전화·주소·**조직(ORG)** 등 비식별 P
 **curl — 조직명 보존**:
 
 ```bash
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "X-PII-Ignore-Types: org" \
   -d '{
@@ -636,7 +636,7 @@ curl http://43.203.142.247:5015/v1/chat/completions \
 from openai import OpenAI
 
 # 문서 생성 서비스: 클라이언트 단에서 한 번만 설정하면 모든 호출에 적용
-client = OpenAI(base_url="http://43.203.142.247:5015/v1", api_key="not-needed",
+client = OpenAI(base_url="http://54.116.51.233:5015/v1", api_key="not-needed",
                 default_headers={"X-PII-Ignore-Types": "org"})
 ```
 
@@ -657,7 +657,7 @@ PII가 전혀 필요 없는 호출(예: 비식별 사내 문서 가공, PII가 �
 
 ```bash
 # 현재 :5015는 기본 활성(allow_bypass=true) — 헤더만으로 우회됨
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "X-PII-Mode: bypass" \
   -d '{"model": "gemma-4",

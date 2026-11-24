@@ -27,7 +27,7 @@
 
 ## 1. 한눈에 보기
 
-**Base URL**: `http://43.203.142.247:5017/v1` — whisper·Qwen3-ASR용 게이트웨이 (`model` 필드로 라우팅). **Voxtral(Realtime 포함)은 전용 게이트웨이 `:5018`** 로 호출합니다.
+**Base URL**: `http://54.116.51.233:5017/v1` — whisper·Qwen3-ASR용 게이트웨이 (`model` 필드로 라우팅). **Voxtral(Realtime 포함)은 전용 게이트웨이 `:5018`** 로 호출합니다.
 
 > 현재 상시 기동은 Voxtral(`:5018`)이고, whisper·Qwen3-ASR(`:5017`)은 비교 PoC로 필요 시에만 기동됩니다. 호출 전 해당 포트의 `/health`·`/v1/models`로 가용 여부를 확인하세요.
 
@@ -62,12 +62,12 @@
 
 ## 2. 첫 호출
 
-> 호출 전 살아있는지 확인: `curl http://43.203.142.247:5017/health` → `200 OK`.
+> 호출 전 살아있는지 확인: `curl http://54.116.51.233:5017/health` → `200 OK`.
 
 ### 2.1 curl
 
 ```bash
-curl http://43.203.142.247:5017/v1/audio/transcriptions \
+curl http://54.116.51.233:5017/v1/audio/transcriptions \
   -F "file=@sample_ko.wav" \
   -F "model=whisper-large-v3" \
   -F "language=ko" \
@@ -89,7 +89,7 @@ curl http://43.203.142.247:5017/v1/audio/transcriptions \
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="http://43.203.142.247:5017/v1",
+    base_url="http://54.116.51.233:5017/v1",
     api_key="not-needed",   # vLLM 기본 인증 없음. 빈 문자열은 SDK가 거부하므로 더미값.
 )
 
@@ -109,7 +109,7 @@ print(resp.text)
 from langchain_core.tools import tool
 from openai import OpenAI
 
-_stt = OpenAI(base_url="http://43.203.142.247:5017/v1", api_key="not-needed")
+_stt = OpenAI(base_url="http://54.116.51.233:5017/v1", api_key="not-needed")
 
 @tool
 def transcribe_audio(path: str, language: str = "ko") -> str:
@@ -128,7 +128,7 @@ import OpenAI from "openai";
 import fs from "fs";
 
 const client = new OpenAI({
-  baseURL: "http://43.203.142.247:5017/v1",
+  baseURL: "http://54.116.51.233:5017/v1",
   apiKey: "not-needed",
 });
 
@@ -145,7 +145,7 @@ console.log(resp.text);
 ### 2.5 모델 목록 확인
 
 ```bash
-curl http://43.203.142.247:5017/v1/models
+curl http://54.116.51.233:5017/v1/models
 ```
 
 응답에 `served_model_name`(예: `whisper-large-v3`)과 `max_model_len`이 들어 있어, 클라이언트에서 모델명을 자동 감지하는 데 쓸 수 있습니다.
@@ -184,7 +184,7 @@ ffmpeg -i input.mp3 -ar 16000 -ac 1 -c:a pcm_s16le output.wav
 `/v1/audio/translations`로 호출하면 **원어가 무엇이든 영어로 번역된 텍스트**가 반환됩니다.
 
 ```bash
-curl http://43.203.142.247:5017/v1/audio/translations \
+curl http://54.116.51.233:5017/v1/audio/translations \
   -F "file=@sample_ko.wav" \
   -F "model=whisper-large-v3" \
   -F "temperature=0"
@@ -198,7 +198,7 @@ curl http://43.203.142.247:5017/v1/audio/translations \
 `response_format=verbose_json` + `timestamp_granularities[]` 조합으로 segment·word 단위 타임스탬프를 받습니다. 회의록·자막 작업에 사용.
 
 ```bash
-curl http://43.203.142.247:5017/v1/audio/transcriptions \
+curl http://54.116.51.233:5017/v1/audio/transcriptions \
   -F "file=@meeting_ko.wav" \
   -F "model=whisper-large-v3" \
   -F "language=ko" \
@@ -239,7 +239,7 @@ curl http://43.203.142.247:5017/v1/audio/transcriptions \
 ```python
 import asyncio, json, websockets
 
-URL = "ws://43.203.142.247:5018/v1/realtime?model=Voxtral-Mini-4B-Realtime-2602"
+URL = "ws://54.116.51.233:5018/v1/realtime?model=Voxtral-Mini-4B-Realtime-2602"
 
 async def main():
     async with websockets.connect(URL) as ws:
@@ -357,7 +357,7 @@ asyncio.run(main())
 
 ```bash
 # 외부 호출 — whisper·Qwen3-ASR은 :5017 (model 필드 라우팅), Voxtral은 :5018
-STT_BASE_URL=http://43.203.142.247:5017/v1
+STT_BASE_URL=http://54.116.51.233:5017/v1
 STT_MODEL=whisper-large-v3            # 필요 시 Qwen3-ASR-1.7B. Voxtral은 :5018로
 STT_LANGUAGE=ko
 
@@ -365,7 +365,7 @@ STT_LANGUAGE=ko
 # STT_BASE_URL=http://localhost:5017/v1
 
 # Realtime WS는 Voxtral 전용 게이트웨이(:5018) + ws:// 스킴
-# STT_REALTIME_URL=ws://43.203.142.247:5018/v1/realtime
+# STT_REALTIME_URL=ws://54.116.51.233:5018/v1/realtime
 # STT_REALTIME_MODEL=Voxtral-Mini-4B-Realtime-2602
 ```
 

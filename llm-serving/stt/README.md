@@ -110,7 +110,7 @@ PY
 pip install --user soundfile soxr librosa
 ```
 
-미설치 시 vLLM 기동 직후 `EngineCore failed to start` + `ImportError: soundfile` 로 fail. 운영계 컨테이너 재배포 시 동일 실패 방지를 위해 `server-setup/requirements.txt` 추가 권장.
+미설치 시 vLLM 기동 직후 `EngineCore failed to start` + `ImportError: soundfile` 로 fail. 서버 이미지에는 빌드 때 들어간다.
 
 ### GPU 점유 충돌 (LLM 인스턴스와 동시 운영)
 

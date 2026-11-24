@@ -2,7 +2,7 @@
 
 `llm-serving/` 코드를 **로컬 → S3 → 운영계 컨테이너**로 옮기고, 모델 서버를 **안쪽(vLLM)부터 바깥(진입점)** 순으로 띄우는 절차.
 
-> 인프라 셋업(EC2/Docker/컨테이너 기동)은 [`../server-setup/SETUP_GUIDE.md`](../server-setup/SETUP_GUIDE.md). 본 문서는 그 위에서 **서빙 코드/모델만** 다룹니다.
+> 본 문서는 서버와 컨테이너가 준비된 뒤의 **서빙 코드/모델만** 다룹니다.
 
 ---
 
@@ -44,7 +44,7 @@
 cd /workspace/ai-infra/llm-serving && ./start.sh push
 ```
 
-> `logs/`, `__pycache__/`, 런처 임시 config(`.vllm_serve_*`·`.runtime/`), `samples/`, `audit.salt`는 런타임 산출물/시크릿이라 `start.sh`가 자동 제외. 모델 조사 문서는 연구계 전용이라 2026-10-06에 `agent-guide/docs/slm_research/`로 옮겨 배포 대상(`llm-serving/`) 밖에 있다 — 운영 서버에는 서빙에 필요한 코드·설정·테스트만 간다. 이동 전 운영 서버에 내려간 `vllm/slm_research/`가 있으면 다음 `pull`이 `--delete`로 지운다.
+> `logs/`, `__pycache__/`, 런처 임시 config(`.vllm_serve_*`·`.runtime/`), `samples/`, `audit.salt`는 런타임 산출물/시크릿이라 `start.sh`가 자동 제외.
 
 > ⚠️ `push`는 **전체 교체**입니다. S3 프리픽스를 비운 뒤 올려 로컬과 정확히 일치시킵니다. 증분만 올리면 로컬에서 지우거나 이름을 바꾼 파일이 S3에 남아 `pull` 때 되살아나기 때문입니다. 업로드 단계에서 중단되면 프리픽스가 빈 상태로 남으므로 반드시 `push`를 다시 실행하세요. 규모를 먼저 보려면 `./start.sh push --dryrun`을 쓰면 삭제 단계까지 미리보기로 동작합니다.
 
@@ -133,7 +133,7 @@ cd /workspace/llm-serving/stt
 # 비교 PoC: ./start.sh up qwen3_asr(또는 whisper_v3) → ./start.sh up 5017
 ```
 
-> ⚠️ **Voxtral 의존성**: `soundfile`·`soxr`·`librosa`·`av`·`mistral_common[audio]`는 `server-setup/requirements.txt`로 이미지 빌드 때 들어간다(vLLM 0.31.0 이미지부터 따로 설치하지 않는다). 옛 이미지에서 빠져 있으면 vLLM 기동 직후 `EngineCore failed to start` + `ImportError: soundfile` 로 fail.
+> ⚠️ **Voxtral 의존성**: `soundfile`·`soxr`·`librosa`·`av`·`mistral_common[audio]`는 서버 이미지 빌드 때 들어간다(vLLM 0.31.0 이미지부터 따로 설치하지 않는다). 옛 이미지에서 빠져 있으면 vLLM 기동 직후 `EngineCore failed to start` + `ImportError: soundfile` 로 fail.
 > ⚠️ **GPU 충돌**: voxtral(GPU 2)은 LLM(GPU 0·1)과 충돌 없음. 비교용 `qwen3_asr`(GPU 0)는 LLM과, `whisper_v3`(GPU 2)는 voxtral과 겹침 → 충돌 대상 먼저 stop(`./start.sh down <name>` — 이름 명시 권장). 상세는 [`stt/README.md`](stt/README.md) "운영 주의".
 
 ---
@@ -207,7 +207,6 @@ cd /workspace/llm-serving/pii && bash start.sh down 5501 && bash start.sh up 550
 
 ## 참고
 
-- 인프라/컨테이너: [`../server-setup/SETUP_GUIDE.md`](../server-setup/SETUP_GUIDE.md)
 - vLLM API 호출 (사용자): 연구계 [`VLLM_API_GUIDE_research.md`](VLLM_API_GUIDE_research.md) · 개발계·운영계 [`VLLM_API_GUIDE_dev_prd.md`](VLLM_API_GUIDE_dev_prd.md)
 - vLLM 운영 상세 (토폴로지·모델 교체·메모리 표): [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md)
 - PII 가드 개요·기동·정책: [`pii/README.md`](pii/README.md), [`VLLM_OPS_GUIDE.md`](VLLM_OPS_GUIDE.md) §7.9

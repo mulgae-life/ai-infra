@@ -11,13 +11,13 @@
 >   - 운영계 PII: `:5501`(프록시) → gw `:6501` ← `prd-pii-gemma.yaml`
 >   - 📌 **아래 기동·테스트 명령 예시는 연구계 비PII(`:5015`/`gemma-26b.yaml`) 기준**입니다. 운영계는 `:5501` / `prd-gemma` 등으로 치환하세요.
 > **인프라**: AWS L40S 46GB × 4장.
-> **vLLM 버전**: 0.31.0 (운영 이미지 `server-setup/Dockerfile.llm`, 연구계 :5015 가상환경). 2026-10 이전은 0.20.2 + nightly(dev251)였고, 버전업 시험 기록은 [`vllm/tests/results/vllm-0.31-ab.md`](vllm/tests/results/vllm-0.31-ab.md)에 있습니다. 본문에 "0.19.0 기준"으로 남은 설명은 그때 소스로 확인한 것입니다.
+> **vLLM 버전**: 0.31.0 (운영 이미지, 연구계 :5015 가상환경). 2026-10 이전은 0.20.2 + nightly(dev251)였고, 버전업 시험 기록은 [`vllm/tests/results/vllm-0.31-ab.md`](vllm/tests/results/vllm-0.31-ab.md)에 있습니다. 본문에 "0.19.0 기준"으로 남은 설명은 그때 소스로 확인한 것입니다.
 
-> 🆕 **2026-04-30 구조 변경**: 단일 `vllm_config.yaml` + `vllm_gateway_config.yaml` → **인스턴스 단위 `instances/<name>.yaml`** + **게이트웨이 단위 `gateways/<port>.yaml`**. 게이트웨이는 인스턴스 yaml의 `gateway_port` 메타 키로 backends를 자동 매칭(`discover_from`). 구식 yaml은 `agent-guide/.archive/2026-04-30_vllm-config-migration/`에 보존.
+> 🆕 **2026-04-30 구조 변경**: 단일 `vllm_config.yaml` + `vllm_gateway_config.yaml` → **인스턴스 단위 `instances/<name>.yaml`** + **게이트웨이 단위 `gateways/<port>.yaml`**. 게이트웨이는 인스턴스 yaml의 `gateway_port` 메타 키로 backends를 자동 매칭(`discover_from`).
 >
 > 🆕 **포트 자동 회피**: 인스턴스 yaml의 `port`는 **hint**. launcher가 사용 중인 포트면 +1, +2 … 비어있는 첫 포트로 자동 회피하고, 실제 포트를 `instances/.runtime/<name>.json`에 기록한다. 게이트웨이는 이 파일을 우선 참조하여 backends를 등록하므로 **복붙 LB 시나리오에서 port를 깜빡해도 자동으로 다른 포트에 띄우고 게이트웨이가 LB**된다.
 >
-> 🆕 **2026-06-04 PII/DLP 가드 (enforcement)**: 사내 정책으로 LLM 앞단에 PII 가드가 의무화됨. 외부에 열린 단일 포트를 **PII 프록시가 인수**하고 게이트웨이는 내부 포트로 한 칸 물러난다 — 연구계 `:5015`→게이트웨이 `:6015`, 운영계 `:5501`→게이트웨이 `:6501`. **외부 호출 주소(`:5015`/`:5501`)는 불변**. PII 프록시·NER 서버 코드는 [`pii/`](pii/), 설계는 [`agent-guide/plans/pii-dlp-gateway.md`](../agent-guide/plans/pii-dlp-gateway.md), 기동 절차는 아래 [§7.9](#79-pii-가드-포함-기동)를 참고. ⚠️ 게이트웨이 yaml 파일명·`gateway.port`가 6015/6501로 바뀌었으므로 `./start.sh up 6015`처럼 **새 포트로 호출**한다.
+> 🆕 **2026-06-04 PII/DLP 가드 (enforcement)**: 사내 정책으로 LLM 앞단에 PII 가드가 의무화됨. 외부에 열린 단일 포트를 **PII 프록시가 인수**하고 게이트웨이는 내부 포트로 한 칸 물러난다 — 연구계 `:5015`→게이트웨이 `:6015`, 운영계 `:5501`→게이트웨이 `:6501`. **외부 호출 주소(`:5015`/`:5501`)는 불변**. PII 프록시·NER 서버 코드는 [`pii/`](pii/), 기동 절차는 아래 [§7.9](#79-pii-가드-포함-기동)를 참고. ⚠️ 게이트웨이 yaml 파일명·`gateway.port`가 6015/6501로 바뀌었으므로 `./start.sh up 6015`처럼 **새 포트로 호출**한다.
 >
 > 🆕 **2026-07-21 2-모드 운용 전환**: PII 가드는 **선택 모드**가 됨 — 현재 연구·운영 모두 **비PII 모드**(게이트웨이가 외부 포트에 직접, PII 스택 미기동)로 운용하고, PII 모드는 필요 시 프록시+NER을 올려 전환한다. 연구계 비PII 프로파일은 `gemma-26b.yaml`(26B-A4B) ↔ `gateways/5015.yaml` 페어, 운영계는 `prd-gemma.yaml` ↔ `gateways/5501.yaml`. 모델 증분 동기화는 `./start.sh download`([§8.2](#82-다운로드최신-동기화--startsh-download)).
 
@@ -507,7 +507,7 @@ CLI 인자  >  instances/<name>.yaml  >  vLLM 기본값
 
 ```env
 PROVIDER=huggingface
-HF_BASE_URL=http://43.203.142.247:5015/v1     # 연구계 (개발계·운영계는 :5501)
+HF_BASE_URL=http://54.116.51.233:5015/v1     # 연구계 (개발계·운영계는 :5501)
 CHAT_MODEL=gemma-4                          # 모델을 교체해도 이 값은 그대로
 RERANKER_MODEL=gemma-4
 ```
@@ -608,7 +608,7 @@ cat > /tmp/qwen_req.json <<'EOF'
 }
 EOF
 
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d @/tmp/qwen_req.json
 ```
@@ -616,7 +616,7 @@ curl http://43.203.142.247:5015/v1/chat/completions \
 **한 줄 명령**:
 
 ```bash
-curl -sS http://43.203.142.247:5015/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"gemma-4","messages":[{"role":"system","content":"자세하게 답변해줘."},{"role":"user","content":"미국인과 한국인의 차이점 비교 설명해줘"}],"max_tokens":10000,"temperature":1.0,"presence_penalty":1.0,"chat_template_kwargs":{"enable_thinking":true}}'
+curl -sS http://54.116.51.233:5015/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"gemma-4","messages":[{"role":"system","content":"자세하게 답변해줘."},{"role":"user","content":"미국인과 한국인의 차이점 비교 설명해줘"}],"max_tokens":10000,"temperature":1.0,"presence_penalty":1.0,"chat_template_kwargs":{"enable_thinking":true}}'
 ```
 
 **Thinking OFF — 빠른 응답**:
@@ -636,7 +636,7 @@ cat > /tmp/qwen_req_nothink.json <<'EOF'
 }
 EOF
 
-curl http://43.203.142.247:5015/v1/chat/completions \
+curl http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d @/tmp/qwen_req_nothink.json
 ```
@@ -645,12 +645,12 @@ curl http://43.203.142.247:5015/v1/chat/completions \
 
 ```bash
 # 사고 과정 + 최종 답변 모두
-curl -sS http://43.203.142.247:5015/v1/chat/completions \
+curl -sS http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d @/tmp/qwen_req.json | jq '.choices[0].message | {reasoning, content}'
 
 # 최종 답변만
-curl -sS http://43.203.142.247:5015/v1/chat/completions \
+curl -sS http://54.116.51.233:5015/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d @/tmp/qwen_req.json | jq -r '.choices[0].message.content'
 ```
@@ -864,7 +864,7 @@ fingerprint_value: gemma-4
 | **vLLM 최소 버전** | 0.20.2 (0.31.0 실기동 확인) | 0.19.0 | 0.18.0 | 0.19.0 (0.31.0 실기동 확인) | 0.19.0 (0.31.0 실기동 확인) |
 | **transformers 최소 버전** | 5.8.0 (config.json 기재) | ≥4.56.0 | ≥4.56.0 | ≥5.5.0 | ≥5.5.0 |
 
-> Qwen3.8 열은 로컬 체크포인트(`/models/LLM/Qwen/Qwen3.8-27B-FP8`)의 `config.json`·`chat_template.jinja`·모델 카드에서 직접 확인한 값입니다. 벤치마크와 세대 비교는 [`slm_research/models/qwen3.8.md`](../agent-guide/docs/slm_research/models/qwen3.8.md), Qwen3.5 vs 3.6와 Gemma 4 vs Qwen3.6 비교는 [`slm_research/topics/gemma4-vs-qwen.md`](../agent-guide/docs/slm_research/topics/gemma4-vs-qwen.md) 참고.
+> Qwen3.8 열은 로컬 체크포인트(`/models/LLM/Qwen/Qwen3.8-27B-FP8`)의 `config.json`·`chat_template.jinja`·모델 카드에서 직접 확인한 값입니다.
 
 **모델별 권장 샘플링** (모델 카드·`generation_config.json` 기준):
 
@@ -1449,13 +1449,13 @@ grep -B1 -A20 "FAIL " tests/logs/test_20260430_144909.log
 cd llm-serving/vllm
 
 # 저강도 생존/성공률 확인 (텍스트만, 짧게)
-python tests/traffic_test_vllm.py --base-url http://43.203.142.247:5015 --requests 10 --concurrency 5 --image-ratio 0
+python tests/traffic_test_vllm.py --base-url http://54.116.51.233:5015 --requests 10 --concurrency 5 --image-ratio 0
 
 # 대기열/429 방어 확인 — 동시성이 게이트웨이 한도(처리 20 + 대기열 40 = 60)를 넘어야 429가 난다
-python tests/traffic_test_vllm.py --base-url http://43.203.142.247:5015 --requests 80 --concurrency 80 --require-429
+python tests/traffic_test_vllm.py --base-url http://54.116.51.233:5015 --requests 80 --concurrency 80 --require-429
 
 # 동시 사용자 20명 기준 짧은 응답 테스트 (상한에 일부러 걸리므로 "상한 도달" 경고가 정상)
-python tests/traffic_test_vllm.py --base-url http://43.203.142.247:5015 --requests 20 --concurrency 20 --max-tokens 32
+python tests/traffic_test_vllm.py --base-url http://54.116.51.233:5015 --requests 20 --concurrency 20 --max-tokens 32
 ```
 
 운영 전에는 `max_tokens >= 512` 또는 실제 서비스 평균 프롬프트/출력 길이로 한 번 더 확인합니다. 테스트 후 `/health`가 200이어야 통과입니다(`/server-status` 조회 포트는 모드에 따라 다름 — [§10.1](#101-게이트웨이-전용-엔드포인트)). PII 모드에서는 위 `--base-url :5015`가 프록시를 경유하므로 마스킹 오버헤드가 포함된 실경로 성능입니다(순수 게이트웨이 성능은 내부 `:6015`로 측정). 비PII 모드는 `:5015`가 곧 게이트웨이라 그대로 순수 성능입니다.
@@ -1629,8 +1629,6 @@ llm-serving/
 └── sglang/                      ← (예정) SGLang 운영 디렉토리
 ```
 
-> 구식 단일 yaml(`vllm_config.yaml`, `vllm_gateway_config.yaml`)은 2026-04-30 새 구조 도입 시 `agent-guide/.archive/2026-04-30_vllm-config-migration/`로 이관됨.
-
 ### 15.2 관련 문서
 
 **워크스페이스 문서**
@@ -1640,16 +1638,9 @@ llm-serving/
 - [`DEPLOY_GUIDE.md`](DEPLOY_GUIDE.md) — 배포 절차 (로컬 → S3 → EC2 동기화)
 - [`README.md`](README.md) — llm-serving 디렉토리 인덱스
 - [`stt/README.md`](stt/README.md) — STT PoC 가이드
-- [`../agent-guide/PROJECT.md`](../agent-guide/PROJECT.md) — 워크스페이스 전체 구조
-- [`../agent-guide/SESSION.md`](../agent-guide/SESSION.md) — 세션 로그 (구조 변경 이력 포함)
 
-**모델 리서치 / 인시던트**
+**인시던트**
 
-- [`slm_research/README.md`](../agent-guide/docs/slm_research/README.md) — 리서치 문서 전체 목록 (연구계 전용, `agent-guide/docs/`)
-- [`slm_research/models/qwen3.6.md`](../agent-guide/docs/slm_research/models/qwen3.6.md) — Qwen3.6 모델 상세 스펙·벤치마크·운영 메모
-- [`slm_research/models/qwen3.5.md`](../agent-guide/docs/slm_research/models/qwen3.5.md) — Qwen3.5 조사
-- [`slm_research/models/gemma4.md`](../agent-guide/docs/slm_research/models/gemma4.md) — Gemma 4 조사
-- [`slm_research/topics/gemma4-vs-qwen.md`](../agent-guide/docs/slm_research/topics/gemma4-vs-qwen.md) — Gemma 4 vs Qwen 3.6 비교
 - [`vllm/bugfix/2026-04-18_vllm_multimodal_encoder_cache.md`](vllm/bugfix/2026-04-18_vllm_multimodal_encoder_cache.md) — encoder cache race 해결 기록
 
 ### 15.3 외부 링크

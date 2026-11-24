@@ -181,7 +181,7 @@ sudo aws s3 sync s3://hgi-ai-res/models/STT/ /models/STT/
 
 Voxtral은 **`soundfile`, `soxr`, `librosa`** 가 vLLM serving 시 필수 (없으면 `EngineCore failed to start`).
 
-- **서버 이미지**: `server-setup/requirements.txt`에 vLLM 0.31의 audio 의존성(`av`, `scipy`, `soundfile`, `soxr`, `mistral_common[audio]`)과 `librosa`가 `==`로 고정돼 들어 있습니다. 따로 설치하지 않습니다.
+- **서버 이미지**: 이미지 빌드 때 vLLM 0.31의 audio 의존성(`av`, `scipy`, `soundfile`, `soxr`, `mistral_common[audio]`)과 `librosa`가 `==`로 고정돼 들어 있습니다. 따로 설치하지 않습니다.
 - **연구계 컨테이너**: 런처가 `SERVING_VLLM_BIN`의 0.31 가상환경(`/home/hjjo/venvs/vllm-0.31`)으로 STT도 띄웁니다. 이 가상환경에는 위 패키지가 없고 `~/.local`도 보지 않으므로(`include-system-site-packages = false`), STT를 쓰기 전에 이미지와 같은 버전으로 넣습니다.
 
 ```bash
@@ -253,7 +253,7 @@ overload:
 
 | 증상 | 원인 / 해결 |
 |------|-------------|
-| `EngineCore failed to start` + `ImportError: soundfile` | Voxtral 의존성 미설치. 연구계는 0.31 가상환경에 설치([§8.3](#83-의존성-필수)), 서버 이미지는 `server-setup/requirements.txt`로 들어감 |
+| `EngineCore failed to start` + `ImportError: soundfile` | Voxtral 의존성 미설치. 연구계는 0.31 가상환경에 설치([§8.3](#83-의존성-필수)), 서버 이미지에는 빌드 때 들어감 |
 | `vllm: error: unrecognized arguments: --task transcription` | vLLM 0.20.x에서 `--task` CLI 인자가 제거되고 model config 기반 자동 감지로 통합됨. launcher `_LAUNCHER_KEYS`(`vllm_server_launcher.py:74`)가 yaml의 `task` 키를 필터하여 vllm serve에 전달하지 않도록 보장(`task` 포함 런처 전용 키 8개). yaml의 `task` 키는 PoC 비교 운영 메타로만 보존. 자동 감지가 부정확한 모델이 나오면 launcher에 `--runner` 매핑 분기 추가. |
 | 게이트웨이 `/health`가 503 + `ready: 0/1` | 백엔드 voxtral가 미기동 또는 로딩 중. `./start.sh status` → `[STARTING]`이면 1~2분 대기 |
 | 게이트웨이 로그 `realtime 백엔드 연결 실패` | voxtral.yaml의 `gateway_port`(5018)와 게이트웨이 포트 일치 확인. 디스커버리 결과는 게이트웨이 기동 로그(`logs/gateway_<port>.log`)에 표시 |

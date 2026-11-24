@@ -75,6 +75,13 @@ backends로 등록한다(vllm_server_launcher.py:_LAUNCHER_KEYS가 vllm serve
       파일을 우선 참조. -> LB 인스턴스 복붙 시 port를 깜빡 안 바꿔도 자동 분리.
   uvicorn_log_level
       HTTP 서버 로그 레벨.
+  enable_tokenizer_info_endpoint
+      true = GET /tokenizer_info를 연다. 서버가 실제로 읽은 토크나이저 설정
+      (등록 특수 토큰 added_tokens_decoder · 특수 토큰 키 · 대화 템플릿)을 돌려준다
+      (0.31.0 entrypoints/serve/tokenize/serving.py:154). 클라이언트가 특수 토큰
+      무력화 목록을 모델 폴더가 아니라 서버 기준으로 대조할 때 쓴다 — 플레어는
+      기동 확인에서 이 주소를 읽는다. 공개 모델의 토크나이저 정보뿐이라 비밀 값은 없다.
+      모든 인스턴스 공통으로 켠다.
 
 
 ── GPU / 메모리 ─────────────────────────────────────────────────────

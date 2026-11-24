@@ -24,6 +24,8 @@ fingerprint_value: gemma-4       #    설정해시가 실려 백엔드 교체마
 host: 127.0.0.1                  # 바인딩 (외부 0.0.0.0 / 내부 127.0.0.1 — PII 뒤면 127.0.0.1)
 port: 7070                       # vLLM 포트 hint (사용 중이면 launcher가 +1 자동 회피)
 uvicorn_log_level: info          # HTTP 서버 로그 레벨
+enable_tokenizer_info_endpoint: true  # GET /tokenizer_info — 서버가 읽은 토크나이저 설정(특수 토큰 · 대화 템플릿) 조회.
+                                 #    클라이언트가 특수 토큰 무력화 목록을 서버 기준으로 대조한다 (플레어 기동 확인)
 
 # GPU / 메모리
 gpus: [0]                        # 사용 GPU 번호 목록

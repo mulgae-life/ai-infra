@@ -76,8 +76,6 @@ PII 가드는 **정확한 문자 offset(start/end)으로 마스킹**한다(`ner_
 
 3개 모델을 각자 **올바른 디코딩**(vmaca·townboy=BIO, frameby=BIOES)으로 직접 로드해 동일 케이스셋(`tests/eval_pii.py` CASES)에 돌렸다. 구조화 타입(rrn/card 등)은 regex 담당이라 제외.
 
-> 평가 스크립트 보존: `.archive/2026-06-05_model-eval/_eval_models.py`, `_smoke_frameby.py`
-
 ### 4.1 타입별 recall (잡아야 할 걸 얼마나 잡나)
 
 | 타입 | vmaca123 | **townboy** | frameby |
@@ -154,7 +152,7 @@ PII 가드는 **정확한 문자 offset(start/end)으로 마스킹**한다(`ner_
 
 - **org 커버 + 라이선스 명확한 대안**이 필요해지면 `ehd0309/ko-pii-public-v1`(23라벨, CC-BY-SA, org 포함 여부 확인 필요) 추가 평가.
 - **person recall 향상**이 목표면 동일 KDPII(CC-BY-4.0)·KPF-BERT(MIT)로 **사내 재학습** → 라이선스 자체 확정 + 도메인 튜닝 동시 달성.
-- 평가 자산: `tests/eval_pii.py`(케이스셋), `.archive/2026-06-05_model-eval/`(3모델 비교 스크립트), `/models/PII/framebyframe/`(frameby 가중치 보존).
+- 평가 자산: `tests/eval_pii.py`(케이스셋), `/models/PII/framebyframe/`(frameby 가중치 보존).
 
 ---
 

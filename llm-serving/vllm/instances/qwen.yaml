@@ -23,6 +23,8 @@ fingerprint_value: gemma-4       #    설정해시가 실려 백엔드 교체마
 host: 0.0.0.0                    # 바인딩 (외부 0.0.0.0 / 내부 127.0.0.1 — PII 뒤면 127.0.0.1)
 port: 7080                       # vLLM 포트 hint (사용 중이면 launcher가 +1 자동 회피)
 uvicorn_log_level: info          # HTTP 서버 로그 레벨
+enable_tokenizer_info_endpoint: true  # GET /tokenizer_info — 서버가 읽은 토크나이저 설정(특수 토큰 · 대화 템플릿) 조회.
+                                 #    클라이언트가 특수 토큰 무력화 목록을 서버 기준으로 대조한다 (플레어 기동 확인)
 
 # GPU / 메모리
 gpus: [0, 1]                     # 사용 GPU 번호 목록
@@ -62,7 +64,6 @@ language_model_only: false       # true면 멀티모달 비활성 (메모리 절
 # ⚠️ 2026-10-07 비활성: 접두 캐시(align 모드) + MTP 조합에서 캐시된 선형 어텐션 상태가 오염돼
 #    같은 접두를 쓰는 요청이 한동안 틀린 답(숫자 복사 오류·질문 되풀이)을 낸다. vLLM 이슈 #53912와 같은 구성,
 #    MambaManager.find_longest_cache_hit가 MTP 미검증 블록을 버리지 않는다. 고친 버전 확인 전까지 끈다.
-#    근거: hjjo-ai-hub/.archive/2026-10-07_hw-chatbot-대화품질/FINDING-서빙-접두캐시.md
 # speculative_config:
 #   # model: ${model}-assistant    # 드래프트 모델. ${model}은 런처가 본체 값으로 치환 — Gemma4만 사용
 #   method: mtp                    # ⚠️ Qwen: mtp 명시 필수 (qwen3_next_mtp는 0.20.2에서 deprecated)
