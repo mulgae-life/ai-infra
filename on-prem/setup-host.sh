@@ -3,14 +3,16 @@ set -euo pipefail
 
 # ============================================
 # 온프레미스 GPU 서버 초기 세팅 스크립트
-# 대상: RHEL 10 + NVIDIA H200 (HGX 8-GPU 또는 PCIe)
+# 대상: RHEL 9 또는 10 + NVIDIA H200 (HGX 또는 PCIe)
 #
-# aws/setup-ec2.sh(Amazon Linux 2023)를 RHEL 10 기준으로 옮긴 것이다. 두 스크립트의
+# aws/setup-ec2.sh(Amazon Linux 2023)를 RHEL 기준으로 옮긴 것이다. 두 스크립트의
 # Phase 구조·디렉토리 정책·안전 가드는 같고, 다음만 다르다:
-#   - 저장소: NVIDIA rhel10 repo(모듈 스트림 없음) + Docker CE 공식 repo (AL2023 dnf docker 아님)
+#   - 저장소: NVIDIA rhel9/rhel10 repo + Docker CE 공식 repo (AL2023 dnf docker 아님)
 #   - 드라이버 버전 고정: .env NVIDIA_DRIVER_VERSION + dnf versionlock
-#     (RHEL 10 repo는 브랜치 스트림이 없어 `dnf update`가 최신 브랜치(610 등)로 올려버린다)
+#     (RHEL 9는 nvidia-driver:<브랜치>-open 모듈 스트림을 켜야 해당 브랜치가 보인다.
+#      RHEL 10 repo는 스트림이 없어 잠그지 않으면 `dnf update`가 최신 브랜치로 올려버린다)
 #   - EBS/cloud-init/ssm-user 없음. 데이터 디스크는 VOLUME_DEVICE로 동일하게 처리
+#     (사내 표준처럼 파일시스템을 미리 받으면 VOLUME_DEVICE는 비우고 MODELS_PATH·DATA_PATH로 연결)
 #   - 폐쇄망 대비: 셋업 시점에 베이스 이미지를 미리 pull (세팅 후 네트워크가 끊길 수 있다)
 #   - RHEL 고유: 구독 확인, firewalld 포트 개방, SELinux 라벨
 #
@@ -46,15 +48,19 @@ CUDA_TEST_IMAGE="${CUDA_TEST_IMAGE:-nvidia/cuda:12.8.1-base-ubuntu24.04}"
 VLLM_IMAGE="${VLLM_IMAGE:-}"
 
 # NVIDIA 버전 고정값. 브랜치 선택 근거는 SETUP_GUIDE.md §1 참조.
-NVIDIA_DRIVER_VERSION="${NVIDIA_DRIVER_VERSION:-580.178.04}"
-NVIDIA_CONTAINER_TOOLKIT_VERSION="${NVIDIA_CONTAINER_TOOLKIT_VERSION:-1.20.0-1}"
+NVIDIA_DRIVER_VERSION="${NVIDIA_DRIVER_VERSION:-580.196.07}"
+NVIDIA_CONTAINER_TOOLKIT_VERSION="${NVIDIA_CONTAINER_TOOLKIT_VERSION:-1.20.1-1}"
+# Docker CE 버전 고정 (예: 29.9.3). 비우면 저장소 최신
+DOCKER_VERSION="${DOCKER_VERSION:-}"
 
 # 컨테이너 포트 정책 (aws/user.sh: compose 5000-5009, user.sh 5010-5499). firewalld 개방 범위.
 CONTAINER_PORT_RANGE="${CONTAINER_PORT_RANGE:-5000-5499}"
 
-NVIDIA_REPO_URL="https://developer.download.nvidia.com/compute/cuda/repos/rhel10/x86_64/cuda-rhel10.repo"
+# 저장소 주소의 RHEL 주 버전은 check_os가 감지해 채운다
+RHEL_MAJOR=""
+NVIDIA_REPO_URL=""
+EPEL_RPM_URL=""
 DOCKER_REPO_URL="https://download.docker.com/linux/rhel/docker-ce.repo"
-EPEL_RPM_URL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm"
 NCT_REPO_URL="https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo"
 
 # ============================================
@@ -84,9 +90,12 @@ check_os() {
     if [ "$id" != "rhel" ]; then
         error_exit "RHEL 전용 스크립트입니다 (감지: ${id:-?} ${ver:-?}). Rocky/Alma는 NVIDIA repo 경로가 같아 동작할 수 있으나 검증하지 않았습니다."
     fi
-    if [ "${ver%%.*}" != "10" ]; then
-        error_exit "RHEL 10 전용입니다 (감지: ${ver}). RHEL 9는 nvidia-driver 모듈 스트림 방식이라 드라이버 설치 절차가 다릅니다."
+    RHEL_MAJOR="${ver%%.*}"
+    if [ "$RHEL_MAJOR" != "9" ] && [ "$RHEL_MAJOR" != "10" ]; then
+        error_exit "RHEL 9 또는 10만 지원합니다 (감지: ${ver})."
     fi
+    NVIDIA_REPO_URL="https://developer.download.nvidia.com/compute/cuda/repos/rhel${RHEL_MAJOR}/x86_64/cuda-rhel${RHEL_MAJOR}.repo"
+    EPEL_RPM_URL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-${RHEL_MAJOR}.noarch.rpm"
     log "  OS: RHEL ${ver}"
 }
 
@@ -104,12 +113,11 @@ mount_data_volume() {
     local device="$1"
     local mount_point="$2"
 
-    # VOLUME_DEVICE 미설정 → 루트 디스크에 디렉토리만 생성
-    # — 온프레미스는 보통 모델용 NVMe를 따로 붙이므로 설치팀에 디바이스 경로를 받아 .env에 적는 것이 기본.
-    #   비워두면 OS 디스크에 모델(수십~수백 GB)이 쌓여 루트가 차는 사고가 난다.
+    # VOLUME_DEVICE 미설정 → 디렉토리만 생성 (mkfs/mount/fstab 없음)
+    # — 설치팀이 파일시스템을 미리 만들어 주는 경우(사내 표준)와 별도 디스크가 없는 경우.
+    #   모델·데이터 경로가 마운트포인트인지는 [4/10]에서 확인한다.
     if [ -z "$device" ]; then
-        log "  ℹ️  VOLUME_DEVICE 미설정 → 루트 디스크에 ${mount_point} 디렉토리만 생성 (mkfs/mount/fstab 건너뜀)"
-        log "  ⚠️  모델 저장소가 OS 디스크에 놓입니다. 별도 NVMe가 있으면 lsblk로 확인해 .env VOLUME_DEVICE에 지정하세요."
+        log "  ℹ️  VOLUME_DEVICE 미설정 → ${mount_point} 디렉토리만 생성 (mkfs/mount/fstab 건너뜀)"
         mkdir -p "$mount_point"
         return
     fi
@@ -361,16 +369,26 @@ JAIL
 
     # 표준 하위 디렉토리 일괄 생성
     # - root-homes는 user.sh --root 컨테이너용. 첫 호출 시 mkdir 멱등이지만 미리 만들어 일관성 ↑
+    # - 모델·데이터는 MODELS_PATH·DATA_PATH (기본 ${VOLUME_PATH}/models, /data)
     mkdir -p \
         "${VOLUME_PATH}/workspace" \
-        "${VOLUME_PATH}/data" \
-        "${VOLUME_PATH}/models" \
         "${VOLUME_PATH}/homes" \
-        "${VOLUME_PATH}/root-homes"
+        "${VOLUME_PATH}/root-homes" \
+        "$MODELS_PATH" \
+        "$DATA_PATH"
 
-    # /models, /data는 모든 컨테이너 공유 → CONTAINER_UID 소유로 통일
+    # 모델·데이터가 OS 디스크에 쌓이면 루트가 차는 사고가 난다 → 경고만 한다
+    # (VOLUME_DEVICE를 마운트한 경우 그 아래 경로는 별도 디스크라 검사하지 않는다)
+    local p
+    for p in "$MODELS_PATH" "$DATA_PATH"; do
+        case "$p" in "${VOLUME_PATH}"/*) [ -n "$VOLUME_DEVICE" ] && continue ;; esac
+        mountpoint -q "$p" 2>/dev/null \
+            || log "  ⚠️  ${p}가 마운트포인트가 아닙니다. 모델·데이터가 OS 디스크에 쌓이지 않는지 확인하세요."
+    done
+
+    # 모델·데이터는 모든 컨테이너 공유 → CONTAINER_UID 소유로 통일
     # (일반 사용자 컨테이너는 CONTAINER_UID로 동작, root 컨테이너는 권한 0이라 어차피 모두 쓰기 가능)
-    chown "$CONTAINER_UID":"$CONTAINER_GID" "${VOLUME_PATH}/data" "${VOLUME_PATH}/models"
+    chown "$CONTAINER_UID":"$CONTAINER_GID" "$DATA_PATH" "$MODELS_PATH"
 
     # 사용자별 디렉토리는 호스트 사용자 소유로 (컨테이너 UID와 동일하면 권한 일치)
     # - USERNAME=root: /volume/root는 compose 마운트가 첫 기동 시 자동 생성 → 별도 작업 불필요
@@ -391,10 +409,12 @@ JAIL
     # selinux-enabled=false라 지금 구성에서는 없어도 동작하지만, 누가 데몬 옵션을 켜는 순간
     # /volume 전체가 Permission denied가 되므로 미리 라벨링해 둔다 (멱등).
     if command -v semanage &>/dev/null && [ "$(getenforce 2>/dev/null || echo Disabled)" != "Disabled" ]; then
-        semanage fcontext -a -t container_file_t "${VOLUME_PATH}(/.*)?" 2>/dev/null \
-            || semanage fcontext -m -t container_file_t "${VOLUME_PATH}(/.*)?" 2>/dev/null || true
-        restorecon -R "$VOLUME_PATH"
-        log "  SELinux: ${VOLUME_PATH} container_file_t 라벨 적용"
+        for p in "$VOLUME_PATH" "$MODELS_PATH" "$DATA_PATH"; do
+            semanage fcontext -a -t container_file_t "${p}(/.*)?" 2>/dev/null \
+                || semanage fcontext -m -t container_file_t "${p}(/.*)?" 2>/dev/null || true
+            restorecon -R "$p"
+            log "  SELinux: ${p} container_file_t 라벨 적용"
+        done
     fi
 
     # --- 시스템 업데이트 + 커널 패키지 ---
@@ -406,8 +426,9 @@ JAIL
         gcc dkms python3-pip --allowerasing
 
     # nvitop (호스트에서 GPU 실시간 모니터링 — htop의 GPU 버전, Phase 2 완료 후 동작)
-    # — RHEL 10도 PEP 668(외부 관리 환경) 정책으로 시스템 Python에 직접 pip install이 차단됨.
+    # — RHEL 10은 PEP 668(외부 관리 환경) 정책으로 시스템 Python에 직접 pip install이 차단됨.
     #   호스트 운영자용 단일 CLI라 시스템 site-packages 충돌 위험이 낮으므로 --break-system-packages로 우회.
+    #   RHEL 9의 pip은 이 옵션을 모르므로 두 번째 명령으로 설치된다.
     if command -v nvitop &>/dev/null; then
         log "  nvitop 이미 설치됨. 건너뜀."
     elif pip3 install --break-system-packages nvitop 2>/dev/null \
@@ -417,7 +438,7 @@ JAIL
         log "  ⚠️ nvitop 설치 실패. 수동 설치: pip3 install --break-system-packages nvitop"
     fi
 
-    # 커널 헤더: NVIDIA 공식 가이드(RHEL 10)의 kernel-devel-matched — 실행 중 커널과 정확히 같은
+    # 커널 헤더: NVIDIA 공식 가이드(RHEL 9·10)의 kernel-devel-matched — 실행 중 커널과 정확히 같은
     # 버전을 고른다. dkms가 이걸로 nvidia 모듈을 빌드하므로 버전이 어긋나면 드라이버가 안 뜬다.
     dnf install -y kernel-devel-matched kernel-headers
     log "  커널: $(uname -r), kernel-devel-matched 설치"
@@ -443,7 +464,15 @@ JAIL
         fi
         dnf config-manager --add-repo "$DOCKER_REPO_URL"
         # compose·buildx가 플러그인 패키지로 함께 온다 — AL2023처럼 curl로 따로 받을 필요가 없다.
-        dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        local docker_pkgs=(docker-ce docker-ce-cli)
+        if [ -n "$DOCKER_VERSION" ]; then
+            docker_pkgs=("docker-ce-${DOCKER_VERSION}" "docker-ce-cli-${DOCKER_VERSION}")
+        fi
+        dnf install -y "${docker_pkgs[@]}" containerd.io docker-buildx-plugin docker-compose-plugin
+        if [ -n "$DOCKER_VERSION" ]; then
+            dnf versionlock add docker-ce docker-ce-cli >/dev/null 2>&1 || true
+            log "  dnf versionlock: docker-ce ${DOCKER_VERSION} 잠금"
+        fi
         systemctl enable --now docker
         log "  Docker 설치 완료: $(docker --version)"
     fi
@@ -475,6 +504,19 @@ JAIL
     log "[9/10] NVIDIA 저장소 등록"
     dnf config-manager --add-repo "$NVIDIA_REPO_URL" 2>/dev/null || true
     dnf clean expire-cache
+    # RHEL 9 repo는 드라이버를 모듈 스트림으로 나눈다. 기본 스트림(open-dkms)은 최신 브랜치라
+    # 고정할 브랜치의 -open 스트림을 켜야 nvidia-open-<버전>과 Fabric Manager가 보인다.
+    if [ "$RHEL_MAJOR" = "9" ]; then
+        local stream="nvidia-driver:${NVIDIA_DRIVER_VERSION%%.*}-open"
+        if dnf module enable -y "$stream"; then
+            log "  모듈 스트림 활성화: ${stream}"
+        elif nvidia-smi &>/dev/null; then
+            # 설치팀이 다른 스트림으로 드라이버를 깔아 둔 경우. 드라이버는 쓰되 Fabric Manager 설치는 실패할 수 있다.
+            log "  ⚠️ ${stream} 활성화 실패 (다른 스트림 사용 중). 확인: dnf module list nvidia-driver"
+        else
+            error_exit "${stream} 활성화 실패. dnf module list nvidia-driver 로 스트림 이름 확인"
+        fi
+    fi
 
     # --- NVIDIA 드라이버 ---
     log "[10/10] NVIDIA 드라이버 설치 (nvidia-open ${NVIDIA_DRIVER_VERSION})"
@@ -496,8 +538,8 @@ JAIL
         return
     fi
 
-    # RHEL 10 repo는 모듈 스트림이 없다. nvidia-open 메타패키지에 버전을 붙여 설치하면
-    # 의존성(nvidia-driver-cuda, kmod-nvidia-open-dkms 등)이 같은 버전으로 따라온다.
+    # nvidia-open 메타패키지에 버전을 붙여 설치하면 의존성(nvidia-driver-cuda, kmod-nvidia-open-dkms 등)이
+    # 같은 버전으로 따라온다. RHEL 9는 [9/10]에서 켠 스트림 안에서 고른다.
     dnf install -y "nvidia-open-${NVIDIA_DRIVER_VERSION}"
     lock_nvidia_versions
 
@@ -518,8 +560,8 @@ JAIL
 }
 
 # NVIDIA 패키지 버전 잠금. RHEL 10 저장소는 브랜치를 스트림으로 가르지 않아서 `dnf update`가
-# 580(LTSB, 2028-06까지)을 610(NFB, 지원 종료)으로 올려버린다. 잠그지 않으면 LTS를 고른 의미가 없다.
-# 멱등: 이미 잠긴 항목은 dnf가 무시한다.
+# 580(LTSB, 2028-06까지)을 610(NFB, 지원 종료)으로 올려버린다. RHEL 9는 스트림이 브랜치를 막지만
+# 같은 브랜치 안의 새 버전으로는 올라가므로 똑같이 잠근다. 멱등: 이미 잠긴 항목은 dnf가 무시한다.
 lock_nvidia_versions() {
     dnf versionlock add 'nvidia-*' 'kmod-nvidia-*' 'libnvidia-*' 'libnvsdm*' >/dev/null 2>&1 || true
     log "  dnf versionlock: nvidia-* 잠금 ($(dnf versionlock list 2>/dev/null | grep -c nvidia || echo 0)건)"
@@ -580,7 +622,7 @@ phase2() {
         local driver_version
         driver_version=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -1 | tr -d ' ')
         # FM은 드라이버와 소수점까지 같은 버전이어야 기동한다. 설치된 드라이버 버전을 그대로 쓴다.
-        # RHEL 10 공식 가이드의 패키지 조합 (libnvidia-nscq, libnvsdm, nvidia-imex 동반).
+        # NVIDIA 공식 가이드의 패키지 조합 (libnvidia-nscq, libnvsdm, nvidia-imex 동반).
         if dnf install -y "nvidia-fabricmanager-${driver_version}" libnvidia-nscq libnvsdm nvidia-imex; then
             dnf versionlock add 'nvidia-fabricmanager*' >/dev/null 2>&1 || true
             systemctl enable nvidia-fabricmanager
@@ -711,6 +753,9 @@ main() {
     else
         log "⚠️ ${ENV_FILE} 없음 — 기본값으로 진행. 먼저 cp on-prem/.env.prd aws/.env 를 권장"
     fi
+    # VOLUME_PATH에 기대는 기본값은 .env를 읽은 뒤에 정한다
+    MODELS_PATH="${MODELS_PATH:-${VOLUME_PATH}/models}"
+    DATA_PATH="${DATA_PATH:-${VOLUME_PATH}/data}"
 
     case "${1:-}" in
         --phase2)

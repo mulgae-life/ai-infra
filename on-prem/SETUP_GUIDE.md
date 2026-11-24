@@ -1,41 +1,45 @@
-# 온프레미스 H200 서버 (RHEL 10 + vLLM)
+# 온프레미스 H200 서버 (RHEL 9 + vLLM)
 
 사내 H200 서버에 vLLM 기반 LLM 환경을 띄우는 호스트 셋업 가이드. [`../aws/`](../aws/)의 EC2 구성을 온프레미스로 옮긴 것으로, **호스트 계층(드라이버·Docker·디스크·방화벽)만 여기서 다루고 컨테이너 계층(`docker compose`, `user.sh`, `Dockerfile.llm`)은 `../aws/`를 그대로 실행합니다.** 컨테이너 계층은 호스트 OS와 무관하고 두 벌로 나누면 고칠 때마다 어긋나기 때문입니다.
 
-AWS와 다른 점은 셋뿐입니다.
+AWS와 다른 점입니다.
 
 | 항목 | AWS (`aws/`) | 온프레미스 (`on-prem/`) |
 |------|------|------|
-| 호스트 OS | Amazon Linux 2023 | RHEL 10 |
+| 호스트 OS | Amazon Linux 2023 | RHEL 9.8 (스크립트는 RHEL 10도 지원) |
 | 코드 전달 | S3 sync (`start.sh push/pull`) | git clone/pull + `.env`는 scp |
+| 디스크 | `/volume` 하나 | 설치팀이 만든 `/appdata`, `/data`, `/model`을 나눠 씀 (§4) |
 | 네트워크 | 상시 | **세팅 시점만 개방, 이후 끊길 수 있음** → 끊기 전 `start.sh check` |
 
 ---
 
-## 1. 설치팀에 전달하는 사양
+## 1. 서버 사양 (서버 구성 요청서 기준)
 
-| 항목 | 버전 | 근거 |
+요청 원본은 [`../agent-guide/docs/서버구성요청서_AI연구서버.docx`](../agent-guide/docs/서버구성요청서_AI연구서버.docx)(2026-11-06, 호스트명 `honp-rn-ai-airap01`)입니다.
+
+| 항목 | 값 | 비고 |
 |------|------|------|
-| **OS** | RHEL 10 (최신 마이너) | 기본 Python 3.12(BaseOS `python3`, RHEL 10 수명 내내 고정) — 컨테이너 안과 동일. 구독 등록까지 요청 |
-| **NVIDIA Driver** | **580.178.04** (open kernel module) | R580은 LTSB로 **2028-06**까지 지원. R610은 번호가 크지만 NFB라 2026-08 종료, R595는 PB로 2027-03 종료 |
-| **CUDA Toolkit** | 13.0 (호스트 설치 선택) | 컨테이너 안 PyTorch가 `cu130` 빌드. 호스트에 깔 거면 같은 버전으로 |
-| **Python** | 3.12 | RHEL 10 기본 |
-| **Docker Engine** | 29.x (2026-08 최신 안정) | Docker CE 공식 저장소. **RHEL 기본 Podman 아님** — 명시 필수 |
-| **NVIDIA Container Toolkit** | 1.20.0 | 2026-08-13 릴리스 |
-| **Fabric Manager** | 580.178.04 (드라이버와 동일) | **HGX 보드(NVSwitch)일 때만.** PCIe 카드 구성이면 불필요 |
+| **OS** | RHEL 9.8 | 사내 고정. 구독 등록까지 요청 |
+| **GPU** | H200 × 4 | HGX(NVSwitch)인지 PCIe인지에 따라 Fabric Manager 여부가 갈림 (§5-2) |
+| **CPU / RAM** | 64코어 / 512GB | |
+| **NVIDIA Driver** | **580.196.07** (open kernel module) | R580은 LTSB로 **2028-06**까지 지원 |
+| **Docker Engine** | 29.9.3 (Docker CE) | **RHEL 기본 Podman 아님** |
+| **NVIDIA Container Toolkit** | 1.20.1 | |
+| **Fabric Manager** | 580.196.07 (드라이버와 동일) | **NVSwitch가 있을 때만** |
+| **호스트 계정** | `hwada` (root 권한) | 컨테이너 계정(`.env USERNAME=root`)과 별개 |
 
-설치팀은 **드라이버까지만** 맡기고 Docker·Toolkit·Fabric Manager는 `setup-host.sh`가 설치해도 됩니다. 어느 쪽이든 스크립트는 이미 설치된 항목을 감지해 건너뜁니다. 단, 드라이버 버전이 `.env`의 고정값과 다르면 교체하지 않고 경고만 냅니다(§7).
-
-추가로 확인할 하드웨어 항목입니다.
-
-| 항목 | 요청 값 | 이유 |
+| 파일시스템 | 용량 | 용도 |
 |------|------|------|
-| GPU 구성 | HGX(8장 한 판) / PCIe(개별 카드) 중 어느 것인지 | Fabric Manager 필요 여부가 갈림 |
-| 모델용 디스크 | NVMe 2TB 이상, OS 디스크와 **별도** | 27B FP8 하나가 30GB급, 여러 모델 보관. `lsblk` 경로를 받아 `.env VOLUME_DEVICE`에 기입 |
-| 시스템 RAM | GPU 총 VRAM(8×141GB)의 1.5배 이상 → 1TB 권장 | 모델 로드 시 가중치가 CPU RAM을 한 번 거침 |
-| 네트워크 | 세팅 기간 동안 GitHub·PyPI·HuggingFace·NVIDIA/Docker 저장소 개방 | 이미지·모델·휠을 이때 다 받는다 |
+| `/appdata` | 830GB | 작업공간·홈 (`VOLUME_PATH`) |
+| `/data` | 3.57TB (3.84TB 디스크 전체) | 데이터 (`DATA_PATH`) |
+| `/model` | `/data`와 같은 파일시스템 공유 | 모델 (`MODELS_PATH`) |
+| `/var/lib/docker` | 400GB | Docker 이미지·컨테이너 |
 
-> 출처: [NVIDIA 지원 드라이버·CUDA 표](https://docs.nvidia.com/datacenter/tesla/drivers/supported-drivers-and-cuda-toolkit-versions.html), [드라이버 580.178.04 릴리스 노트](https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-580-178-04/index.html), [RHEL Docker 설치](https://docs.docker.com/engine/install/rhel/), [Container Toolkit 설치](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). 패키지 존재는 NVIDIA rhel10 저장소 목록에서 `nvidia-open-580.178.04-1.el10`·`nvidia-fabricmanager-580.178.04-1.el10`으로 확인(2026-08-28).
+설치팀이 드라이버·Docker·Toolkit을 먼저 깔아 두면 `setup-host.sh`는 이미 설치된 항목을 감지해 건너뜁니다. 단, 드라이버 버전이 `.env`의 고정값과 다르면 교체하지 않고 경고만 냅니다(§7).
+
+세팅 기간에는 GitHub·PyPI·HuggingFace·NVIDIA/Docker 저장소·EPEL이 열려 있어야 합니다. 이미지·모델·휠을 이때 다 받습니다.
+
+> 출처: [NVIDIA 지원 드라이버·CUDA 표](https://docs.nvidia.com/datacenter/tesla/drivers/supported-drivers-and-cuda-toolkit-versions.html), [RHEL Docker 설치](https://docs.docker.com/engine/install/rhel/), [Container Toolkit 설치](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). 패키지 존재는 2026-11-24 저장소 목록에서 확인: NVIDIA rhel9 `nvidia-open-580.196.07-1.el9`·`nvidia-fabricmanager-580.196.07-1.el9`(모듈 스트림 `nvidia-driver:580-open`), Toolkit `1.20.1-1`, Docker CE `29.9.3-1.el9`, EPEL 9.
 
 ---
 
@@ -43,7 +47,7 @@ AWS와 다른 점은 셋뿐입니다.
 
 | 항목 | 내용 |
 |------|------|
-| 서버 | RHEL 10, NVIDIA 드라이버 580.178.04 설치(또는 미설치 — 스크립트가 설치), 구독 등록 완료(`dnf repolist`에 BaseOS) |
+| 서버 | RHEL 9.8, NVIDIA 드라이버 580.196.07 설치(또는 미설치 — 스크립트가 설치), 구독 등록 완료(`dnf repolist`에 BaseOS), 파일시스템 `/appdata`·`/data`·`/model` 생성 완료 |
 | 권한 | `sudo` 가능한 OS 계정 |
 | 네트워크 | 세팅 중 개방 (§1) |
 | 개발 머신에서 가져갈 것 | `on-prem/.env.prd` (git 미추적) |
@@ -57,7 +61,7 @@ AWS와 다른 점은 셋뿐입니다.
 ### 3-1. 개발 머신에서 준비
 
 ```bash
-# on-prem/.env.prd 의 서버 고유값 확인 (VOLUME_DEVICE는 설치팀에 받은 경로)
+# on-prem/.env.prd 의 서버 고유값 확인 (VOLUME_DEVICE는 비워 둔다 — 파일시스템은 설치팀이 만든다)
 vim /workspace/ai-infra/on-prem/.env.prd
 ```
 
@@ -70,16 +74,16 @@ cd ~/ai-infra
 
 # (2) 개발 머신에서 .env 전달 → aws/.env 로 (setup-host.sh·compose·user.sh 가 모두 이 경로를 읽는다)
 #     개발 머신에서: scp /workspace/ai-infra/on-prem/.env.prd <server>:~/ai-infra/aws/.env
-vim aws/.env                         # VOLUME_DEVICE, SSH_PORT 등 서버 고유값 최종 확인
+vim aws/.env                         # VOLUME_PATH·MODELS_PATH·DATA_PATH, SSH_PORT 등 서버 고유값 최종 확인
 
 # (3) 호스트 셋업 (Phase 1 → 자동 reboot → Phase 2 자동 실행)
 chmod +x on-prem/setup-host.sh
 sudo ./on-prem/setup-host.sh
 tail -f /var/log/onprem-setup.log    # 진행 확인 (다른 터미널)
 
-# (4) 완료 후 작업 사본으로 이동 — Phase 1이 /volume/workspace/root/ai-infra 에 clone하고 .env를 옮겨 둔다.
+# (4) 완료 후 작업 사본으로 이동 — Phase 1이 ${VOLUME_PATH}/workspace/root/ai-infra 에 clone하고 .env를 옮겨 둔다.
 #     컨테이너 안에서 /workspace/ai-infra 로 보이는 위치라 연구계와 경로가 같다. ~/ai-infra 는 이제 안 쓴다.
-cd /volume/workspace/root/ai-infra/aws
+cd /appdata/workspace/root/ai-infra/aws
 
 # (5) 컨테이너 빌드 + 기동 (vLLM은 베이스 이미지 v0.31.0 정식 빌드를 쓴다 — 따로 전달할 휠 없음)
 docker compose build
@@ -97,7 +101,7 @@ exit
 
 # 런타임 pip 휠 — §5-3
 # 점검 — 전부 ✅ 여야 끊어도 된다
-/volume/workspace/root/ai-infra/on-prem/start.sh check
+/appdata/workspace/root/ai-infra/on-prem/start.sh check
 ```
 
 ---
@@ -106,13 +110,16 @@ exit
 
 `aws/.env.prd`와 같은 키에 아래가 추가됐습니다. 나머지는 [`../aws/SETUP_GUIDE.md` §5-1](../aws/SETUP_GUIDE.md#5-1-env-주요-키) 참조.
 
-| 키 | 설명 | 기본 |
+| 키 | 설명 | 값 |
 |----|------|------|
-| `NVIDIA_DRIVER_VERSION` | 설치·고정할 드라이버. 설치 후 `dnf versionlock` | `580.178.04` |
-| `NVIDIA_CONTAINER_TOOLKIT_VERSION` | Toolkit 4개 패키지 공통 버전 (`-1`은 rpm 릴리스 번호) | `1.20.0-1` |
+| `NVIDIA_DRIVER_VERSION` | 설치·고정할 드라이버. 설치 후 `dnf versionlock`. RHEL 9는 이 값의 브랜치로 `nvidia-driver:<브랜치>-open` 스트림을 켠다 | `580.196.07` |
+| `NVIDIA_CONTAINER_TOOLKIT_VERSION` | Toolkit 4개 패키지 공통 버전 (`-1`은 rpm 릴리스 번호) | `1.20.1-1` |
+| `DOCKER_VERSION` | Docker CE 버전 고정. 값이 있으면 설치 후 `dnf versionlock`. 비우면 저장소 최신 | `29.9.3` |
 | `CONTAINER_PORT_RANGE` | firewalld로 여는 컨테이너 포트 범위 | `5000-5499` |
-| `VOLUME_DEVICE` | 모델용 NVMe (`lsblk` 확인). **온프레미스는 채우는 게 기본** — 비우면 OS 디스크에 모델이 쌓인다 | (빈값) |
-| `LLM_MEMORY` / `SHM_SIZE` | H200 8장 기준 `512g` / `64g`. 호스트 RAM 확정 후 조정 | — |
+| `VOLUME_DEVICE` | 값을 넣으면 그 디스크를 xfs로 **포맷**·마운트한다. 설치팀이 파일시스템을 만들어 주므로 **비워 둔다** | (빈값) |
+| `VOLUME_PATH` | 작업공간·홈 경로 (`workspace/`, `homes/`, `root-homes/`, `root/`) | `/appdata` |
+| `MODELS_PATH` / `DATA_PATH` | 컨테이너 `/models`·`/data`로 연결되는 호스트 경로. 비우면 `${VOLUME_PATH}/models`·`/data` | `/model` / `/data` |
+| `LLM_MEMORY` / `SHM_SIZE` | H200 4장, 호스트 RAM 512GB 기준 | `384g` / `32g` |
 
 ---
 
@@ -122,16 +129,16 @@ exit
 
 | 단계 | 내용 | AWS와 차이 |
 |:----:|------|------|
-| 0 | RHEL 10 확인 + 구독 저장소(BaseOS) 확인 | 신규 |
+| 0 | RHEL 9·10 확인 + 구독 저장소(BaseOS) 확인 | 신규 |
 | 1 | OS 사용자 생성 + sudo (`USERNAME=root`면 스킵). UID/GID 불일치 fail-fast | 동일 |
 | 2 | SSH 포트 변경 + 비밀번호 인증 + **SELinux `ssh_port_t` 등록** + **firewalld 개방** + fail2ban(EPEL) | SELinux·firewalld 신규 |
-| 3 | 데이터 디스크 xfs 포맷 + 마운트 + fstab (루트 디스크 오지정 가드 동일) | EBS→NVMe, 로직 동일 |
-| 4 | `/volume/{workspace,data,models,homes,root-homes}` + 소유권 + **SELinux `container_file_t` 라벨** | 라벨 신규 |
+| 3 | `VOLUME_DEVICE`가 있을 때만 xfs 포맷 + 마운트 + fstab (루트 디스크 오지정 가드 동일). 비우면 디렉토리만 | EBS→NVMe, 로직 동일 |
+| 4 | `${VOLUME_PATH}/{workspace,homes,root-homes}` + `MODELS_PATH`·`DATA_PATH` + 소유권 + **SELinux `container_file_t` 라벨**. 모델·데이터 경로가 마운트포인트가 아니면 경고 | 라벨·경로 분리 신규 |
 | 5 | 시스템 업데이트(커널 제외) + git/gcc/dkms + `kernel-devel-matched` + versionlock 플러그인 + nvitop | 커널 패키지명 |
-| 6 | **작업 사본 배치**: `/volume/workspace/root/ai-infra`에 clone + `.env` 복사 (git 설치 뒤라 최소 설치 RHEL에서도 동작) | 신규 (S3 없음) |
-| 7 | **Docker CE 공식 저장소** (podman·runc 충돌 패키지 제거 후) — compose·buildx 플러그인 동봉 | AL2023 dnf docker 아님 |
+| 6 | **작업 사본 배치**: `${VOLUME_PATH}/workspace/root/ai-infra`에 clone + `.env` 복사 (git 설치 뒤라 최소 설치 RHEL에서도 동작) | 신규 (S3 없음) |
+| 7 | **Docker CE 공식 저장소** (podman·runc 충돌 패키지 제거 후) — compose·buildx 플러그인 동봉. `DOCKER_VERSION`이 있으면 그 버전 + versionlock | AL2023 dnf docker 아님 |
 | 8 | Claude Code (dev 모드만) | 동일 |
-| 9 | NVIDIA rhel10 저장소 등록 | repo 경로 |
+| 9 | NVIDIA rhel9/rhel10 저장소 등록. **RHEL 9는 `nvidia-driver:<브랜치>-open` 모듈 스트림 활성화** | repo 경로 |
 | 10 | `nvidia-open-<버전>` 설치 + **`dnf versionlock`** + `nvidia-persistenced` → 자동 reboot | 버전 고정 신규 |
 
 ### Phase 2 (재부팅 후 자동, systemd) — 5단계
@@ -148,9 +155,11 @@ exit
 
 ### 5-1. 왜 드라이버를 잠그는가
 
-RHEL 9까지는 `nvidia-driver:580-open` 같은 **모듈 스트림**으로 브랜치를 고정했습니다. RHEL 10 저장소는 스트림이 없고 580·595·610이 한 저장소에 나란히 있어, `dnf update`가 가장 높은 610으로 올려버립니다. 610은 이번 달 지원이 끝나는 NFB입니다. 그래서 설치 직후 `dnf versionlock add 'nvidia-*' 'kmod-nvidia-*'`를 걸고, `start.sh check`가 잠금 여부를 확인합니다.
+- **RHEL 9**: 저장소가 브랜치를 **모듈 스트림**으로 나눕니다. 기본 스트림(`open-dkms`)은 최신 브랜치를 따라가므로, 스크립트가 `dnf module enable nvidia-driver:580-open`으로 580 브랜치를 켠 뒤 설치합니다. 스트림은 브랜치만 막고 같은 브랜치 안의 새 버전(580.x)으로는 올라가므로 버전도 잠급니다.
+- **RHEL 10**: 스트림이 없고 580·595·610이 한 저장소에 나란히 있어, 잠그지 않으면 `dnf update`가 가장 높은 브랜치로 올려버립니다.
+- 두 경우 모두 설치 직후 `dnf versionlock add 'nvidia-*' 'kmod-nvidia-*'`를 걸고, `start.sh check`가 잠금 여부를 확인합니다.
 
-의도적으로 올릴 때는 `dnf versionlock delete 'nvidia-*'` 후 `.env NVIDIA_DRIVER_VERSION`을 바꾸고 재설치합니다.
+의도적으로 올릴 때는 `dnf versionlock delete 'nvidia-*'` 후 `.env NVIDIA_DRIVER_VERSION`을 바꾸고 재설치합니다. RHEL 9에서 브랜치를 바꾸면 `dnf module switch-to nvidia-driver:<새 브랜치>-open`도 필요합니다.
 
 ### 5-2. Fabric Manager 판단 기준
 
@@ -177,7 +186,7 @@ pip install --dry-run -r /data/requirements.txt                    # 오프라�
 exit
 ```
 
-`start.sh check`가 `/volume/data/pip-wheels`와 `/volume/root/.config/pip/pip.conf`를 함께 봅니다. `user.sh --root <name>` 컨테이너는 홈이 `/volume/root-homes/<name>`이라 `pip.conf`를 그쪽에도 복사해야 합니다.
+`start.sh check`가 `${DATA_PATH}/pip-wheels`와 `${VOLUME_PATH}/root/.config/pip/pip.conf`를 함께 봅니다. `user.sh --root <name>` 컨테이너는 홈이 `${VOLUME_PATH}/root-homes/<name>`이라 `pip.conf`를 그쪽에도 복사해야 합니다.
 
 ---
 
@@ -187,24 +196,24 @@ exit
 
 ```bash
 # 네트워크 개방 시
-cd /volume/workspace/root/ai-infra && on-prem/start.sh pull
+cd /appdata/workspace/root/ai-infra && on-prem/start.sh pull
 cd aws && docker compose build --no-cache && docker compose up -d
 sudo ./user.sh rebuild
 
 # 네트워크 폐쇄 시 — 개발 머신에서 밀어 넣기 (.git 제외, .env 보존)
 rsync -av --delete --exclude .git --exclude .env --exclude .archive --exclude logs \
-      /workspace/ai-infra/ <server>:/volume/workspace/root/ai-infra/
+      /workspace/ai-infra/ <server>:/appdata/workspace/root/ai-infra/
 ```
 
 `.env`는 git 밖이라 `pull`로 안 따라옵니다. 바뀌었으면 scp로 따로 옮깁니다.
 
 ### 6-2. `.env`만 수정한 경우
 
-[`../aws/SETUP_GUIDE.md` §4-2](../aws/SETUP_GUIDE.md#4-2-env만-변경)와 같습니다. `NVIDIA_*`·`VOLUME_DEVICE`·`SSH_PORT`는 호스트 값이라 `setup-host.sh`를 다시 돌려야 반영됩니다(멱등).
+[`../aws/SETUP_GUIDE.md` §4-2](../aws/SETUP_GUIDE.md#4-2-env만-변경)와 같습니다. `NVIDIA_*`·`DOCKER_VERSION`·`VOLUME_DEVICE`·`SSH_PORT`는 호스트 값이라 `setup-host.sh`를 다시 돌려야 반영됩니다(멱등).
 
 ### 6-3. 다중 사용자·접속·디렉토리 구조
 
-컨테이너 계층은 AWS와 동일합니다 — [`../aws/SETUP_GUIDE.md`](../aws/SETUP_GUIDE.md) §3(`user.sh`), §3-3(접속), §5-3(`/volume` 구조). SSM 대신 호스트 SSH(`SSH_PORT`)로 들어갑니다.
+컨테이너 계층은 AWS와 동일합니다 — [`../aws/SETUP_GUIDE.md`](../aws/SETUP_GUIDE.md) §3(`user.sh`), §3-3(접속), §5-3(`/volume` 구조). 온프레미스는 그 구조의 `/volume`이 `/appdata`이고, `models`·`data`만 `/model`·`/data`로 나뉩니다. SSM 대신 호스트 SSH(`SSH_PORT`)로 들어갑니다.
 
 ---
 
@@ -213,6 +222,7 @@ rsync -av --delete --exclude .git --exclude .env --exclude .archive --exclude lo
 | 증상 | 원인 / 해결 |
 |------|-------------|
 | `RHEL BaseOS 저장소가 활성화되지 않았습니다` | 구독 미등록. `subscription-manager register --auto-attach` 후 재실행 |
+| `nvidia-driver:580-open 활성화 실패` (RHEL 9) | 다른 스트림(예: 설치팀이 쓴 `open-dkms`)이 이미 켜져 있음. `dnf module list nvidia-driver`로 확인 후 `dnf module switch-to -y nvidia-driver:580-open` |
 | `설치된 드라이버 X ≠ .env NVIDIA_DRIVER_VERSION` 경고 | 설치팀이 다른 버전을 깔아 둔 경우. 스크립트는 교체하지 않는다(원격 세션 단절 위험). 교체: `dnf versionlock delete 'nvidia-*'; dnf remove -y 'nvidia-*' 'kmod-nvidia-*'; reboot` 후 재실행 |
 | Phase 2 `NVIDIA 드라이버가 로드되지 않았습니다` | dkms 빌드 실패가 대부분. `dkms status`, `uname -r`과 `rpm -q kernel-devel` 버전 일치 확인. 커널이 올라갔으면 `dnf install kernel-devel-matched && dkms autoinstall` |
 | SSH 재시작 후 접속 불가 | SELinux가 `SSH_PORT` 바인딩 거부. 콘솔에서 `semanage port -a -t ssh_port_t -p tcp <포트>` (스크립트가 하지만 `policycoreutils-python-utils` 설치 실패 시 누락) |

@@ -27,7 +27,7 @@ last-updated: 2026-10-26 (구조 트리·:5015 구성·빠른 시작을 실제 �
 | 레이어 | 책임 | 위치 | 안 다루는 것 |
 |--------|------|------|------------|
 | **개발 환경** | 로컬 PC·사내 서버에 띄우는 컨테이너 (개발자 PC) | `my-docker-server/` | EC2 호스트 셋업, 모델 서빙 |
-| **인프라** | 호스트 셋업, 드라이버, 다중 사용자, 포트/볼륨 정책 | `aws/` (EC2, 컨테이너 계층 포함) / `on-prem/` (사내 RHEL 10 H200 — 호스트 계층만, `.env`·compose·`user.sh`는 `aws/` 공유) | 모델 추론 로직, 게이트웨이 라우팅 |
+| **인프라** | 호스트 셋업, 드라이버, 다중 사용자, 포트/볼륨 정책 | `aws/` (EC2, 컨테이너 계층 포함) / `on-prem/` (사내 RHEL 9.8 H200 — 호스트 계층만, `.env`·compose·`user.sh`는 `aws/` 공유) | 모델 추론 로직, 게이트웨이 라우팅 |
 | **서빙** | LLM 모델 서빙 프레임워크 설정·게이트웨이·운영 가이드 | `llm-serving/` | 어디에 띄울지 (인프라), 컨테이너 OS 설정 |
 
 > 신규 파일을 만들 때는 위 책임 표를 보고 디렉토리를 결정하세요. 예: vLLM의 새로운 멀티모달 설정은 `llm-serving/vllm/`, EC2 자동 스케일 정책은 `aws/`, 새로운 로컬 GPU 워크플로우는 `my-docker-server/`.
@@ -70,8 +70,8 @@ ai-infra/
 │   ├── ssh-config-sample
 │   └── SETUP_GUIDE.md                # EC2 셋업·다중 사용자·dev/prd 모드
 │
-├── on-prem/                          # 사내 H200(RHEL 10) 호스트 셋업 — 컨테이너 계층은 ../aws/ 공유
-│   ├── setup-host.sh                 # setup-ec2.sh의 RHEL 10 판 (Phase 1 → reboot → Phase 2, 드라이버 versionlock)
+├── on-prem/                          # 사내 H200 × 4(RHEL 9.8) 호스트 셋업 — 컨테이너 계층은 ../aws/ 공유
+│   ├── setup-host.sh                 # setup-ec2.sh의 RHEL 9·10 판 (Phase 1 → reboot → Phase 2, 드라이버 versionlock)
 │   ├── start.sh                      # pull(git 동기화) / check(네트워크 끊기 전 준비 점검)
 │   └── SETUP_GUIDE.md
 │
@@ -90,7 +90,7 @@ ai-infra/
     │   ├── vllm_gateway.py           # OpenAI 호환 게이트웨이 (chat + audio + realtime)
     │   ├── instances/                # 인스턴스 yaml (키당 제목 한줄 슬림, 상세는 _SCHEMA.txt)
     │   │   ├── _SCHEMA.txt            #   인스턴스 키 레퍼런스 + 모델별 노하우(MTP·soft_tokens·GPU표)
-    │   │   ├── gemma.yaml            #   ├ 연구 gemma 31B   gw 6015 → 외부 :5015 (PII 경유)
+    │   │   ├── gemma.yaml            #   ├ 연구 gemma 31B   gw 5015 → :5015 직접 (비PII)
     │   │   ├── gemma-26b.yaml        #   ├ 연구 gemma 26B-A4B gw 5015 → :5015 직접 (비PII, 연구 세 종은 GPU0·1 택일)
     │   │   ├── prd-gemma.yaml        #   ├ 운영 gemma  gw 5501 → :5501 직접 (PII 미경유)
     │   │   ├── prd-pii-gemma.yaml    #   ├ 운영 gemma  gw 6501 → :5501 (PII 경유)
@@ -141,7 +141,7 @@ ai-infra/
 | **베이스 OS** | Ubuntu 24.04, NVIDIA CUDA 13.4.3-devel-ubuntu24.04 (로컬 `cfd`, 호스트 드라이버 R615 이상) |
 | **GPU 호스트** | NVIDIA Open Driver, NVIDIA Container Toolkit, Fabric Manager (H100/H200/A100/B100/B200) |
 | **클라우드** | AWS EC2 (g6e/p4/p5), EBS, IAM/S3, SSM Session Manager |
-| **온프레미스** | RHEL 10, H200, 드라이버 580 LTSB 고정(`dnf versionlock`), Docker CE 저장소, 폐쇄망 대비 사전 pull |
+| **온프레미스** | RHEL 9.8, H200 × 4, 드라이버 580 LTSB 고정(RHEL 9 모듈 스트림 + `dnf versionlock`), Docker CE 저장소, `/appdata`·`/model`·`/data` 분리, 폐쇄망 대비 사전 pull |
 | **서빙** | vLLM (chat + audio + realtime), FastAPI 게이트웨이 (OpenAI 호환 + 대기열 기반 과부하 차단 + 모델 교체 호환 계층). LLM(연구계 :5015, 개발계·운영계 :5501 — API 노출명은 백엔드 모델과 무관하게 `gemma-4` 고정) + STT(Voxtral :5018, 비교 PoC :5017). 향후 SGLang 추가 예정 |
 | **런타임** | Python 3.12, Node.js LTS (nvm) |
 | **개발 도구** | Claude Code, OpenAI Codex, GitHub CLI, tmux, fzf, ripgrep |

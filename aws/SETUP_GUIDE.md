@@ -324,6 +324,7 @@ sudo ./user.sh rebuild <서빙 컨테이너>     # 또는 5)에서 쓴 방법으
 | | `HF_TOKEN` | HuggingFace 토큰. 접근 승인이 필요한 모델에 필수 |
 | 저장소 | `VOLUME_DEVICE` | 추가 EBS 디바이스 경로. 비우면 루트 디스크에 `/volume`을 만듦 (인스턴스 종료 시 사라짐) |
 | | `VOLUME_PATH` | 마운트 경로 (기본 `/volume`) |
+| | `MODELS_PATH` / `DATA_PATH` | 컨테이너 `/models`·`/data`의 호스트 경로. 비우면 `${VOLUME_PATH}/models`·`/data` (AWS는 비워 둠, 온프레미스는 `/model`·`/data`) |
 | 이미지 | `VLLM_IMAGE` | 베이스 이미지. 태그와 다이제스트를 함께 적음 (지금 `vllm/vllm-openai:v0.31.0@sha256:c1c9f6fd…`). 바꾸면 `Dockerfile.llm`의 `ARG VLLM_VERSION`도 같이 바꿈. 둘이 다르면 빌드 첫 단계에서 멈춤 (필수) |
 | | `LLM_IMAGE_NAME` | 빌드한 이미지 이름 (`llm-dev`, `llm-prd`). compose와 `user.sh`가 함께 씀 |
 | | `EXTRA_REQUIREMENTS` | 비워 둠. 컨테이너가 뜰 때마다 pip로 더 설치할 파일 경로. 서빙 패키지는 이미지 빌드 때 들어감. 값을 주면 vLLM·torch·transformers 버전을 바꾸는 패키지는 설치에 실패하고 컨테이너가 멈춤 |

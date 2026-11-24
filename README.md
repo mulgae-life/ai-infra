@@ -8,7 +8,7 @@
 |------|------|
 | [`my-docker-server/`](my-docker-server/) | 로컬 PC·사내 서버용 dev/GPU Docker 환경 (`Dockerfile.dev`, `Dockerfile.gpu`, `docker-compose.yml`) |
 | [`aws/`](aws/) | AWS EC2 GPU 인스턴스 셋업 + 다중 사용자 컨테이너 운영 인프라 (vLLM 베이스, SSH) |
-| [`on-prem/`](on-prem/) | 온프레미스 H200 서버(RHEL 10) 호스트 셋업 + 폐쇄망 준비 점검. 컨테이너 계층은 `aws/`를 그대로 실행 |
+| [`on-prem/`](on-prem/) | 온프레미스 H200 서버(RHEL 9.8) 호스트 셋업 + 폐쇄망 준비 점검. 컨테이너 계층은 `aws/`를 그대로 실행 |
 | [`llm-serving/`](llm-serving/) | LLM/STT 서빙 프레임워크 운영 구성 (vLLM 기반 LLM 연구계 :5015·개발/운영계 :5501 + STT Voxtral :5018, 향후 SGLang 추가 예정) |
 
 각 디렉토리는 자체 README/가이드를 포함합니다. 아래 진입점에서 시작하세요.
@@ -19,7 +19,7 @@
 |--------------|----------|
 | 로컬 PC에 풀스택 dev/GPU 컨테이너 띄우기 | [`my-docker-server/SETUP_GUIDE.md`](my-docker-server/SETUP_GUIDE.md) |
 | AWS GPU 인스턴스에 vLLM 베이스 + 다중 사용자 운영 환경 셋업 | [`aws/SETUP_GUIDE.md`](aws/SETUP_GUIDE.md) |
-| 온프레미스 H200 서버(RHEL 10) 호스트 셋업 + 네트워크 끊기 전 점검 | [`on-prem/SETUP_GUIDE.md`](on-prem/SETUP_GUIDE.md) |
+| 온프레미스 H200 서버(RHEL 9.8) 호스트 셋업 + 네트워크 끊기 전 점검 | [`on-prem/SETUP_GUIDE.md`](on-prem/SETUP_GUIDE.md) |
 | vLLM API 호출 (사용자) | 연구계 [`llm-serving/VLLM_API_GUIDE_research.md`](llm-serving/VLLM_API_GUIDE_research.md) · 개발계·운영계 [`llm-serving/VLLM_API_GUIDE_dev_prd.md`](llm-serving/VLLM_API_GUIDE_dev_prd.md) |
 | vLLM 서버 + 멀티 GPU 게이트웨이 띄우기 (운영자) | [`llm-serving/VLLM_OPS_GUIDE.md`](llm-serving/VLLM_OPS_GUIDE.md) |
 | STT API 호출 (사용자) | [`llm-serving/STT_API_GUIDE.md`](llm-serving/STT_API_GUIDE.md) |

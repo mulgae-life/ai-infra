@@ -45,6 +45,9 @@ fi
 # docker-compose.yml 의 LLM_IMAGE_NAME 과 반드시 동일 값이어야 함 (설정 채널 일원화)
 IMAGE_NAME="${LLM_IMAGE_NAME:-llm-dev}"
 VOLUME_PATH="${VOLUME_PATH:-/volume}"
+# 모델·데이터 공유 경로. 온프레미스처럼 별도 파일시스템이면 .env에서 지정한다
+MODELS_PATH="${MODELS_PATH:-${VOLUME_PATH}/models}"
+DATA_PATH="${DATA_PATH:-${VOLUME_PATH}/data}"
 HF_TOKEN="${HF_TOKEN:-}"
 EXTRA_REQUIREMENTS="${EXTRA_REQUIREMENTS:-}"
 SHM_SIZE="${SHM_SIZE:-16g}"
@@ -290,15 +293,15 @@ cmd_up() {
     # 디렉토리 생성 + 소유권 설정 (sudo로 실행되므로 root 소유 방지)
     mkdir -p "${VOLUME_PATH}/workspace/${username}"
     mkdir -p "$home_host"
-    mkdir -p "${VOLUME_PATH}/models"
-    mkdir -p "${VOLUME_PATH}/data"
+    mkdir -p "$MODELS_PATH"
+    mkdir -p "$DATA_PATH"
     chown "${home_uid}:${home_gid}" "${VOLUME_PATH}/workspace/${username}"
     chown "${home_uid}:${home_gid}" "$home_host"
     # models/data 는 공유 디렉토리 → 글로벌 SHARED_UID/GID 소유 유지 (스크립트 시작 시점 .env 값).
     # rebuild가 root 컨테이너의 CONTAINER_UID=0을 cmd_up에 주입해도 공유 디렉토리 chown은 영향받지 않음
     # — root 컨테이너는 권한이 0이라 어차피 모든 디렉토리에 쓸 수 있고, 일반 사용자(2000) 쓰기 권한이 보존됨.
-    chown "${SHARED_UID}:${SHARED_GID}" "${VOLUME_PATH}/models"
-    chown "${SHARED_UID}:${SHARED_GID}" "${VOLUME_PATH}/data"
+    chown "${SHARED_UID}:${SHARED_GID}" "$MODELS_PATH"
+    chown "${SHARED_UID}:${SHARED_GID}" "$DATA_PATH"
 
     # GPU 옵션 (--gpus로 직접 제어, NVIDIA_VISIBLE_DEVICES 환경변수 미사용)
     # Docker --gpus 파서는 CSV 방식: 쉼표가 필드 구분자.
@@ -360,8 +363,8 @@ cmd_up() {
         --memory "$LLM_MEMORY" \
         "${port_opts[@]}" \
         -v "${VOLUME_PATH}/workspace/${username}:/workspace" \
-        -v "${VOLUME_PATH}/models:/models" \
-        -v "${VOLUME_PATH}/data:/data" \
+        -v "${MODELS_PATH}:/models" \
+        -v "${DATA_PATH}:/data" \
         -v "${home_host}:${home_container}" \
         -e "USERNAME=${container_username}" \
         -e "PASSWORD=${password}" \

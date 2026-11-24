@@ -25,10 +25,12 @@ if [ -f "$ENV_FILE" ]; then
     set +a
 fi
 VOLUME_PATH="${VOLUME_PATH:-/volume}"
+MODELS_PATH="${MODELS_PATH:-${VOLUME_PATH}/models}"
+DATA_PATH="${DATA_PATH:-${VOLUME_PATH}/data}"
 VLLM_IMAGE="${VLLM_IMAGE:-}"
 LLM_IMAGE_NAME="${LLM_IMAGE_NAME:-llm-prd}"
 EXTRA_REQUIREMENTS="${EXTRA_REQUIREMENTS:-}"
-NVIDIA_DRIVER_VERSION="${NVIDIA_DRIVER_VERSION:-580.178.04}"
+NVIDIA_DRIVER_VERSION="${NVIDIA_DRIVER_VERSION:-580.196.07}"
 
 # git pull (네트워크 개방 시에만 동작). S3와 달리 .env는 git 밖이라 안 따라온다.
 cmd_pull() {
@@ -124,7 +126,7 @@ cmd_check() {
     [ -f "$ENV_FILE" ] && ok "aws/.env" || fail "aws/.env 없음 → cp on-prem/.env.prd aws/.env"
     echo
 
-    echo "모델 가중치 (${VOLUME_PATH}/models — llm-serving 인스턴스 yaml 기준)"
+    echo "모델 가중치 (${MODELS_PATH} — llm-serving 인스턴스 yaml 기준)"
     local inst_dir="$SCRIPT_DIR/../llm-serving/vllm/instances"
     local found=0 f model ddir host_dir
     for f in "$inst_dir"/*.yaml; do
@@ -135,8 +137,8 @@ cmd_check() {
         ddir=$(_yaml_top_value download_dir "$f")
         [ -n "$model" ] && [ -n "$ddir" ] || continue
         found=1
-        # 컨테이너 /models/LLM → 호스트 ${VOLUME_PATH}/models/LLM (compose bind mount 경로 규약)
-        host_dir="${VOLUME_PATH}/${ddir#/}/${model}"
+        # 컨테이너 /models/LLM → 호스트 ${MODELS_PATH}/LLM (compose bind mount 경로 규약)
+        host_dir="${MODELS_PATH}/${ddir#/models/}/${model}"
         if [ -d "$host_dir" ] && [ -n "$(ls -A "$host_dir" 2>/dev/null)" ]; then
             ok "$(basename "$f" .yaml): ${model} ($(du -sh "$host_dir" 2>/dev/null | cut -f1))"
         else
@@ -148,7 +150,7 @@ cmd_check() {
 
     echo "런타임 pip (entrypoint가 매 기동마다 EXTRA_REQUIREMENTS 를 pip install)"
     if [ -n "$EXTRA_REQUIREMENTS" ]; then
-        local wheels_dir="${VOLUME_PATH}/data/pip-wheels"
+        local wheels_dir="${DATA_PATH}/pip-wheels"
         local pipconf="${VOLUME_PATH}/root/.config/pip/pip.conf"
         if [ -d "$wheels_dir" ] && [ -n "$(ls -A "$wheels_dir" 2>/dev/null)" ]; then
             ok "오프라인 휠 ${wheels_dir} ($(ls "$wheels_dir" | wc -l)개)"
