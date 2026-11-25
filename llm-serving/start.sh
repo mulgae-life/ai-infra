@@ -104,6 +104,11 @@ cmd_push() {
 #   체크섬을 보지 않으므로 크기까지 같은 수정(yaml의 0.95 → 0.90 같은 자릿수 동일 치환)에서
 #   특히 잘 걸린다. 이 옵션이 그 판정을 막아 rm -rf 후 재다운로드와 같은 정합을 준다.
 cmd_pull() {
+    # 온프레미스는 S3를 쓰지 않는다 — 같은 ai-infra 아래 server-setup/.env의 PLATFORM으로 판별
+    if grep -qsE '^PLATFORM=["'"'"']?onprem' "$SCRIPT_DIR/../server-setup/.env"; then
+        echo "[pull] 온프레미스는 S3 pull을 쓰지 않습니다. 저장소 전체를 server-setup/start.sh pull(git)로 갱신하세요 (SETUP_GUIDE_ONPREM.md §7-1)"
+        exit 1
+    fi
     require_aws pull
 
     echo "[pull] S3 → 로컬 동기화(잔재 삭제 포함): $S3_URI → $SCRIPT_DIR"

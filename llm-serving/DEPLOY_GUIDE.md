@@ -19,6 +19,8 @@
                                                                           (갱신은 ./start.sh download — 폐쇄망은 네트워크 개방 시점에)
 ```
 
+> 온프레미스는 S3를 쓰지 않는다. llm-serving은 서버 셋업 때 `/workspace/ai-infra/llm-serving`으로 함께 올라가고, 갱신은 `../server-setup/SETUP_GUIDE_ONPREM.md` §7-1(git pull)로 한다. 이 문서의 `/workspace/llm-serving`은 그 경로로 바꿔 쓴다.
+
 **② 서비스 진입점 맵** — 배포 후 클라이언트가 들어가는 **외부 포트**와 그 뒤 내부 흐름. 외부엔 진입점만 열고 내부 포트는 방화벽으로 차단한다.
 
 ```
